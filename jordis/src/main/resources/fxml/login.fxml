@@ -1,14 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="CONTROLLER_NAME"
-            prefHeight="400.0" prefWidth="600.0">
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.LoginController"
+      alignment="CENTER"
+      spacing="0"
+      style="-fx-background-color: #F5F5F5;">
 
-</AnchorPane>
+    <!-- Encabezado -->
+    <VBox alignment="CENTER" spacing="8"
+          style="-fx-background-color: #1A237E; -fx-padding: 40 0 40 0;">
+        <Text text="Jordis Technology"
+              style="-fx-font-size: 28; -fx-font-weight: bold; -fx-fill: white;"/>
+        <Text text="Sistema de Ventas"
+              style="-fx-font-size: 14; -fx-fill: #C5CAE9;"/>
+    </VBox>
+
+    <!-- Formulario -->
+    <VBox alignment="CENTER" spacing="16" maxWidth="360"
+          style="-fx-background-color: white; -fx-padding: 40; -fx-background-radius: 8;
+                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
+        <padding>
+            <Insets top="40" bottom="20"/>
+        </padding>
+
+        <Text text="Iniciar Sesión"
+              style="-fx-font-size: 20; -fx-font-weight: bold; -fx-fill: #1A237E;"/>
+
+        <!-- Campo usuario -->
+        <VBox spacing="4">
+            <Label text="Usuario" style="-fx-font-size: 13; -fx-text-fill: #555;"/>
+            <TextField fx:id="txtUsuario"
+                       promptText="Ingrese su usuario"
+                       prefHeight="38"
+                       style="-fx-font-size: 14; -fx-border-color: #BDBDBD; -fx-border-radius: 4;
+                              -fx-background-radius: 4; -fx-padding: 4 10;"/>
+        </VBox>
+
+        <!-- Campo contraseña -->
+        <VBox spacing="4">
+            <Label text="Contraseña" style="-fx-font-size: 13; -fx-text-fill: #555;"/>
+            <PasswordField fx:id="txtContrasena"
+                           promptText="Ingrese su contraseña"
+                           prefHeight="38"
+                           style="-fx-font-size: 14; -fx-border-color: #BDBDBD; -fx-border-radius: 4;
+                                  -fx-background-radius: 4; -fx-padding: 4 10;"/>
+        </VBox>
+
+        <!-- Mensaje de error -->
+        <Label fx:id="lblError"
+               text=""
+               wrapText="true"
+               style="-fx-text-fill: #C62828; -fx-font-size: 12;"
+               maxWidth="320"/>
+
+        <!-- Botón ingresar -->
+        <Button fx:id="btnIngresar"
+                text="Ingresar"
+                prefWidth="320"
+                prefHeight="42"
+                onAction="#onIngresar"
+                style="-fx-background-color: #1A237E; -fx-text-fill: white; -fx-font-size: 14;
+                       -fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;"/>
+
+        <Label text="Jordis Technology © 2026"
+               style="-fx-text-fill: #9E9E9E; -fx-font-size: 11;"/>
+    </VBox>
+</VBox>
