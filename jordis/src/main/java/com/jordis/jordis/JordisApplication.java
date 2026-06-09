@@ -20,9 +20,11 @@ public class JordisApplication extends Application {
     public void start(Stage primaryStage) {
         StageManager stageManager = springContext.getBean(StageManager.class);
         stageManager.setPrimaryStage(primaryStage);
+
+        primaryStage.setMaximized(true);
         primaryStage.setWidth(900);
         primaryStage.setHeight(600);
-        primaryStage.setResizable(true);
+
         stageManager.switchScene("/fxml/login.fxml", "Iniciar sesión");
     }
 

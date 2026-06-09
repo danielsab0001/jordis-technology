@@ -1,6 +1,7 @@
 package com.jordis.jordis.config;
 
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -17,13 +18,33 @@ public class SpringFXMLLoader {
     }
 
     public <T> T load(String fxmlPath) throws IOException {
+        FXMLLoader loader = createLoader(fxmlPath);
+        return loader.load();
+    }
+
+    public <C> LoadResult<C> loadWithController(String fxmlPath) throws IOException {
+        FXMLLoader loader = createLoader(fxmlPath);
+        Parent root = loader.load();
+        C controller = loader.getController();
+        return new LoadResult<>(root, controller);
+    }
+
+    private FXMLLoader createLoader(String fxmlPath) throws IOException {
         FXMLLoader loader = new FXMLLoader();
         loader.setControllerFactory(context::getBean);
         URL url = getClass().getResource(fxmlPath);
-        if (url == null) {
-            throw new IOException("No se encontró el archivo FXML: " + fxmlPath);
-        }
+        if (url == null) throw new IOException("FXML no encontrado: " + fxmlPath);
         loader.setLocation(url);
-        return loader.load();
+        return loader;
+    }
+
+    public static class LoadResult<C> {
+        public final Parent root;
+        public final C controller;
+
+        public LoadResult(Parent root, C controller) {
+            this.root = root;
+            this.controller = controller;
+        }
     }
 }

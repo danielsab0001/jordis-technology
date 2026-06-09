@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -19,103 +19,140 @@ public class AutenticacionService {
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    // Máximo de intentos antes de bloquear
     private static final int MAX_INTENTOS = 3;
 
-    // Mapa en memoria: nombre de usuario cantidad de intentos fallidos
-    private final Map<String, Integer> intentosFallidos = new HashMap<>();
-
-    // Sesión activa actual
     private Usuario usuarioActivo;
 
-    /**
-     * Intenta autenticar a un usuario.
-     * @return el Usuario si las credenciales son válidas
-     * @throws UsuarioNoEncontradoException si el usuario no existe o está inactivo
-     * @throws CredencialesInvalidasException si la contraseña es incorrecta
-     * @throws UsuarioBloqueadoException si superó el límite de intentos
-     */
+    // Sin @Transactional aquí — cada operación maneja su propia transacción
     public Usuario autenticar(String nombre, String contrasena) {
 
-        // 1. Verificar si el usuario está bloqueado
-        if (estaBloqueado(nombre)) {
-            log.warn("Intento de acceso a usuario bloqueado: {}", nombre);
-            throw new UsuarioBloqueadoException(
-                    "El usuario '" + nombre + "' está bloqueado por demasiados intentos fallidos. " +
-                            "Contacte al administrador."
-            );
-        }
-
-        // 2. Buscar el usuario en la base de datos
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByNombreAndActivoTrue(nombre);
+        // 1. Buscar por nombre sin filtrar por activo
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByNombre(nombre);
 
         if (usuarioOpt.isEmpty()) {
-            log.warn("Intento de login con usuario inexistente o inactivo: {}", nombre);
-            registrarIntentoFallido(nombre);
+            log.warn("Login fallido: usuario '{}' no existe", nombre);
             throw new UsuarioNoEncontradoException("Usuario o contraseña incorrectos.");
         }
 
         Usuario usuario = usuarioOpt.get();
 
-        // 3. Verificar contraseña con BCrypt
-        if (!passwordEncoder.matches(contrasena, usuario.getContrasena())) {
-            registrarIntentoFallido(nombre);
-            int intentosRestantes = MAX_INTENTOS - intentosFallidos.getOrDefault(nombre, 0);
-            log.warn("Contraseña incorrecta para usuario: {}. Intentos restantes: {}", nombre, intentosRestantes);
-
-            if (intentosRestantes <= 0) {
-                throw new UsuarioBloqueadoException(
-                        "Has superado el límite de intentos. El usuario ha sido bloqueado."
-                );
-            }
-
-            throw new CredencialesInvalidasException(
-                    "Contraseña incorrecta. Te quedan " + intentosRestantes + " intento(s)."
+        // 2. Verificar si la cuenta está desactivada
+        if (!usuario.getActivo()) {
+            log.warn("Login fallido: cuenta desactivada '{}'", nombre);
+            throw new CuentaDesactivadaException(
+                    "Esta cuenta ha sido desactivada. Comunícate con el administrador."
             );
         }
 
-        // 4. Login exitoso — limpiar intentos y guardar sesión
-        intentosFallidos.remove(nombre);
+        // 3. Verificar si está bloqueado (solo cajeros)
+        if (usuario.getBloqueado()
+                && usuario.getRol() != Usuario.Rol.ADMINISTRADOR) {
+            log.warn("Login fallido: cuenta bloqueada '{}'", nombre);
+            throw new UsuarioBloqueadoException(
+                    "Esta cuenta ha sido bloqueada por precaución debido a varios " +
+                            "intentos fallidos de contraseña. Comuníquese con el administrador."
+            );
+        }
+
+        // 4. Verificar contraseña
+        if (!passwordEncoder.matches(contrasena, usuario.getContrasena())) {
+
+            // Administradores no acumulan intentos
+            if (usuario.getRol() == Usuario.Rol.ADMINISTRADOR) {
+                log.warn("Contraseña incorrecta para admin '{}'", nombre);
+                throw new CredencialesInvalidasException("Contraseña incorrecta.");
+            }
+
+            // Cajeros: incrementar contador en transacción separada
+            int nuevoIntentos = usuario.getIntentosFallidos() + 1;
+
+            if (nuevoIntentos >= MAX_INTENTOS) {
+                // Bloquear en transacción propia para que no haga rollback
+                bloquearUsuario(usuario.getIdUsuario());
+                log.warn("Usuario '{}' bloqueado tras {} intentos", nombre, nuevoIntentos);
+                throw new UsuarioBloqueadoException(
+                        "Esta cuenta ha sido bloqueada por precaución debido a varios " +
+                                "intentos fallidos de contraseña. Comuníquese con el administrador."
+                );
+            }
+
+            // Guardar nuevo contador en transacción propia
+            incrementarIntentos(usuario.getIdUsuario(), nuevoIntentos);
+            int restantes = MAX_INTENTOS - nuevoIntentos;
+            log.warn("Contraseña incorrecta para '{}'. Intentos restantes: {}",
+                    nombre, restantes);
+            throw new CredencialesInvalidasException(
+                    "Contraseña incorrecta. Te quedan " + restantes + " intento(s)."
+            );
+        }
+
+        // 5. Login exitoso — resetear en transacción propia
+        resetearIntentos(usuario.getIdUsuario());
         usuarioActivo = usuario;
         log.info("Login exitoso: {} ({})", usuario.getNombreCompleto(), usuario.getRol());
         return usuario;
     }
 
+    // ---- Métodos con transacción propia ----
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void incrementarIntentos(Integer idUsuario, int nuevoIntentos) {
+        usuarioRepository.findById(idUsuario).ifPresent(u -> {
+            u.setIntentosFallidos(nuevoIntentos);
+            usuarioRepository.save(u);
+        });
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void bloquearUsuario(Integer idUsuario) {
+        usuarioRepository.findById(idUsuario).ifPresent(u -> {
+            u.setIntentosFallidos(MAX_INTENTOS);
+            u.setBloqueado(true);
+            usuarioRepository.save(u);
+        });
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void resetearIntentos(Integer idUsuario) {
+        usuarioRepository.findById(idUsuario).ifPresent(u -> {
+            u.setIntentosFallidos(0);
+            u.setBloqueado(false);
+            usuarioRepository.save(u);
+        });
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void desbloquearUsuario(Integer idUsuario) {
+        usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado."));
+        usuarioRepository.findById(idUsuario).ifPresent(u -> {
+            u.setBloqueado(false);
+            u.setIntentosFallidos(0);
+            usuarioRepository.save(u);
+        });
+        log.info("Usuario ID {} desbloqueado", idUsuario);
+    }
+
     public void cerrarSesion() {
-        log.info("Cerrando sesión de: {}", usuarioActivo != null ? usuarioActivo.getNombreCompleto() : "desconocido");
+        log.info("Cerrando sesión de: {}",
+                usuarioActivo != null ? usuarioActivo.getNombreCompleto() : "desconocido");
         usuarioActivo = null;
     }
 
-    public Usuario getUsuarioActivo() {
-        return usuarioActivo;
-    }
+    public Usuario getUsuarioActivo() { return usuarioActivo; }
+    public boolean hayUsuarioActivo() { return usuarioActivo != null; }
 
-    public boolean hayUsuarioActivo() {
-        return usuarioActivo != null;
-    }
-
-    // ---- Métodos privados ----
-
-    private boolean estaBloqueado(String nombre) {
-        return intentosFallidos.getOrDefault(nombre, 0) >= MAX_INTENTOS;
-    }
-
-    private void registrarIntentoFallido(String nombre) {
-        intentosFallidos.merge(nombre, 1, Integer::sum);
-        log.warn("Intentos fallidos para '{}': {}", nombre, intentosFallidos.get(nombre));
-    }
-
-    // ---- Excepciones internas ----
-
+    // ---- Excepciones ----
     public static class UsuarioBloqueadoException extends RuntimeException {
         public UsuarioBloqueadoException(String msg) { super(msg); }
     }
-
     public static class CredencialesInvalidasException extends RuntimeException {
         public CredencialesInvalidasException(String msg) { super(msg); }
     }
-
     public static class UsuarioNoEncontradoException extends RuntimeException {
         public UsuarioNoEncontradoException(String msg) { super(msg); }
+    }
+    public static class CuentaDesactivadaException extends RuntimeException {
+        public CuentaDesactivadaException(String msg) { super(msg); }
     }
 }

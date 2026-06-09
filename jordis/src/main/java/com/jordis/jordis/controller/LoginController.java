@@ -43,30 +43,34 @@ public class LoginController {
 
     @FXML
     public void onIngresar() {
-        String usuario = txtUsuario.getText().trim();
+        String usuario   = txtUsuario.getText().trim();
         String contrasena = txtContrasena.getText();
 
-        // Validación básica de campos vacíos
         if (usuario.isEmpty() || contrasena.isEmpty()) {
             mostrarError("Por favor complete todos los campos.");
             return;
         }
 
-        btnIngresar.setDisable(true);
         lblError.setText("");
+        btnIngresar.setDisable(true);
 
         try {
             Usuario usuarioAutenticado = autenticacionService.autenticar(usuario, contrasena);
             log.info("Acceso concedido a: {}", usuarioAutenticado.getNombreCompleto());
-
-            // Navegar al menú principal
             stageManager.switchScene("/fxml/main.fxml", "Menú Principal");
 
         } catch (AutenticacionService.UsuarioBloqueadoException e) {
+            // Mostrar mensaje pero NO bloquear el formulario
             mostrarError(e.getMessage());
-            txtUsuario.setDisable(true);
-            txtContrasena.setDisable(true);
-            btnIngresar.setDisable(true);
+            txtContrasena.clear();
+            btnIngresar.setDisable(false);
+
+        } catch (AutenticacionService.CuentaDesactivadaException e) {
+            // Mostrar mensaje pero NO bloquear el formulario
+            mostrarError(e.getMessage());
+            txtContrasena.clear();
+            btnIngresar.setDisable(false);
+
         } catch (AutenticacionService.CredencialesInvalidasException |
                  AutenticacionService.UsuarioNoEncontradoException e) {
             mostrarError(e.getMessage());

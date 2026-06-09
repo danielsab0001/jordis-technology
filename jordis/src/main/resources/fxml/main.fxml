@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
@@ -10,80 +9,103 @@
 
     <!-- Barra superior -->
     <top>
-        <HBox style="-fx-background-color: #1A237E; -fx-padding: 12 20;"
+        <HBox style="-fx-background-color: #2563EB; -fx-padding: 12 20;"
               alignment="CENTER_LEFT" spacing="16">
-            <Text text="Jordis Technology"
+            <Text text="Jordis"
                   style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: white;"/>
+            <Text text="Technology"
+                  style="-fx-font-size: 11; -fx-fill: #BFDBFE;
+                         -fx-translate-y: 3;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="lblBienvenida"
-                   style="-fx-text-fill: #C5CAE9; -fx-font-size: 13;"/>
+                   style="-fx-text-fill: #BFDBFE; -fx-font-size: 13;"/>
             <Label fx:id="lblRol"
-                   style="-fx-text-fill: white; -fx-font-size: 12; -fx-background-color: #3949AB;
-                          -fx-padding: 2 8; -fx-background-radius: 10;"/>
+                   style="-fx-text-fill: white; -fx-font-size: 11;
+                          -fx-background-color: rgba(255,255,255,0.2);
+                          -fx-padding: 3 10; -fx-background-radius: 10;"/>
             <Button text="Cerrar sesión" onAction="#onCerrarSesion"
-                    style="-fx-background-color: transparent; -fx-text-fill: #EF9A9A;
-                           -fx-border-color: #EF9A9A; -fx-border-radius: 4; -fx-cursor: hand;
-                           -fx-font-size: 12;"/>
+                    style="-fx-background-color: transparent;
+                           -fx-text-fill: #FCA5A5;
+                           -fx-border-color: #FCA5A5;
+                           -fx-border-radius: 4; -fx-background-radius: 4;
+                           -fx-cursor: hand; -fx-font-size: 12;
+                           -fx-padding: 4 12;"/>
         </HBox>
     </top>
 
     <!-- Menú lateral -->
     <left>
-        <VBox style="-fx-background-color: #283593; -fx-padding: 16 0;" spacing="2" prefWidth="200">
-            <Label text="MÓDULOS" style="-fx-text-fill: #7986CB; -fx-font-size: 11;
-                                         -fx-padding: 8 16 4 16; -fx-font-weight: bold;"/>
+        <VBox style="-fx-background-color: #1D4ED8; -fx-padding: 12 0;"
+              spacing="2" prefWidth="200">
 
-            <Button fx:id="btnVentas" text="  🛒  Ventas" prefWidth="200" prefHeight="44"
-                    onAction="#onVentas" style="-fx-background-color: transparent; -fx-text-fill: white;
-                    -fx-font-size: 13; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+            <Label text="MÓDULOS"
+                   style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
+                          -fx-padding: 8 16 4 16; -fx-font-weight: bold;"/>
 
-            <Button fx:id="btnClientes" text="  👥  Clientes" prefWidth="200" prefHeight="44"
-                    onAction="#onClientes" style="-fx-background-color: transparent; -fx-text-fill: white;
-                    -fx-font-size: 13; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+            <Button fx:id="btnVentas" text="  Ventas"
+                    prefWidth="200" prefHeight="42" onAction="#onVentas"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
-            <Button fx:id="btnProductos" text="  📦  Productos" prefWidth="200" prefHeight="44"
-                    onAction="#onProductos" style="-fx-background-color: transparent; -fx-text-fill: white;
-                    -fx-font-size: 13; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+            <Button fx:id="btnClientes" text="  Clientes"
+                    prefWidth="200" prefHeight="42" onAction="#onClientes"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
-            <Button fx:id="btnInventario" text="  📋  Inventario" prefWidth="200" prefHeight="44"
-                    onAction="#onInventario" style="-fx-background-color: transparent; -fx-text-fill: white;
-                    -fx-font-size: 13; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+            <Button fx:id="btnProductos" text="  Productos"
+                    prefWidth="200" prefHeight="42" onAction="#onProductos"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
-            <Button fx:id="btnProveedores" text="  🏭  Proveedores" prefWidth="200" prefHeight="44"
-                    onAction="#onProveedores" style="-fx-background-color: transparent; -fx-text-fill: white;
-                    -fx-font-size: 13; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+            <Button fx:id="btnInventario" text="  Inventario"
+                    prefWidth="200" prefHeight="42" onAction="#onInventario"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
-            <Label text="ADMINISTRACIÓN" style="-fx-text-fill: #7986CB; -fx-font-size: 11;
-                                                -fx-padding: 16 16 4 16; -fx-font-weight: bold;"/>
+            <Button fx:id="btnProveedores" text="  Proveedores"
+                    prefWidth="200" prefHeight="42" onAction="#onProveedores"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
-            <Button fx:id="btnReportes" text="  📊  Reportes" prefWidth="200" prefHeight="44"
-                    onAction="#onReportes" style="-fx-background-color: transparent; -fx-text-fill: white;
-                    -fx-font-size: 13; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+            <Label text="ADMINISTRACIÓN"
+                   style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
+                          -fx-padding: 16 16 4 16; -fx-font-weight: bold;"/>
 
-            <Button fx:id="btnUsuarios" text="  🔐  Usuarios" prefWidth="200" prefHeight="44"
-                    onAction="#onUsuarios" style="-fx-background-color: transparent; -fx-text-fill: white;
-                    -fx-font-size: 13; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+            <Button fx:id="btnReportes" text="  Reportes"
+                    prefWidth="200" prefHeight="42" onAction="#onReportes"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnUsuarios" text="  Usuarios"
+                    prefWidth="200" prefHeight="42" onAction="#onUsuarios"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
         </VBox>
     </left>
 
     <!-- Área de contenido central -->
     <center>
-        <VBox fx:id="contenidoCentral" alignment="CENTER" spacing="12"
-              style="-fx-background-color: #F5F5F5; -fx-padding: 40;">
-            <Text fx:id="txtBienvenidaCentro"
-                  style="-fx-font-size: 22; -fx-font-weight: bold; -fx-fill: #1A237E;"/>
-            <Text text="Seleccione un módulo del menú lateral para comenzar."
-                  style="-fx-font-size: 14; -fx-fill: #757575;"/>
-        </VBox>
+        <AnchorPane fx:id="contenidoCentral"
+                    style="-fx-background-color: #F8FAFF;"/>
     </center>
 
-    <!-- Barra inferior de estado -->
+    <!-- Barra inferior -->
     <bottom>
-        <HBox style="-fx-background-color: #E8EAF6; -fx-padding: 6 16;" alignment="CENTER_LEFT" spacing="16">
-            <Label fx:id="lblEstado" text=""
-                   style="-fx-text-fill: #3949AB; -fx-font-size: 12;"/>
+        <HBox style="-fx-background-color: #EFF6FF; -fx-padding: 6 16;
+                     -fx-border-color: #DBEAFE; -fx-border-width: 1 0 0 0;"
+              alignment="CENTER_LEFT" spacing="16">
+            <Label fx:id="lblEstado" text="Sistema listo"
+                   style="-fx-text-fill: #2563EB; -fx-font-size: 12;"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label text="v1.0.0" style="-fx-text-fill: #9E9E9E; -fx-font-size: 11;"/>
+            <Label text="v1.0.0"
+                   style="-fx-text-fill: #94A3B8; -fx-font-size: 11;"/>
         </HBox>
     </bottom>
 </BorderPane>
