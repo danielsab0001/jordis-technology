@@ -25,8 +25,8 @@ public class ClienteController {
     @FXML private TableView<Cliente> tablaClientes;
     @FXML private TableColumn<Cliente, String> colId;
     @FXML private TableColumn<Cliente, String> colNombre;
-    @FXML private TableColumn<Cliente, String> colApellido;
-    @FXML private TableColumn<Cliente, String> colCedula;
+    @FXML private TableColumn<Cliente, String> colTipo;
+    @FXML private TableColumn<Cliente, String> colIdentificador;
     @FXML private TableColumn<Cliente, String> colTelefono;
     @FXML private TableColumn<Cliente, String> colDireccion;
     @FXML private TableColumn<Cliente, Void>   colAcciones;
@@ -46,11 +46,11 @@ public class ClienteController {
         colId.setCellValueFactory(d ->
                 new SimpleStringProperty(String.valueOf(d.getValue().getIdCliente())));
         colNombre.setCellValueFactory(d ->
-                new SimpleStringProperty(d.getValue().getNombre()));
-        colApellido.setCellValueFactory(d ->
-                new SimpleStringProperty(d.getValue().getApellido()));
-        colCedula.setCellValueFactory(d ->
-                new SimpleStringProperty(d.getValue().getCedulaIdentificacion()));
+                new SimpleStringProperty(d.getValue().getNombreCompleto()));
+        colTipo.setCellValueFactory(d ->
+                new SimpleStringProperty(d.getValue().getTipoCliente()));
+        colIdentificador.setCellValueFactory(d ->
+                new SimpleStringProperty(d.getValue().getIdentificador()));
         colTelefono.setCellValueFactory(d ->
                 new SimpleStringProperty(
                         d.getValue().getTelefono() != null ? d.getValue().getTelefono() : "—"));
@@ -63,17 +63,17 @@ public class ClienteController {
             private final Button btnEliminar = crearBtn("Eliminar", "#DC2626", "#FEF2F2");
             private final HBox box = new HBox(6, btnEditar, btnEliminar);
 
-            {
-                btnEditar.setOnAction(e ->
-                        abrirFormulario(getTableView().getItems().get(getIndex())));
-                btnEliminar.setOnAction(e ->
-                        eliminar(getTableView().getItems().get(getIndex())));
-            }
-
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setGraphic(null);
+                    return;
+                }
+                Cliente cliente = (Cliente) getTableRow().getItem();
+                btnEditar.setOnAction(e -> abrirFormulario(cliente));
+                btnEliminar.setOnAction(e -> eliminar(cliente));
+                setGraphic(box);
             }
         });
     }
@@ -92,10 +92,7 @@ public class ClienteController {
                 FXCollections.observableArrayList(clienteService.obtenerTodos()));
     }
 
-    @FXML
-    public void onNuevoCliente() {
-        abrirFormulario(null);
-    }
+    @FXML public void onNuevoCliente() { abrirFormulario(null); }
 
     @FXML
     public void onBuscar() {
@@ -107,11 +104,7 @@ public class ClienteController {
             resultado = clienteService.buscar(texto);
         }
         tablaClientes.setItems(FXCollections.observableArrayList(resultado));
-        if (resultado.isEmpty()) {
-            mostrarMensaje("No se encontraron clientes.", true);
-        } else {
-            lblMensaje.setText("");
-        }
+        mostrarMensaje(resultado.isEmpty() ? "No se encontraron clientes." : "", resultado.isEmpty());
     }
 
     @FXML
@@ -140,21 +133,19 @@ public class ClienteController {
         try {
             SpringFXMLLoader.LoadResult<ClienteFormController> result =
                     fxmlLoader.loadWithController("/fxml/cliente_form.fxml");
-
             result.controller.setCliente(cliente);
             result.controller.setOnGuardado(() -> {
                 cargarClientes();
                 mostrarMensaje("Cliente guardado correctamente.", false);
             });
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(cliente == null ? "Nuevo Cliente" : "Editar Cliente");
-            stage.setScene(new Scene(result.root, 500, 360));
+            stage.setScene(new Scene(result.root, 520, 420));
             stage.showAndWait();
-
         } catch (Exception e) {
             log.error("Error abriendo formulario de cliente", e);
+            mostrarMensaje("Error al abrir el formulario.", true);
         }
     }
 

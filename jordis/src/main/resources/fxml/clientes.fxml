@@ -22,8 +22,8 @@
 
     <HBox style="-fx-padding: 12 24;" spacing="10" alignment="CENTER_LEFT">
         <TextField fx:id="txtBuscar"
-                   promptText="Buscar por nombre o cédula..."
-                   prefWidth="280" prefHeight="34"
+                   promptText="Buscar por nombre, apellido o cédula..."
+                   prefWidth="300" prefHeight="34"
                    style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
                           -fx-border-radius: 6; -fx-background-radius: 6;
                           -fx-padding: 4 10;"/>
@@ -44,13 +44,13 @@
                    style="-fx-border-color: #DBEAFE; -fx-border-radius: 8;
                           -fx-background-radius: 8; -fx-font-size: 12;">
             <columns>
-                <TableColumn fx:id="colId"       text="ID"       prefWidth="50"/>
-                <TableColumn fx:id="colNombre"   text="Nombre"   prefWidth="120"/>
-                <TableColumn fx:id="colApellido" text="Apellido" prefWidth="120"/>
-                <TableColumn fx:id="colCedula"   text="Cédula"   prefWidth="120"/>
-                <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="110"/>
-                <TableColumn fx:id="colDireccion" text="Dirección" prefWidth="160"/>
-                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
+                <TableColumn fx:id="colId"           text="ID"            prefWidth="50"/>
+                <TableColumn fx:id="colNombre"       text="Nombre"        prefWidth="160"/>
+                <TableColumn fx:id="colTipo"         text="Tipo"          prefWidth="80"/>
+                <TableColumn fx:id="colIdentificador" text="Cédula / RNC" prefWidth="140"/>
+                <TableColumn fx:id="colTelefono"     text="Teléfono"      prefWidth="110"/>
+                <TableColumn fx:id="colDireccion"    text="Dirección"     prefWidth="150"/>
+                <TableColumn fx:id="colAcciones"     text="Acciones"      prefWidth="150"/>
             </columns>
         </TableView>
     </VBox>

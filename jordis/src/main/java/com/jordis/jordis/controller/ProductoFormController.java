@@ -21,10 +21,10 @@ public class ProductoFormController {
     @FXML private TextField txtMarca;
     @FXML private TextField txtModelo;
     @FXML private TextField txtPrecio;
-    @FXML private TextField txtStock;
     @FXML private TextField txtStockMinimo;
     @FXML private TextArea  txtDescripcion;
     @FXML private ComboBox<Categoria> cmbCategoria;
+    @FXML private Label lblPrecioSugerido;
     @FXML private Label lblError;
     @FXML private Button btnGuardar;
 
@@ -36,7 +36,7 @@ public class ProductoFormController {
     @FXML
     public void initialize() {
         cmbCategoria.getItems().addAll(productoService.obtenerCategorias());
-        txtStockMinimo.setText("5");
+        txtStockMinimo.setText("3");
     }
 
     public void setProducto(Producto producto) {
@@ -47,18 +47,28 @@ public class ProductoFormController {
             txtMarca.setText(producto.getMarca() != null ? producto.getMarca() : "");
             txtModelo.setText(producto.getModelo() != null ? producto.getModelo() : "");
             txtPrecio.setText(producto.getPrecioUnitario().toPlainString());
-            txtStock.setText(String.valueOf(producto.getStock()));
             txtStockMinimo.setText(String.valueOf(producto.getStockMinimo()));
-            txtDescripcion.setText(producto.getDescripcion() != null ? producto.getDescripcion() : "");
+            txtDescripcion.setText(
+                    producto.getDescripcion() != null ? producto.getDescripcion() : "");
             cmbCategoria.setValue(producto.getCategoria());
+
+            // Mostrar precio sugerido si existe
+            if (producto.getPrecioSugerido() != null) {
+                lblPrecioSugerido.setText("RD$" +
+                        producto.getPrecioSugerido().toPlainString()
+                        + " (basado en último costo + 30%)");
+            } else if (producto.getUltimoPrecioCompra() != null) {
+                lblPrecioSugerido.setText("—  (aún no hay compras registradas)");
+            } else {
+                lblPrecioSugerido.setText("—");
+            }
         } else {
             txtTitulo.setText("Nuevo Producto");
+            lblPrecioSugerido.setText("—  (disponible tras la primera compra)");
         }
     }
 
-    public void setOnGuardado(Runnable callback) {
-        this.onGuardado = callback;
-    }
+    public void setOnGuardado(Runnable callback) { this.onGuardado = callback; }
 
     @FXML
     public void onGuardar() {
@@ -74,14 +84,12 @@ public class ProductoFormController {
         }
 
         BigDecimal precio;
-        int stock, stockMin;
-
+        int stockMin;
         try {
             precio   = new BigDecimal(txtPrecio.getText().trim());
-            stock    = Integer.parseInt(txtStock.getText().trim());
             stockMin = Integer.parseInt(txtStockMinimo.getText().trim());
         } catch (NumberFormatException e) {
-            lblError.setText("Precio, stock y stock mínimo deben ser números válidos.");
+            lblError.setText("Precio y stock mínimo deben ser números válidos.");
             return;
         }
 
@@ -92,10 +100,13 @@ public class ProductoFormController {
 
         try {
             if (productoEditar == null) {
-                productoService.crear(nombre, desc, precio, stock, stockMin, cat, marca, modelo);
+                productoService.crear(nombre, desc, precio, 0, stockMin, cat, marca, modelo);
             } else {
-                productoService.actualizar(productoEditar.getIdProducto(),
-                        nombre, desc, precio, stock, stockMin, cat, marca, modelo);
+                productoService.actualizar(
+                        productoEditar.getIdProducto(),
+                        nombre, desc, precio,
+                        productoEditar.getStock(), // mantener stock existente
+                        stockMin, cat, marca, modelo);
             }
             if (onGuardado != null) onGuardado.run();
             cerrar();
@@ -104,10 +115,7 @@ public class ProductoFormController {
         }
     }
 
-    @FXML
-    public void onCancelar() {
-        cerrar();
-    }
+    @FXML public void onCancelar() { cerrar(); }
 
     private void cerrar() {
         ((Stage) btnGuardar.getScene().getWindow()).close();

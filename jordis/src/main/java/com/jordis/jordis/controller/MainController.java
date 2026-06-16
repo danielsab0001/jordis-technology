@@ -86,8 +86,8 @@ public class MainController {
             marcarBotonActivo(boton);
             log.debug("Módulo cargado: {}", fxml);
         } catch (Exception e) {
-            lblEstado.setText("Error cargando módulo.");
-            log.error("Error cargando módulo {}: {}", fxml, e.getMessage());
+            lblEstado.setText("");
+            log.error("{}: {}", fxml, e.getMessage());
         }
     }
 
@@ -113,40 +113,14 @@ public class MainController {
 
     // ---- Handlers del menú lateral ----
 
-    @FXML
-    public void onVentas() {
-        cargarModulo("/fxml/ventas.fxml", btnVentas, "Módulo: Ventas");
-    }
-
-    @FXML
-    public void onClientes() {
-        cargarModulo("/fxml/clientes.fxml", btnClientes, "Módulo: Clientes");
-    }
-
-    @FXML
-    public void onProductos() {
-        cargarModulo("/fxml/productos.fxml", btnProductos, "Módulo: Productos");
-    }
-
-    @FXML
-    public void onInventario() {
-        cargarModulo("/fxml/inventario.fxml", btnInventario, "Módulo: Inventario");
-    }
-
-    @FXML
-    public void onProveedores() {
-        cargarModulo("/fxml/proveedores.fxml", btnProveedores, "Módulo: Proveedores");
-    }
-
-    @FXML
-    public void onReportes() {
-        cargarModulo("/fxml/reportes.fxml", btnReportes, "Módulo: Reportes");
-    }
-
-    @FXML
-    public void onUsuarios() {
-        cargarModulo("/fxml/usuarios.fxml", btnUsuarios, "Módulo: Usuarios");
-    }
+    @FXML public void onVentas()      { cargarModulo("/fxml/ventas.fxml",      btnVentas,      "Módulo: Ventas"); }
+    @FXML public void onClientes()    { cargarModulo("/fxml/clientes.fxml",    btnClientes,    "Módulo: Clientes"); }
+    @FXML public void onProductos()   { cargarModulo("/fxml/productos.fxml",   btnProductos,   "Módulo: Productos"); }
+    @FXML public void onInventario()  { cargarModulo("/fxml/inventario.fxml",  btnInventario,  "Módulo: Inventario"); }
+    @FXML public void onProveedores() { cargarModulo("/fxml/proveedores.fxml", btnProveedores, "Módulo: Proveedores"); }
+    @FXML public void onReportes()    { cargarModulo("/fxml/reportes.fxml",    btnReportes,    "Módulo: Reportes"); }
+    @FXML public void onUsuarios()    { cargarModulo("/fxml/usuarios.fxml",    btnUsuarios,    "Módulo: Usuarios"); }
+    @FXML public void onCompras()     { cargarModulo("/fxml/compras.fxml",     null,           "Módulo: Compras"); }
 
     // ---- Cerrar sesión ----
 

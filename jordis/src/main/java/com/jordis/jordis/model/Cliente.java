@@ -19,14 +19,18 @@ public class Cliente {
     @Column(name = "id_cliente")
     private Integer idCliente;
 
+    @Column(name = "tipo_cliente", nullable = false, length = 10)
+    private String tipoCliente = "PERSONA"; // PERSONA o EMPRESA
+
+    // Campos comunes
     @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
 
-    @Column(name = "apellido", nullable = false, length = 100)
-    private String apellido;
+    @Column(name = "apellido", length = 100)
+    private String apellido; // null para empresas
 
-    @Column(name = "cedula_identificacion", nullable = false, unique = true, length = 20)
-    private String cedulaIdentificacion;
+    @Column(name = "cedula_identificacion", unique = true, length = 20)
+    private String cedulaIdentificacion; // null para empresas
 
     @Column(name = "telefono", length = 20)
     private String telefono;
@@ -34,13 +38,33 @@ public class Cliente {
     @Column(name = "direccion", length = 255)
     private String direccion;
 
+    // Campos exclusivos de empresa
+    @Column(name = "rnc", unique = true, length = 20)
+    private String rnc;
+
+    @Column(name = "razon_social", length = 200)
+    private String razonSocial;
+
+    @Column(name = "contacto_principal", length = 100)
+    private String contactoPrincipal;
+
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    public boolean esEmpresa() {
+        return "EMPRESA".equals(tipoCliente);
+    }
+
     public String getNombreCompleto() {
-        return nombre + " " + apellido;
+        if (esEmpresa()) return razonSocial != null ? razonSocial : nombre;
+        return nombre + (apellido != null ? " " + apellido : "");
+    }
+
+    public String getIdentificador() {
+        if (esEmpresa()) return "RNC: " + (rnc != null ? rnc : "—");
+        return "Cédula: " + (cedulaIdentificacion != null ? cedulaIdentificacion : "—");
     }
 }

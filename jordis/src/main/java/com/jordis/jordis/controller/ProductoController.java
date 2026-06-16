@@ -27,10 +27,9 @@ public class ProductoController {
     @FXML private TableColumn<Producto, String> colId;
     @FXML private TableColumn<Producto, String> colNombre;
     @FXML private TableColumn<Producto, String> colMarca;
+    @FXML private TableColumn<Producto, String> colModelo;
     @FXML private TableColumn<Producto, String> colCategoria;
     @FXML private TableColumn<Producto, String> colPrecio;
-    @FXML private TableColumn<Producto, String> colStock;
-    @FXML private TableColumn<Producto, String> colEstado;
     @FXML private TableColumn<Producto, Void>   colAcciones;
     @FXML private TextField txtBuscar;
     @FXML private ComboBox<Categoria> cmbCategoria;
@@ -47,9 +46,15 @@ public class ProductoController {
     }
 
     private void cargarCategorias() {
-        List<Categoria> cats = productoService.obtenerCategorias();
         cmbCategoria.getItems().clear();
-        cmbCategoria.getItems().addAll(cats);
+        cmbCategoria.getItems().add(null);
+        cmbCategoria.getItems().addAll(productoService.obtenerCategorias());
+        cmbCategoria.setConverter(new javafx.util.StringConverter<>() {
+            @Override public String toString(Categoria c) {
+                return c == null ? "Todas las categorías" : c.getNombre();
+            }
+            @Override public Categoria fromString(String s) { return null; }
+        });
     }
 
     private void configurarColumnas() {
@@ -60,6 +65,9 @@ public class ProductoController {
         colMarca.setCellValueFactory(d ->
                 new SimpleStringProperty(
                         d.getValue().getMarca() != null ? d.getValue().getMarca() : "—"));
+        colModelo.setCellValueFactory(d ->
+                new SimpleStringProperty(
+                        d.getValue().getModelo() != null ? d.getValue().getModelo() : "—"));
         colCategoria.setCellValueFactory(d ->
                 new SimpleStringProperty(
                         d.getValue().getCategoria() != null
@@ -67,44 +75,22 @@ public class ProductoController {
         colPrecio.setCellValueFactory(d ->
                 new SimpleStringProperty("RD$" +
                         d.getValue().getPrecioUnitario().toPlainString()));
-        colStock.setCellValueFactory(d ->
-                new SimpleStringProperty(String.valueOf(d.getValue().getStock())));
-
-        colEstado.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow().getItem() == null) {
-                    setGraphic(null); return;
-                }
-                Producto p = (Producto) getTableRow().getItem();
-                Label badge = new Label(p.isStockBajo() ? "Stock bajo" : "Activo");
-                badge.setStyle("-fx-background-color: "
-                        + (p.isStockBajo() ? "#FEF3C7" : "#DCFCE7")
-                        + "; -fx-text-fill: "
-                        + (p.isStockBajo() ? "#B45309" : "#15803D")
-                        + "; -fx-padding: 2 7; -fx-background-radius: 4;"
-                        + " -fx-font-size: 10; -fx-font-weight: bold;");
-                setGraphic(badge);
-            }
-        });
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar   = crearBtn("Editar",   "#2563EB", "#EFF6FF");
             private final Button btnEliminar = crearBtn("Eliminar", "#DC2626", "#FEF2F2");
             private final HBox box = new HBox(6, btnEditar, btnEliminar);
 
-            {
-                btnEditar.setOnAction(e ->
-                        abrirFormulario(getTableView().getItems().get(getIndex())));
-                btnEliminar.setOnAction(e ->
-                        eliminar(getTableView().getItems().get(getIndex())));
-            }
-
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                    setGraphic(null); return;
+                }
+                Producto p = (Producto) getTableRow().getItem();
+                btnEditar.setOnAction(e -> abrirFormulario(p));
+                btnEliminar.setOnAction(e -> eliminar(p));
+                setGraphic(box);
             }
         });
     }
@@ -123,17 +109,13 @@ public class ProductoController {
                 FXCollections.observableArrayList(productoService.obtenerTodos()));
     }
 
-    @FXML
-    public void onNuevoProducto() {
-        abrirFormulario(null);
-    }
+    @FXML public void onNuevoProducto() { abrirFormulario(null); }
 
     @FXML
     public void onBuscar() {
         String texto     = txtBuscar.getText().trim();
         Categoria catSel = cmbCategoria.getValue();
         List<Producto> resultado;
-
         if (catSel != null) {
             resultado = productoService.obtenerPorCategoria(catSel.getIdCategoria());
         } else {
@@ -149,13 +131,6 @@ public class ProductoController {
         txtBuscar.clear();
         cmbCategoria.setValue(null);
         lblMensaje.setText("");
-    }
-
-    @FXML
-    public void onVerStockBajo() {
-        List<Producto> bajos = productoService.obtenerStockBajo();
-        tablaProductos.setItems(FXCollections.observableArrayList(bajos));
-        mostrarMensaje(bajos.size() + " producto(s) con stock bajo.", bajos.isEmpty());
     }
 
     private void eliminar(Producto producto) {
@@ -178,21 +153,19 @@ public class ProductoController {
         try {
             SpringFXMLLoader.LoadResult<ProductoFormController> result =
                     fxmlLoader.loadWithController("/fxml/producto_form.fxml");
-
             result.controller.setProducto(producto);
             result.controller.setOnGuardado(() -> {
                 cargarProductos();
                 mostrarMensaje("Producto guardado correctamente.", false);
             });
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(producto == null ? "Nuevo Producto" : "Editar Producto");
-            stage.setScene(new Scene(result.root, 500, 480));
+            stage.setScene(new Scene(result.root, 500, 440));
             stage.showAndWait();
-
         } catch (Exception e) {
             log.error("Error abriendo formulario de producto", e);
+            mostrarMensaje("Error al abrir formulario.", true);
         }
     }
 

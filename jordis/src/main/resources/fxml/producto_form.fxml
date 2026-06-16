@@ -41,25 +41,32 @@
         </VBox>
     </HBox>
 
+    <!-- Solo precio — el stock lo gestiona inventario -->
     <HBox spacing="12">
         <VBox spacing="4" HBox.hgrow="ALWAYS">
-            <Label text="Precio unitario (RD$)" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <Label text="Precio de venta (RD$)"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
             <TextField fx:id="txtPrecio" promptText="Ej: 55000.00" prefHeight="34"
                        style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
                               -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
         </VBox>
         <VBox spacing="4" HBox.hgrow="ALWAYS">
-            <Label text="Stock actual" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
-            <TextField fx:id="txtStock" promptText="Ej: 10" prefHeight="34"
-                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
-                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
-        </VBox>
-        <VBox spacing="4" HBox.hgrow="ALWAYS">
-            <Label text="Stock mínimo" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <Label text="Stock mínimo (alerta)"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
             <TextField fx:id="txtStockMinimo" promptText="Ej: 3" prefHeight="34"
                        style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
                               -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
         </VBox>
+    </HBox>
+
+    <!-- Precio sugerido (solo lectura, informativo) -->
+    <HBox spacing="8" alignment="CENTER_LEFT"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 8 12;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label text="💡 Precio sugerido basado en última compra:"
+               style="-fx-font-size: 12; -fx-text-fill: #1E40AF;"/>
+        <Label fx:id="lblPrecioSugerido" text="—"
+               style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #2563EB;"/>
     </HBox>
 
     <VBox spacing="4">

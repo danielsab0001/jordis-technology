@@ -26,14 +26,22 @@ public class SpringFXMLLoader {
         FXMLLoader loader = createLoader(fxmlPath);
         Parent root = loader.load();
         C controller = loader.getController();
+        if (controller == null) {
+            throw new IOException(
+                    "El controller es null para: " + fxmlPath
+                            + ". Verifica que el fx:controller esté correcto en el FXML.");
+        }
         return new LoadResult<>(root, controller);
     }
 
     private FXMLLoader createLoader(String fxmlPath) throws IOException {
+        URL url = getClass().getResource(fxmlPath);
+        if (url == null) {
+            throw new IOException("FXML no encontrado en classpath: " + fxmlPath
+                    + ". Verifica que el archivo exista en src/main/resources" + fxmlPath);
+        }
         FXMLLoader loader = new FXMLLoader();
         loader.setControllerFactory(context::getBean);
-        URL url = getClass().getResource(fxmlPath);
-        if (url == null) throw new IOException("FXML no encontrado: " + fxmlPath);
         loader.setLocation(url);
         return loader;
     }
@@ -41,7 +49,6 @@ public class SpringFXMLLoader {
     public static class LoadResult<C> {
         public final Parent root;
         public final C controller;
-
         public LoadResult(Parent root, C controller) {
             this.root = root;
             this.controller = controller;

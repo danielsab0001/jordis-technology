@@ -27,4 +27,10 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
 
     @Query("SELECT COUNT(c) > 0 FROM Cliente c WHERE c.cedulaIdentificacion = :cedula AND c.idCliente <> :id")
     boolean existeCedulaEnOtro(String cedula, Integer id);
+
+    @Query("SELECT COUNT(c) > 0 FROM Cliente c WHERE c.rnc = :rnc")
+    boolean existeRnc(String rnc);
+
+    @Query("SELECT COUNT(c) > 0 FROM Cliente c WHERE c.rnc = :rnc AND c.idCliente <> :id")
+    boolean existeRncEnOtro(String rnc, Integer id);
 }

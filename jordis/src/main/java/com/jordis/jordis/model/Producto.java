@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
@@ -35,6 +36,14 @@ public class Producto {
     @Column(name = "stock_minimo", nullable = false)
     private Integer stockMinimo = 5;
 
+    // Nuevo: último precio al que se compró
+    @Column(name = "ultimo_precio_compra", precision = 12, scale = 2)
+    private BigDecimal ultimoPrecioCompra;
+
+    // Nuevo: precio sugerido de venta (calculado)
+    @Column(name = "precio_sugerido", precision = 12, scale = 2)
+    private BigDecimal precioSugerido;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_categoria")
     private Categoria categoria;
@@ -53,5 +62,15 @@ public class Producto {
 
     public boolean isStockBajo() {
         return stock <= stockMinimo;
+    }
+
+    // Calcula y actualiza el precio sugerido con el margen dado
+    // Ej: margen 1.30 = 30% sobre el costo
+    public void calcularPrecioSugerido(BigDecimal margen) {
+        if (ultimoPrecioCompra != null && margen != null) {
+            this.precioSugerido = ultimoPrecioCompra
+                    .multiply(margen)
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
     }
 }

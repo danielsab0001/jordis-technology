@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.Separator?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.VentaFormController"
+      spacing="12" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text text="Nueva Venta"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <!-- Cliente y método de pago -->
+    <HBox spacing="12">
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Cliente (opcional)"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <ComboBox fx:id="cmbCliente" prefWidth="260" prefHeight="34"
+                      promptText="Sin cliente / Ocasional"
+                      style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                             -fx-border-radius: 6; -fx-background-radius: 6;"/>
+        </VBox>
+        <VBox spacing="4">
+            <Label text="Método de pago"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <ComboBox fx:id="cmbMetodoPago" prefWidth="160" prefHeight="34"
+                      style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                             -fx-border-radius: 6; -fx-background-radius: 6;"/>
+        </VBox>
+    </HBox>
+
+    <!-- Agregar producto a la venta -->
+    <HBox spacing="10" alignment="BOTTOM_LEFT">
+        <VBox spacing="4">
+            <Label text="Producto"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <ComboBox fx:id="cmbProducto" prefWidth="240" prefHeight="34"
+                      style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                             -fx-border-radius: 6; -fx-background-radius: 6;"/>
+        </VBox>
+        <VBox spacing="4">
+            <Label text="Cantidad"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtCantidad" promptText="1" prefWidth="80"
+                       prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+        </VBox>
+        <Button text="+ Agregar" onAction="#onAgregarProducto"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 8 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <!-- Tabla de productos en la venta -->
+    <TableView fx:id="tablaDetalle" prefHeight="180"
+               style="-fx-border-color: #DBEAFE; -fx-border-radius: 6;
+                      -fx-font-size: 12;">
+        <columns>
+            <TableColumn fx:id="colProducto" text="Producto"     prefWidth="210"/>
+            <TableColumn fx:id="colCantidad" text="Cant."        prefWidth="60"/>
+            <TableColumn fx:id="colPrecio"   text="Precio unit." prefWidth="120"/>
+            <TableColumn fx:id="colSubtotal" text="Subtotal"     prefWidth="120"/>
+            <TableColumn fx:id="colQuitar"   text=""             prefWidth="70"/>
+        </columns>
+    </TableView>
+
+    <!-- Descuento y totales -->
+    <HBox spacing="20" alignment="CENTER_RIGHT">
+        <VBox spacing="4" alignment="CENTER_RIGHT">
+            <Label text="Descuento"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <ComboBox fx:id="cmbDescuento" prefWidth="150" prefHeight="32"
+                      style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                             -fx-border-radius: 6; -fx-background-radius: 6;"/>
+        </VBox>
+        <VBox spacing="4" alignment="CENTER_RIGHT">
+            <Label text=""
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtDescuentoManual" promptText="0.00"
+                       prefWidth="80" prefHeight="32"
+                       style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 8;"/>
+        </VBox>
+
+        <!-- Desglose de totales -->
+        <VBox spacing="4" alignment="CENTER_RIGHT"
+              style="-fx-background-color: #F8FAFF; -fx-padding: 10 14;
+                 -fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                 -fx-background-radius: 8;">
+            <HBox spacing="20" alignment="CENTER_RIGHT">
+                <Label text="Subtotal:"
+                       style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                <Label fx:id="lblSubtotal" text="RD$0.00"
+                       style="-fx-font-size: 13; -fx-text-fill: #0F172A; -fx-min-width: 110;
+                          -fx-alignment: CENTER_RIGHT;"/>
+            </HBox>
+            <HBox spacing="20" alignment="CENTER_RIGHT">
+                <Label fx:id="lblDescuentoLabel" text="Descuento (0%):"
+                       style="-fx-font-size: 12; -fx-text-fill: #DC2626;"/>
+                <Label fx:id="lblDescuentoMonto" text="—"
+                       style="-fx-font-size: 13; -fx-text-fill: #DC2626; -fx-min-width: 110;
+                          -fx-alignment: CENTER_RIGHT;"/>
+            </HBox>
+            <Separator style="-fx-background-color: #DBEAFE;"/>
+            <HBox spacing="20" alignment="CENTER_RIGHT">
+                <Label text="TOTAL:"
+                       style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #1E40AF;"/>
+                <Label fx:id="lblTotal" text="RD$0.00"
+                       style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #2563EB;
+                          -fx-min-width: 110; -fx-alignment: CENTER_RIGHT;"/>
+            </HBox>
+        </VBox>
+    </HBox>
+
+
+    <Label fx:id="lblError" text="" wrapText="true"
+           style="-fx-text-fill: #DC2626; -fx-font-size: 12;"/>
+
+    <HBox spacing="10">
+        <Button fx:id="btnGuardar" text="Registrar venta" onAction="#onGuardar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 13; -fx-background-radius: 6;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+        <Button text="Cancelar" onAction="#onCancelar"
+                style="-fx-background-color: transparent; -fx-text-fill: #2563EB;
+                       -fx-border-color: #2563EB; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>
