@@ -14,6 +14,17 @@
         <Text text="Inventario"
               style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
         <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Margen %:"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtMargen" text="30" prefWidth="60" prefHeight="32"
+                   style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                  -fx-border-radius: 6; -fx-background-radius: 6;
+                  -fx-padding: 4 8;"/>
+        <Button text="Aplicar" onAction="#onAplicarMargen"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+               -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+               -fx-background-radius: 6; -fx-font-size: 12;
+               -fx-padding: 6 10; -fx-cursor: hand;"/>
         <Button text="⚠ Stock bajo" onAction="#onVerStockBajo"
                 style="-fx-background-color: #FEF3C7; -fx-text-fill: #B45309;
                        -fx-border-color: #FDE68A; -fx-border-radius: 6;
@@ -85,6 +96,7 @@
                 <TableColumn fx:id="colPrecioVenta" text="Precio venta"   prefWidth="105"/>
                 <TableColumn fx:id="colPrecioComp"  text="Último costo"   prefWidth="105"/>
                 <TableColumn fx:id="colPrecioSug"   text="Precio sug."   prefWidth="110"/>
+                <TableColumn fx:id="colMargen" text="Margen %" prefWidth="90"/>
             </columns>
         </TableView>
     </VBox>

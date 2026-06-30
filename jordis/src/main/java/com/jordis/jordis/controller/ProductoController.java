@@ -161,7 +161,7 @@ public class ProductoController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(producto == null ? "Nuevo Producto" : "Editar Producto");
-            stage.setScene(new Scene(result.root, 500, 440));
+            stage.setScene(new Scene(result.root, 500, 460));
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de producto", e);

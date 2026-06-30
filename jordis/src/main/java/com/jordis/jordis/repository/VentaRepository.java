@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Integer> {
@@ -18,10 +19,23 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
             "v.fechaHora BETWEEN :desde AND :hasta ORDER BY v.fechaHora DESC")
     List<Venta> findEntreFechas(LocalDateTime desde, LocalDateTime hasta);
 
-    // Para el algoritmo de recomendación: ventas de un producto en los últimos N días
+    @Query("SELECT v FROM Venta v WHERE v.anulada = false AND v.esCredito = true " +
+            "ORDER BY v.fechaHora DESC")
+    List<Venta> findCreditos();
+
+    @Query("SELECT v FROM Venta v WHERE v.anulada = false AND " +
+            "v.cliente.idCliente = :idCliente ORDER BY v.fechaHora DESC")
+    List<Venta> findByCliente(Integer idCliente);
+
+    @Query("SELECT v FROM Venta v WHERE v.numeroFactura = :numero")
+    Optional<Venta> findByNumeroFactura(String numero);
+
     @Query("SELECT COALESCE(SUM(vp.cantidad), 0) FROM VentaProducto vp " +
             "WHERE vp.producto.idProducto = :idProducto " +
-            "AND vp.venta.anulada = false " +
-            "AND vp.venta.fechaHora >= :desde")
+            "AND vp.venta.anulada = false AND vp.venta.fechaHora >= :desde")
     Integer totalVendidoDesde(Integer idProducto, LocalDateTime desde);
+
+    @Query("SELECT v FROM Venta v WHERE v.anulada = false AND " +
+            "v.cajero.idUsuario = :idCajero ORDER BY v.fechaHora DESC")
+    List<Venta> findByCajero(Integer idCajero);
 }

@@ -13,6 +13,7 @@ public class JordisApplication extends Application {
 
     @Override
     public void init() {
+        System.setProperty("java.awt.headless", "false");
         springContext = SpringApplication.run(JordisApp.class);
     }
 

@@ -35,7 +35,7 @@
         </VBox>
         <VBox spacing="4" HBox.hgrow="ALWAYS">
             <Label text="Modelo" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
-            <TextField fx:id="txtModelo" promptText="Ej: A3090" prefHeight="34"
+            <TextField fx:id="txtModelo" promptText="Ej: A3090" prefWidth="220" prefHeight="34"
                        style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
                               -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
         </VBox>

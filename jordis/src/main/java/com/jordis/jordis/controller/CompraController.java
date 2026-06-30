@@ -93,8 +93,9 @@ public class CompraController {
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnRecibir  = btn("Recibir",  "#15803D", "#DCFCE7");
+            private final Button btnEditar   = btn("Editar",   "#2563EB", "#EFF6FF");
             private final Button btnCancelar = btn("Cancelar", "#DC2626", "#FEE2E2");
-            private final HBox box = new HBox(6, btnRecibir, btnCancelar);
+            private final HBox box = new HBox(5, btnRecibir, btnEditar, btnCancelar);
 
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -103,13 +104,23 @@ public class CompraController {
                     setGraphic(null); return;
                 }
                 Compra c = (Compra) getTableRow().getItem();
-                boolean pendiente = "PENDIENTE".equals(c.getEstado());
+                boolean pendiente  = "PENDIENTE".equals(c.getEstado());
+                boolean cancelada  = "CANCELADA".equals(c.getEstado());
+
                 btnRecibir.setOnAction(e -> recibirCompra(c));
+                btnEditar.setOnAction(e -> abrirEdicion(c));
                 btnCancelar.setOnAction(e -> cancelarCompra(c));
+
+                // Recibir y Cancelar solo para pendientes
                 btnRecibir.setVisible(pendiente);
                 btnRecibir.setManaged(pendiente);
                 btnCancelar.setVisible(pendiente);
                 btnCancelar.setManaged(pendiente);
+
+                // Editar disponible para pendientes y recibidas, no para canceladas
+                btnEditar.setVisible(!cancelada);
+                btnEditar.setManaged(!cancelada);
+
                 setGraphic(box);
             }
         });
@@ -122,6 +133,26 @@ public class CompraController {
                 + "; -fx-border-radius: 4; -fx-background-radius: 4;"
                 + " -fx-font-size: 10; -fx-padding: 3 8; -fx-cursor: hand;");
         return b;
+    }
+
+    private void abrirEdicion(Compra compra) {
+        try {
+            SpringFXMLLoader.LoadResult<CompraEdicionFormController> result =
+                    fxmlLoader.loadWithController("/fxml/compra_edicion_form.fxml");
+            result.controller.setCompra(compra);
+            result.controller.setOnGuardado(() -> {
+                cargarCompras();
+                mostrarMensaje("Compra actualizada correctamente.", false);
+            });
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Editar Compra #" + compra.getIdCompra());
+            stage.setScene(new Scene(result.root, 680, 520));
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo edición de compra", e);
+            mostrarMensaje("Error al abrir: " + e.getMessage(), true);
+        }
     }
 
     private void cargarCompras() {

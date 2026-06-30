@@ -18,6 +18,7 @@ public class AutenticacionService {
 
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final AlertaService alertaService;
 
     private static final int MAX_INTENTOS = 3;
 
@@ -70,6 +71,7 @@ public class AutenticacionService {
                 // Bloquear en transacción propia para que no haga rollback
                 bloquearUsuario(usuario.getIdUsuario());
                 log.warn("Usuario '{}' bloqueado tras {} intentos", nombre, nuevoIntentos);
+                alertaService.alertaUsuarioBloqueado(usuario);
                 throw new UsuarioBloqueadoException(
                         "Esta cuenta ha sido bloqueada por precaución debido a varios " +
                                 "intentos fallidos de contraseña. Comuníquese con el administrador."

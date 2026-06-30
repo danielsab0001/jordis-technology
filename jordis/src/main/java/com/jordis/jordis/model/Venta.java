@@ -22,19 +22,22 @@ public class Venta {
     @Column(name = "id_venta")
     private Integer idVenta;
 
+    @Column(name = "numero_factura", length = 20)
+    private String numeroFactura;
+
     @Column(name = "fecha_hora", nullable = false)
     private LocalDateTime fechaHora = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_cliente")
-    private Cliente cliente; // puede ser null (venta sin cliente registrado)
+    private Cliente cliente;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_cajero", nullable = false)
     private Usuario cajero;
 
     @Column(name = "metodo_pago", nullable = false, length = 20)
-    private String metodoPago; // EFECTIVO, TARJETA, TRANSFERENCIA
+    private String metodoPago;
 
     @Column(name = "descuento_porcentual", nullable = false, precision = 5, scale = 2)
     private BigDecimal descuentoPorcentual = BigDecimal.ZERO;
@@ -45,6 +48,15 @@ public class Venta {
     @Column(name = "total", nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
 
+    @Column(name = "es_credito", nullable = false)
+    private Boolean esCredito = false;
+
+    @Column(name = "fecha_limite_credito")
+    private LocalDateTime fechaLimiteCredito;
+
+    @Column(name = "notas", columnDefinition = "TEXT")
+    private String notas;
+
     @Column(name = "anulada", nullable = false)
     private Boolean anulada = false;
 
@@ -53,4 +65,25 @@ public class Venta {
 
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<VentaProducto> detalles = new ArrayList<>();
+
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<VentaGarantia> garantias = new ArrayList<>();
+
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<CreditoPago> pagos = new ArrayList<>();
+
+    // Calcula cuánto se ha pagado del crédito
+    public BigDecimal getTotalPagado() {
+        return pagos.stream()
+                .map(CreditoPago::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getSaldoPendiente() {
+        return total.subtract(getTotalPagado());
+    }
+
+    public boolean estaCancelado() {
+        return getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0;
+    }
 }

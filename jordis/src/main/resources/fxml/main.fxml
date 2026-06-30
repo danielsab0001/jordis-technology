@@ -14,8 +14,7 @@
             <Text text="Jordis"
                   style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: white;"/>
             <Text text="Technology"
-                  style="-fx-font-size: 11; -fx-fill: #BFDBFE;
-                         -fx-translate-y: 3;"/>
+                  style="-fx-font-size: 11; -fx-fill: #BFDBFE; -fx-translate-y: 3;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="lblBienvenida"
                    style="-fx-text-fill: #BFDBFE; -fx-font-size: 13;"/>
@@ -24,74 +23,98 @@
                           -fx-background-color: rgba(255,255,255,0.2);
                           -fx-padding: 3 10; -fx-background-radius: 10;"/>
             <Button text="Cerrar sesión" onAction="#onCerrarSesion"
-                    style="-fx-background-color: transparent;
-                           -fx-text-fill: #FCA5A5;
-                           -fx-border-color: #FCA5A5;
-                           -fx-border-radius: 4; -fx-background-radius: 4;
-                           -fx-cursor: hand; -fx-font-size: 12;
-                           -fx-padding: 4 12;"/>
+                    style="-fx-background-color: transparent; -fx-text-fill: #FCA5A5;
+                           -fx-border-color: #FCA5A5; -fx-border-radius: 4;
+                           -fx-background-radius: 4; -fx-cursor: hand;
+                           -fx-font-size: 12; -fx-padding: 4 12;"/>
         </HBox>
     </top>
 
     <!-- Menú lateral -->
     <left>
         <VBox style="-fx-background-color: #1D4ED8; -fx-padding: 12 0;"
-              spacing="2" prefWidth="200">
+              spacing="2" prefWidth="210">
 
             <Label text="MÓDULOS"
                    style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
                           -fx-padding: 8 16 4 16; -fx-font-weight: bold;"/>
 
             <Button fx:id="btnVentas" text="  Ventas"
-                    prefWidth="200" prefHeight="42" onAction="#onVentas"
+                    prefWidth="210" prefHeight="42" onAction="#onVentas"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
             <Button fx:id="btnClientes" text="  Clientes"
-                    prefWidth="200" prefHeight="42" onAction="#onClientes"
+                    prefWidth="210" prefHeight="42" onAction="#onClientes"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
             <Button fx:id="btnProductos" text="  Productos"
-                    prefWidth="200" prefHeight="42" onAction="#onProductos"
+                    prefWidth="210" prefHeight="42" onAction="#onProductos"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
             <Button fx:id="btnInventario" text="  Inventario"
-                    prefWidth="200" prefHeight="42" onAction="#onInventario"
+                    prefWidth="210" prefHeight="42" onAction="#onInventario"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnCompras" text="  Compras"
+                    prefWidth="210" prefHeight="42" onAction="#onCompras"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
             <Button fx:id="btnProveedores" text="  Proveedores"
-                    prefWidth="200" prefHeight="42" onAction="#onProveedores"
+                    prefWidth="210" prefHeight="42" onAction="#onProveedores"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
-            <Button text="  Compras" prefWidth="200" prefHeight="42" onAction="#onCompras"
+            <Button fx:id="btnCreditos" text="  Créditos"
+                    prefWidth="210" prefHeight="42" onAction="#onCreditos"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
-            <Label text="ADMINISTRACIÓN"
+            <!-- Sección solo visible para administradores -->
+            <Label fx:id="lblSeccionAdmin" text="ADMINISTRACIÓN"
                    style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
                           -fx-padding: 16 16 4 16; -fx-font-weight: bold;"/>
 
             <Button fx:id="btnReportes" text="  Reportes"
-                    prefWidth="200" prefHeight="42" onAction="#onReportes"
+                    prefWidth="210" prefHeight="42" onAction="#onReportes"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
             <Button fx:id="btnUsuarios" text="  Usuarios"
-                    prefWidth="200" prefHeight="42" onAction="#onUsuarios"
+                    prefWidth="210" prefHeight="42" onAction="#onUsuarios"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <!-- Alertas con contador — solo admin -->
+            <!-- Alertas con contador superpuesto -->
+            <StackPane prefWidth="210" prefHeight="42">
+                <Button fx:id="btnAlertas" text="  Alertas"
+                        prefWidth="210" prefHeight="42" onAction="#onAlertas"
+                        style="-fx-background-color: transparent; -fx-text-fill: white;
+                   -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                   -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+                <Label fx:id="lblAlertaContador" text="0"
+                       StackPane.alignment="CENTER_RIGHT"
+                       style="-fx-background-color: #DC2626; -fx-text-fill: white;
+                  -fx-padding: 1 7; -fx-background-radius: 10;
+                  -fx-font-size: 11; -fx-font-weight: bold;
+                  -fx-translate-x: -14;"
+                       visible="false" mouseTransparent="true"/>
+            </StackPane>
+
         </VBox>
     </left>
 

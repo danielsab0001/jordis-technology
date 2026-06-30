@@ -1,6 +1,7 @@
 package com.jordis.jordis.service;
 
 import com.jordis.jordis.model.*;
+import com.jordis.jordis.repository.CompraEdicionRepository;
 import com.jordis.jordis.repository.CompraRepository;
 import com.jordis.jordis.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ public class CompraService {
     private final CompraRepository compraRepository;
     private final ProductoRepository productoRepository;
     private final ProveedorService proveedorService;
+    private final AlertaService alertaService;
+    private final CompraEdicionRepository edicionRepository;
 
     // Margen de ganancia por defecto: 30%
     private static final BigDecimal MARGEN_DEFAULT = new BigDecimal("1.30");
@@ -40,16 +43,16 @@ public class CompraService {
      */
     @Transactional
     public Compra registrarCompra(Integer idProveedor, Integer idUsuario,
-                                  Map<Integer, BigDecimal[]> detalles) {
-
+                                  Map<Integer, BigDecimal[]> detalles,
+                                  String descripcion) {
         Proveedor proveedor = proveedorService.obtenerPorId(idProveedor);
 
         Compra compra = new Compra();
         compra.setProveedor(proveedor);
         compra.setFechaPedido(LocalDateTime.now());
         compra.setEstado("PENDIENTE");
+        compra.setDescripcion(descripcion); // ← línea nueva
 
-        // Usar un usuario placeholder — se inyecta desde el controller
         Usuario usuario = new Usuario();
         usuario.setIdUsuario(idUsuario);
         compra.setUsuario(usuario);
@@ -57,12 +60,13 @@ public class CompraService {
         BigDecimal total = BigDecimal.ZERO;
 
         for (Map.Entry<Integer, BigDecimal[]> entry : detalles.entrySet()) {
-            Integer idProducto   = entry.getKey();
-            Integer cantidad     = entry.getValue()[0].intValue();
-            BigDecimal costo     = entry.getValue()[1];
+            Integer idProducto = entry.getKey();
+            Integer cantidad   = entry.getValue()[0].intValue();
+            BigDecimal costo   = entry.getValue()[1];
 
             Producto producto = productoRepository.findById(idProducto)
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + idProducto));
+                    .orElseThrow(() -> new RuntimeException(
+                            "Producto no encontrado: " + idProducto));
 
             CompraProducto detalle = new CompraProducto();
             detalle.setCompra(compra);
@@ -71,13 +75,13 @@ public class CompraService {
             detalle.setCostoUnitario(costo);
             detalle.setSubtotal(costo.multiply(BigDecimal.valueOf(cantidad)));
             compra.getDetalles().add(detalle);
-
             total = total.add(detalle.getSubtotal());
         }
 
         compra.setTotalCompra(total);
         Compra guardada = compraRepository.save(compra);
-        log.info("Compra #{} registrada — PENDIENTE — Total: {}", guardada.getIdCompra(), total);
+        log.info("Compra #{} registrada — PENDIENTE — Total: {}",
+                guardada.getIdCompra(), total);
         return guardada;
     }
 
@@ -108,6 +112,12 @@ public class CompraService {
             // Calcular precio sugerido con margen del 30%
             producto.calcularPrecioSugerido(MARGEN_DEFAULT);
 
+            // Generar alerta si el precio cambió mucho
+            alertaService.alertaPrecioCompraInusual(
+                    producto,
+                    producto.getUltimoPrecioCompra(), // precio anterior
+                    detalle.getCostoUnitario());       // precio nuevo
+
             productoRepository.save(producto);
             log.info("Stock actualizado — Producto: {} | Nuevo stock: {} | Precio sugerido: {}",
                     producto.getNombre(), producto.getStock(), producto.getPrecioSugerido());
@@ -130,5 +140,52 @@ public class CompraService {
         compra.setEstado("CANCELADA");
         compraRepository.save(compra);
         log.info("Compra #{} cancelada", idCompra);
+    }
+
+    @Transactional
+    public void editarCompra(Integer idCompra, Map<Integer, Integer> cantidadesRecibidas,
+                             String motivo, boolean notaCredito, Integer idUsuario) {
+
+        Compra compra = compraRepository.findById(idCompra)
+                .orElseThrow(() -> new RuntimeException("Compra no encontrada: " + idCompra));
+
+        StringBuilder cambios = new StringBuilder();
+
+        for (CompraProducto detalle : compra.getDetalles()) {
+            Integer idProducto = detalle.getProducto().getIdProducto();
+            Integer cantRecibida = cantidadesRecibidas.getOrDefault(
+                    idProducto, detalle.getCantidad());
+
+            if (!cantRecibida.equals(detalle.getCantidad())) {
+                cambios.append(String.format("%s: pedido %d → recibido %d. ",
+                        detalle.getProducto().getNombre(),
+                        detalle.getCantidad(),
+                        cantRecibida));
+                detalle.setCantidad(cantRecibida);
+                detalle.setSubtotal(
+                        detalle.getCostoUnitario()
+                                .multiply(java.math.BigDecimal.valueOf(cantRecibida)));
+            }
+        }
+
+        // Recalcular total
+        java.math.BigDecimal nuevoTotal = compra.getDetalles().stream()
+                .map(CompraProducto::getSubtotal)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        compra.setTotalCompra(nuevoTotal);
+        compraRepository.save(compra);
+
+        // Registrar la edición
+        CompraEdicion edicion = new CompraEdicion();
+        edicion.setCompra(compra);
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(idUsuario);
+        edicion.setUsuario(usuario);
+        edicion.setMotivo(motivo);
+        edicion.setCambios(cambios.length() > 0 ? cambios.toString() : "Sin cambios en cantidades.");
+        edicion.setNotaCredito(notaCredito);
+        edicionRepository.save(edicion);
+
+        log.info("Compra #{} editada. Cambios: {}", idCompra, cambios);
     }
 }

@@ -49,6 +49,7 @@
                 <TableColumn fx:id="colTipo"         text="Tipo"          prefWidth="80"/>
                 <TableColumn fx:id="colIdentificador" text="Cédula / RNC" prefWidth="140"/>
                 <TableColumn fx:id="colTelefono"     text="Teléfono"      prefWidth="110"/>
+                <TableColumn fx:id="colContacto"      text="Contacto principal" prefWidth="140"/>
                 <TableColumn fx:id="colDireccion"    text="Dirección"     prefWidth="150"/>
                 <TableColumn fx:id="colAcciones"     text="Acciones"      prefWidth="150"/>
             </columns>

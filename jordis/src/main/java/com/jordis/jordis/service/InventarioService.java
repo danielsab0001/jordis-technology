@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,6 +35,12 @@ public class InventarioService {
 
     public List<Producto> obtenerStockBajo() {
         return productoRepository.findProductosStockBajo();
+    }
+
+    public Producto obtenerProductoPorId(Integer idProducto) {
+        return productoRepository.findById(idProducto)
+                .orElseThrow(() -> new RuntimeException(
+                        "Producto no encontrado: " + idProducto));
     }
 
     /**
@@ -86,5 +93,29 @@ public class InventarioService {
 
         log.info("Ajuste inventario — Producto: {} | Cantidad: {} | Nuevo stock: {} | Motivo: {}",
                 producto.getNombre(), cantidad, nuevoStock, motivo);
+    }
+
+    @Transactional
+    public void actualizarPreciosSugeridos(BigDecimal factor) {
+        List<Producto> productos = productoRepository.findByActivoTrue();
+        for (Producto p : productos) {
+            if (p.getUltimoPrecioCompra() != null) {
+                p.calcularPrecioSugerido(factor);
+                productoRepository.save(p);
+            }
+        }
+        log.info("Precios sugeridos actualizados con factor {}", factor);
+    }
+
+    @Transactional
+    public void actualizarPrecioSugeridoProducto(Integer idProducto, BigDecimal factor) {
+        productoRepository.findById(idProducto).ifPresent(p -> {
+            if (p.getUltimoPrecioCompra() != null) {
+                p.calcularPrecioSugerido(factor);
+                productoRepository.save(p);
+                log.info("Precio sugerido de '{}' actualizado con factor {}",
+                        p.getNombre(), factor);
+            }
+        });
     }
 }

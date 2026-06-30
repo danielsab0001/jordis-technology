@@ -1,8 +1,7 @@
 package com.jordis.jordis.service;
 
 import com.jordis.jordis.model.*;
-import com.jordis.jordis.repository.ProductoRepository;
-import com.jordis.jordis.repository.VentaRepository;
+import com.jordis.jordis.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,42 +18,101 @@ import java.util.Map;
 @Slf4j
 public class VentaService {
 
-    private final VentaRepository ventaRepository;
-    private final ProductoRepository productoRepository;
+    private final VentaRepository        ventaRepository;
+    private final ProductoRepository     productoRepository;
+    private final CreditoPagoRepository  creditoPagoRepository;
+    private final ClienteRepository      clienteRepository;
+    private final AlertaService alertaService;
 
     public List<Venta> obtenerTodas() {
         return ventaRepository.findActivas();
     }
 
+    public List<Venta> obtenerCreditos() {
+        return ventaRepository.findCreditos();
+    }
+
+    public List<Venta> filtrarEntreFechas(LocalDateTime desde, LocalDateTime hasta) {
+        return ventaRepository.findEntreFechas(desde, hasta);
+    }
+
+    public List<Venta> filtrarPorCliente(Integer idCliente) {
+        return ventaRepository.findByCliente(idCliente);
+    }
+
+    public List<Venta> filtrarPorCajero(Integer idCajero) {
+        return ventaRepository.findByCajero(idCajero);
+    }
+
+    public Venta obtenerPorId(Integer idVenta) {
+        return ventaRepository.findById(idVenta)
+                .orElseThrow(() -> new RuntimeException("Venta no encontrada: " + idVenta));
+    }
+
     /**
-     * Registra una venta completa.
-     * @param idCliente puede ser null (cliente ocasional sin registro)
-     * @param cajero usuario que realiza la venta
-     * @param metodoPago EFECTIVO, TARJETA o TRANSFERENCIA
-     * @param descuentoPorcentual 0 a 100
-     * @param items Map<idProducto, cantidad>
+     * Registra una venta completa con garantías y soporte de crédito.
+     *
+     * @param idCliente            null = cliente ocasional
+     * @param cajero               usuario que realiza la venta
+     * @param metodoPago           EFECTIVO, TARJETA, TRANSFERENCIA, CREDITO
+     * @param descuentoPorcentual  0-100
+     * @param items                Map<idProducto, cantidad>
+     * @param garantias            Map<idProducto, [descripcion, meses]>
+     * @param notas                notas adicionales de la venta
+     * @param esCredito            si la venta es a crédito
+     * @param fechaLimiteCredito   fecha límite de pago (solo si esCredito=true)
      */
     @Transactional
-    public Venta registrarVenta(Integer idCliente, Usuario cajero,
-                                String metodoPago, BigDecimal descuentoPorcentual,
-                                Map<Integer, Integer> items) {
+    public Venta registrarVenta(Integer idCliente,
+                                Usuario cajero,
+                                String metodoPago,
+                                BigDecimal descuentoPorcentual,
+                                Map<Integer, Integer> items,
+                                Map<Integer, String[]> garantias,
+                                String notas,
+                                boolean esCredito,
+                                LocalDateTime fechaLimiteCredito) {
 
         if (items.isEmpty()) {
-            throw new RuntimeException("La venta debe tener al menos un producto.");
+            throw new VentaInvalidaException("La venta debe tener al menos un producto.");
         }
+
+        // Validar cliente para crédito
+        Cliente cliente = null;
+        if (idCliente != null) {
+            cliente = clienteRepository.findById(idCliente)
+                    .orElseThrow(() -> new RuntimeException("Cliente no encontrado."));
+        }
+
+        if (esCredito) {
+            if (cliente == null) {
+                throw new VentaInvalidaException(
+                        "Las ventas a crédito requieren un cliente registrado.");
+            }
+            if (!cliente.esEmpresa()) {
+                throw new VentaInvalidaException(
+                        "Las ventas a crédito solo están disponibles para empresas.");
+            }
+            if (fechaLimiteCredito == null) {
+                throw new VentaInvalidaException(
+                        "Debes indicar la fecha límite de pago.");
+            }
+        }
+
+        // Generar número de factura
+        String numeroFactura = generarNumeroFactura();
 
         Venta venta = new Venta();
+        venta.setNumeroFactura(numeroFactura);
         venta.setFechaHora(LocalDateTime.now());
         venta.setCajero(cajero);
-        venta.setMetodoPago(metodoPago);
+        venta.setCliente(cliente);
+        venta.setMetodoPago(esCredito ? "CREDITO" : metodoPago);
         venta.setDescuentoPorcentual(descuentoPorcentual);
+        venta.setEsCredito(esCredito);
+        venta.setFechaLimiteCredito(fechaLimiteCredito);
+        venta.setNotas(notas);
         venta.setAnulada(false);
-
-        if (idCliente != null) {
-            Cliente cliente = new Cliente();
-            cliente.setIdCliente(idCliente);
-            venta.setCliente(cliente);
-        }
 
         BigDecimal subtotal = BigDecimal.ZERO;
 
@@ -89,46 +147,113 @@ public class VentaService {
             // Descontar stock
             producto.setStock(producto.getStock() - cantidad);
             productoRepository.save(producto);
+
+            // Agregar garantía si existe
+            if (garantias != null && garantias.containsKey(idProducto)) {
+                String[] g = garantias.get(idProducto);
+                String descGarantia = g[0];
+                int meses = g.length > 1 && g[1] != null
+                        ? Integer.parseInt(g[1]) : 0;
+
+                if (descGarantia != null && !descGarantia.isBlank()) {
+                    VentaGarantia garantia = new VentaGarantia();
+                    garantia.setVenta(venta);
+                    garantia.setProducto(producto);
+                    garantia.setDescripcion(descGarantia);
+                    garantia.setMeses(meses);
+                    if (meses > 0) {
+                        garantia.setFechaVence(
+                                LocalDateTime.now().plusMonths(meses));
+                    }
+                    venta.getGarantias().add(garantia);
+                }
+            }
         }
 
         venta.setSubtotal(subtotal);
-
-        // Aplicar descuento porcentual al total
-        BigDecimal factorDescuento = BigDecimal.ONE.subtract(
+        BigDecimal factor = BigDecimal.ONE.subtract(
                 descuentoPorcentual.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-        BigDecimal total = subtotal.multiply(factorDescuento)
-                .setScale(2, RoundingMode.HALF_UP);
-        venta.setTotal(total);
+        venta.setTotal(subtotal.multiply(factor).setScale(2, RoundingMode.HALF_UP));
 
         Venta guardada = ventaRepository.save(venta);
-        log.info("Venta #{} registrada — Total: {} — Cajero: {}",
-                guardada.getIdVenta(), total, cajero.getNombreCompleto());
+        log.info("Venta #{} registrada — Factura: {} — Total: {} — Cajero: {}",
+                guardada.getIdVenta(), numeroFactura,
+                guardada.getTotal(), cajero.getNombreCompleto());
         return guardada;
+    }
+
+    /**
+     * Registra un pago parcial o total de una venta a crédito.
+     */
+    @Transactional
+    public CreditoPago registrarPagoCredito(Integer idVenta, BigDecimal monto,
+                                            String metodoPago, String notas,
+                                            Usuario cajero) {
+        Venta venta = obtenerPorId(idVenta);
+
+        if (!venta.getEsCredito()) {
+            throw new VentaInvalidaException("Esta venta no es a crédito.");
+        }
+        if (venta.getAnulada()) {
+            throw new VentaInvalidaException("No se puede pagar una venta anulada.");
+        }
+        if (venta.estaCancelado()) {
+            throw new VentaInvalidaException("Esta venta ya está completamente pagada.");
+        }
+
+        BigDecimal saldo = venta.getSaldoPendiente();
+        if (monto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new VentaInvalidaException("El monto debe ser mayor a 0.");
+        }
+        if (monto.compareTo(saldo) > 0) {
+            throw new VentaInvalidaException(
+                    "El monto excede el saldo pendiente de RD$" + saldo.toPlainString());
+        }
+
+        CreditoPago pago = new CreditoPago();
+        pago.setVenta(venta);
+        pago.setMonto(monto);
+        pago.setMetodoPago(metodoPago);
+        pago.setNotas(notas);
+        pago.setCajero(cajero);
+        pago.setFechaPago(LocalDateTime.now());
+
+        CreditoPago guardado = creditoPagoRepository.save(pago);
+        log.info("Pago de crédito registrado — Venta #{} — Monto: RD${} — Saldo restante: RD${}",
+                idVenta, monto, venta.getSaldoPendiente().subtract(monto));
+        alertaService.escanearCreditosPorVencer();
+        return guardado;
     }
 
     @Transactional
     public void anularVenta(Integer idVenta, String motivo) {
-        Venta venta = ventaRepository.findById(idVenta)
-                .orElseThrow(() -> new RuntimeException("Venta no encontrada: " + idVenta));
-
+        Venta venta = obtenerPorId(idVenta);
         if (venta.getAnulada()) {
-            throw new RuntimeException("Esta venta ya fue anulada.");
+            throw new VentaInvalidaException("Esta venta ya fue anulada.");
         }
-
         // Restaurar stock
         for (VentaProducto detalle : venta.getDetalles()) {
             Producto producto = detalle.getProducto();
             producto.setStock(producto.getStock() + detalle.getCantidad());
             productoRepository.save(producto);
         }
-
         venta.setAnulada(true);
         venta.setMotivoAnulacion(motivo);
         ventaRepository.save(venta);
-        log.info("Venta #{} anulada — Motivo: {}", idVenta, motivo);
+        log.info("Venta #{} anulada. Motivo: {}", idVenta, motivo);
     }
 
+    private String generarNumeroFactura() {
+        // Formato: FAC-00001, FAC-00002, etc.
+        long total = ventaRepository.count() + 1;
+        return String.format("FAC-%05d", total);
+    }
+
+    // ---- Excepciones ----
     public static class StockInsuficienteException extends RuntimeException {
         public StockInsuficienteException(String msg) { super(msg); }
+    }
+    public static class VentaInvalidaException extends RuntimeException {
+        public VentaInvalidaException(String msg) { super(msg); }
     }
 }

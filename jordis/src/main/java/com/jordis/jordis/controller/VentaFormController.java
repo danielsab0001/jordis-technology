@@ -4,8 +4,10 @@ import com.jordis.jordis.model.Cliente;
 import com.jordis.jordis.model.Producto;
 import com.jordis.jordis.service.AutenticacionService;
 import com.jordis.jordis.service.ClienteService;
+import com.jordis.jordis.service.FacturaService;
 import com.jordis.jordis.service.ProductoService;
 import com.jordis.jordis.service.VentaService;
+import com.jordis.jordis.model.Venta;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -18,7 +20,10 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -30,93 +35,162 @@ public class VentaFormController {
     @FXML private ComboBox<String>     cmbMetodoPago;
     @FXML private ComboBox<Producto>   cmbProducto;
     @FXML private TextField            txtCantidad;
+    @FXML private TextField            txtGarantiaDesc;
+    @FXML private TextField            txtGarantiaMeses;
+    @FXML private CheckBox             chkCredito;
+    @FXML private Label                lblFechaLimite;
+    @FXML private DatePicker           dpFechaLimite;
     @FXML private TableView<FilaVenta> tablaDetalle;
     @FXML private TableColumn<FilaVenta, String> colProducto;
     @FXML private TableColumn<FilaVenta, String> colCantidad;
     @FXML private TableColumn<FilaVenta, String> colPrecio;
+    @FXML private TableColumn<FilaVenta, String> colGarantia;
     @FXML private TableColumn<FilaVenta, String> colSubtotal;
     @FXML private TableColumn<FilaVenta, Void>   colQuitar;
     @FXML private ComboBox<String>     cmbDescuento;
     @FXML private TextField            txtDescuentoManual;
     @FXML private Label                lblSubtotal;
+    @FXML private Label                lblDescuentoLabel;
+    @FXML private Label                lblDescuentoMonto;
     @FXML private Label                lblTotal;
+    @FXML private TextField            txtNotas;
     @FXML private Label                lblError;
     @FXML private Button               btnGuardar;
-    @FXML private Label lblDescuentoLabel;
-    @FXML private Label lblDescuentoMonto;
 
     private final VentaService         ventaService;
     private final ClienteService       clienteService;
     private final ProductoService      productoService;
     private final AutenticacionService autenticacionService;
+    private final FacturaService       facturaService;
 
     private final ObservableList<FilaVenta> detalles =
             FXCollections.observableArrayList();
+    private List<Producto> todosLosProductos;
     private Runnable onGuardado;
 
     @FXML
     public void initialize() {
-        configurarConverters();
+        configurarClientes();
+        configurarMetodoPago();
+        configurarProductoEditable();
         configurarDescuento();
         configurarTabla();
         tablaDetalle.setItems(detalles);
     }
 
-    // Llamado desde VentaController antes de mostrar la ventana
     public void prepararNuevaVenta() {
         detalles.clear();
 
-        // Recargar datos frescos
+        // Recargar clientes
         cmbCliente.getItems().clear();
         cmbCliente.getItems().add(null);
         cmbCliente.getItems().addAll(clienteService.obtenerTodos());
         cmbCliente.setValue(null);
 
-        cmbProducto.getItems().setAll(productoService.obtenerTodos());
+        // Recargar productos
+        todosLosProductos = productoService.obtenerTodos();
+        cmbProducto.getItems().setAll(todosLosProductos);
         cmbProducto.setValue(null);
+        if (cmbProducto.isEditable()) cmbProducto.getEditor().clear();
 
         cmbMetodoPago.setValue("EFECTIVO");
         cmbDescuento.setValue("0%");
+        chkCredito.setSelected(false);
+        dpFechaLimite.setValue(null);
+        lblFechaLimite.setVisible(false);
+        lblFechaLimite.setManaged(false);
+        dpFechaLimite.setVisible(false);
+        dpFechaLimite.setManaged(false);
 
         txtCantidad.clear();
+        txtGarantiaDesc.clear();
+        txtGarantiaMeses.clear();
+        txtNotas.clear();
         txtDescuentoManual.clear();
         txtDescuentoManual.setDisable(true);
-        txtDescuentoManual.setStyle(
-                "-fx-border-color: #BFDBFE; -fx-border-radius: 6; "
-                        + "-fx-background-radius: 6; -fx-padding: 4 8;");
-
+        lblDescuentoLabel.setText("Descuento (0%):");
+        lblDescuentoMonto.setText("—");
         lblSubtotal.setText("RD$0.00");
         lblTotal.setText("RD$0.00");
         lblError.setText("");
-
-        // Al final del método prepararNuevaVenta() agrega:
-        lblDescuentoLabel.setText("Descuento (0%):");
-        lblDescuentoMonto.setText("—");
     }
 
-    private void configurarConverters() {
+    private void configurarClientes() {
         cmbCliente.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Cliente c) {
-                return c == null ? "Sin cliente (ocasional)" : c.getNombreCompleto();
+                if (c == null) return "Sin cliente (ocasional)";
+                return c.getNombreCompleto()
+                        + (c.esEmpresa() ? " [Empresa]" : "");
             }
             @Override public Cliente fromString(String s) { return null; }
         });
 
-        cmbMetodoPago.getItems().setAll("EFECTIVO", "TARJETA", "TRANSFERENCIA");
-        cmbMetodoPago.setValue("EFECTIVO");
+        // Si selecciona empresa, ofrece crédito automáticamente
+        cmbCliente.setOnAction(e -> {
+            Cliente seleccionado = cmbCliente.getValue();
+            if (seleccionado != null && seleccionado.esEmpresa()) {
+                chkCredito.setDisable(false);
+            } else {
+                chkCredito.setSelected(false);
+                chkCredito.setDisable(true);
+                ocultarCredito();
+            }
+        });
+    }
 
+    private void configurarMetodoPago() {
+        cmbMetodoPago.getItems().setAll(
+                "EFECTIVO", "TARJETA", "TRANSFERENCIA");
+        cmbMetodoPago.setValue("EFECTIVO");
+    }
+
+    private void configurarProductoEditable() {
+        cmbProducto.setEditable(true);
         cmbProducto.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Producto p) {
-                return p == null ? "" : p.getNombre()
-                        + " (Stock: " + p.getStock() + ") — RD$"
-                        + p.getPrecioUnitario().toPlainString();
+                if (p == null) return "";
+                return p.getNombre()
+                        + (p.getMarca() != null ? " — " + p.getMarca() : "")
+                        + " (Stock: " + p.getStock() + ")"
+                        + " — RD$" + p.getPrecioUnitario().toPlainString();
             }
-            @Override public Producto fromString(String s) { return null; }
+            @Override public Producto fromString(String texto) {
+                if (texto == null || texto.isBlank() || todosLosProductos == null)
+                    return null;
+                return todosLosProductos.stream()
+                        .filter(p -> toString(p).equalsIgnoreCase(texto))
+                        .findFirst().orElse(null);
+            }
+        });
+
+        cmbProducto.getEditor().textProperty().addListener((obs, old, val) -> {
+            if (todosLosProductos == null) return;
+            // No filtrar si el cambio viene de seleccionar un item
+            Producto sel = cmbProducto.getValue();
+            if (sel != null) {
+                String textoSel = cmbProducto.getConverter().toString(sel);
+                if (textoSel.equals(val)) return;
+            }
+            if (val == null || val.isBlank()) {
+                cmbProducto.getItems().setAll(todosLosProductos);
+                return;
+            }
+            String filtro = val.toLowerCase();
+            List<Producto> filtrados = todosLosProductos.stream()
+                    .filter(p -> p.getNombre().toLowerCase().contains(filtro)
+                            || (p.getMarca() != null &&
+                            p.getMarca().toLowerCase().contains(filtro)))
+                    .toList();
+            cmbProducto.getItems().setAll(filtrados);
+            if (!cmbProducto.isShowing() && !filtrados.isEmpty()) {
+                cmbProducto.show();
+            }
         });
     }
 
     private void configurarDescuento() {
-        cmbDescuento.getItems().setAll("0%", "5%", "10%", "15%", "20%", "Manual");
+        cmbDescuento.getItems().setAll(
+                "0%", "5%", "10%", "15%", "20%", "Manual");
         cmbDescuento.setValue("0%");
         cmbDescuento.setOnAction(e -> {
             boolean esManual = "Manual".equals(cmbDescuento.getValue());
@@ -127,44 +201,40 @@ public class VentaFormController {
                         "-fx-border-color: #BFDBFE; -fx-border-radius: 6; "
                                 + "-fx-background-radius: 6; -fx-padding: 4 8;");
                 lblError.setText("");
-                actualizarTotales();
             }
+            actualizarTotales();
         });
 
         txtDescuentoManual.setDisable(true);
         txtDescuentoManual.textProperty().addListener((obs, old, val) -> {
             if (val == null || val.isBlank()) {
-                txtDescuentoManual.setStyle(
-                        "-fx-border-color: #BFDBFE; -fx-border-radius: 6; "
-                                + "-fx-background-radius: 6; -fx-padding: 4 8;");
-                lblError.setText("");
-                actualizarTotales();
-                return;
+                restaurarEstiloDescuento(); actualizarTotales(); return;
             }
             try {
                 BigDecimal d = new BigDecimal(val);
-                if (d.compareTo(BigDecimal.ZERO) < 0) {
-                    marcarDescuentoError("El descuento no puede ser negativo.");
-                } else if (d.compareTo(new BigDecimal("100")) > 0) {
-                    marcarDescuentoError("El descuento no puede superar el 100%.");
-                } else {
+                if (d.compareTo(BigDecimal.ZERO) < 0 ||
+                        d.compareTo(new BigDecimal("100")) > 0) {
                     txtDescuentoManual.setStyle(
-                            "-fx-border-color: #BFDBFE; -fx-border-radius: 6; "
+                            "-fx-border-color: #DC2626; -fx-border-radius: 6; "
                                     + "-fx-background-radius: 6; -fx-padding: 4 8;");
+                    lblError.setText("El descuento debe estar entre 0% y 100%.");
+                } else {
+                    restaurarEstiloDescuento();
                     lblError.setText("");
                 }
             } catch (NumberFormatException ignored) {
-                marcarDescuentoError("El descuento debe ser un número.");
+                txtDescuentoManual.setStyle(
+                        "-fx-border-color: #DC2626; -fx-border-radius: 6; "
+                                + "-fx-background-radius: 6; -fx-padding: 4 8;");
             }
             actualizarTotales();
         });
     }
 
-    private void marcarDescuentoError(String mensaje) {
+    private void restaurarEstiloDescuento() {
         txtDescuentoManual.setStyle(
-                "-fx-border-color: #DC2626; -fx-border-radius: 6; "
+                "-fx-border-color: #BFDBFE; -fx-border-radius: 6; "
                         + "-fx-background-radius: 6; -fx-padding: 4 8;");
-        lblError.setText(mensaje);
     }
 
     private void configurarTabla() {
@@ -175,6 +245,12 @@ public class VentaFormController {
         colPrecio.setCellValueFactory(d ->
                 new SimpleStringProperty("RD$" +
                         d.getValue().producto.getPrecioUnitario().toPlainString()));
+        colGarantia.setCellValueFactory(d -> {
+            String g = d.getValue().garantiaDesc;
+            int m = d.getValue().garantiaMeses;
+            if (g == null || g.isBlank()) return new SimpleStringProperty("—");
+            return new SimpleStringProperty(g + (m > 0 ? " (" + m + " m.)" : ""));
+        });
         colSubtotal.setCellValueFactory(d ->
                 new SimpleStringProperty("RD$" + d.getValue().subtotal().toPlainString()));
 
@@ -183,9 +259,9 @@ public class VentaFormController {
             {
                 btn.setStyle("-fx-background-color: #FEE2E2; -fx-text-fill: #DC2626;"
                         + " -fx-border-color: #FCA5A5; -fx-border-radius: 4;"
-                        + " -fx-background-radius: 4; -fx-font-size: 11; -fx-padding: 2 6;");
+                        + " -fx-background-radius: 4; -fx-font-size: 11;"
+                        + " -fx-padding: 2 6;");
             }
-
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -205,10 +281,36 @@ public class VentaFormController {
     public void setOnGuardado(Runnable cb) { this.onGuardado = cb; }
 
     @FXML
+    public void onToggleCredito() {
+        boolean esCredito = chkCredito.isSelected();
+        if (esCredito) {
+            lblFechaLimite.setVisible(true);
+            lblFechaLimite.setManaged(true);
+            dpFechaLimite.setVisible(true);
+            dpFechaLimite.setManaged(true);
+            cmbMetodoPago.setDisable(true);
+            cmbMetodoPago.setValue("CREDITO");
+        } else {
+            ocultarCredito();
+        }
+    }
+
+    private void ocultarCredito() {
+        lblFechaLimite.setVisible(false);
+        lblFechaLimite.setManaged(false);
+        dpFechaLimite.setVisible(false);
+        dpFechaLimite.setManaged(false);
+        cmbMetodoPago.setDisable(false);
+        cmbMetodoPago.setValue("EFECTIVO");
+    }
+
+    @FXML
     public void onAgregarProducto() {
         lblError.setText("");
         Producto producto = cmbProducto.getValue();
-        if (producto == null) { lblError.setText("Selecciona un producto."); return; }
+        if (producto == null) {
+            lblError.setText("Selecciona un producto de la lista."); return;
+        }
 
         try {
             int cantidad = Integer.parseInt(
@@ -218,16 +320,30 @@ public class VentaFormController {
                 lblError.setText("La cantidad debe ser mayor a 0."); return;
             }
             if (cantidad > producto.getStock()) {
-                lblError.setText("Stock insuficiente. Disponible: " + producto.getStock());
-                return;
+                lblError.setText("Stock insuficiente. Disponible: "
+                        + producto.getStock()); return;
             }
+
+            String garantiaDesc  = txtGarantiaDesc.getText().trim();
+            int    garantiaMeses = 0;
+            try {
+                String m = txtGarantiaMeses.getText().trim();
+                if (!m.isEmpty()) garantiaMeses = Integer.parseInt(m);
+            } catch (NumberFormatException ignored) {}
 
             detalles.removeIf(f -> f.producto.getIdProducto()
                     .equals(producto.getIdProducto()));
-            detalles.add(new FilaVenta(producto, cantidad));
+            detalles.add(new FilaVenta(producto, cantidad,
+                    garantiaDesc, garantiaMeses));
             actualizarTotales();
+
+            // Limpiar campos de agregar
             txtCantidad.clear();
+            txtGarantiaDesc.clear();
+            txtGarantiaMeses.clear();
             cmbProducto.setValue(null);
+            cmbProducto.getEditor().clear();
+            cmbProducto.getItems().setAll(todosLosProductos);
 
         } catch (NumberFormatException e) {
             lblError.setText("La cantidad debe ser un número entero.");
@@ -241,39 +357,90 @@ public class VentaFormController {
         if (detalles.isEmpty()) {
             lblError.setText("Agrega al menos un producto."); return;
         }
-        if (cmbMetodoPago.getValue() == null) {
-            lblError.setText("Selecciona un método de pago."); return;
+
+        boolean esCredito = chkCredito.isSelected();
+        Cliente clienteSel = cmbCliente.getValue();
+
+        if (esCredito) {
+            if (clienteSel == null) {
+                lblError.setText(
+                        "Las ventas a crédito requieren un cliente registrado."); return;
+            }
+            if (!clienteSel.esEmpresa()) {
+                lblError.setText(
+                        "Las ventas a crédito solo están disponibles para empresas."); return;
+            }
+            if (dpFechaLimite.getValue() == null) {
+                lblError.setText("Indica la fecha límite de pago."); return;
+            }
         }
 
-        // Validar descuento
         BigDecimal descuento = obtenerDescuento();
-        if (descuento.compareTo(BigDecimal.ZERO) < 0) {
-            lblError.setText("El descuento no puede ser negativo."); return;
-        }
-        if (descuento.compareTo(new BigDecimal("100")) > 0) {
-            lblError.setText("El descuento no puede superar el 100%."); return;
+        if (descuento.compareTo(BigDecimal.ZERO) < 0
+                || descuento.compareTo(new BigDecimal("100")) > 0) {
+            lblError.setText("El descuento debe estar entre 0% y 100%."); return;
         }
 
-        Map<Integer, Integer> items = new HashMap<>();
+        Map<Integer, Integer>  items     = new HashMap<>();
+        Map<Integer, String[]> garantias = new HashMap<>();
         for (FilaVenta f : detalles) {
             items.put(f.producto.getIdProducto(), f.cantidad);
+            if (f.garantiaDesc != null && !f.garantiaDesc.isBlank()) {
+                garantias.put(f.producto.getIdProducto(),
+                        new String[]{f.garantiaDesc,
+                                String.valueOf(f.garantiaMeses)});
+            }
         }
 
-        Cliente clienteSeleccionado = cmbCliente.getValue();
+        LocalDateTime fechaLimite = null;
+        if (esCredito && dpFechaLimite.getValue() != null) {
+            fechaLimite = dpFechaLimite.getValue()
+                    .atTime(23, 59, 59);
+        }
+
+        String metodoPago = esCredito
+                ? "CREDITO" : cmbMetodoPago.getValue();
 
         try {
-            ventaService.registrarVenta(
-                    clienteSeleccionado != null ? clienteSeleccionado.getIdCliente() : null,
+            Venta venta = ventaService.registrarVenta(
+                    clienteSel != null ? clienteSel.getIdCliente() : null,
                     autenticacionService.getUsuarioActivo(),
-                    cmbMetodoPago.getValue(),
+                    metodoPago,
                     descuento,
-                    items);
+                    items,
+                    garantias,
+                    txtNotas.getText().trim(),
+                    esCredito,
+                    fechaLimite);
+
+            // Preguntar si desea imprimir la factura
+            Alert pregunta = new Alert(Alert.AlertType.CONFIRMATION,
+                    "Venta registrada correctamente.\n¿Deseas generar la factura PDF?",
+                    ButtonType.YES, ButtonType.NO);
+            pregunta.setTitle("Factura");
+            pregunta.setHeaderText("Factura " + venta.getNumeroFactura());
+            pregunta.showAndWait().ifPresent(bt -> {
+                if (bt == ButtonType.YES) {
+                    try {
+                        String ruta = facturaService.generarFactura(venta);
+                        facturaService.abrirPDF(ruta);
+                    } catch (Exception ex) {
+                        new Alert(Alert.AlertType.ERROR,
+                                "Error generando PDF: " + ex.getMessage())
+                                .showAndWait();
+                    }
+                }
+            });
+
             if (onGuardado != null) onGuardado.run();
             cerrar();
-        } catch (VentaService.StockInsuficienteException e) {
+
+        } catch (VentaService.StockInsuficienteException
+                 | VentaService.VentaInvalidaException e) {
             lblError.setText(e.getMessage());
         } catch (Exception e) {
-            lblError.setText("Error: " + e.getMessage());
+            lblError.setText("Error inesperado: " + e.getMessage());
+            log.error("Error registrando venta", e);
         }
     }
 
@@ -284,19 +451,14 @@ public class VentaFormController {
         if ("Manual".equals(sel)) {
             try {
                 BigDecimal d = new BigDecimal(txtDescuentoManual.getText().trim());
-                // Clamp 0–100
                 if (d.compareTo(BigDecimal.ZERO) < 0) return BigDecimal.ZERO;
                 if (d.compareTo(new BigDecimal("100")) > 0) return new BigDecimal("100");
                 return d;
-            } catch (Exception e) {
-                return BigDecimal.ZERO;
-            }
+            } catch (Exception e) { return BigDecimal.ZERO; }
         }
         try {
             return new BigDecimal(sel.replace("%", "").trim());
-        } catch (Exception e) {
-            return BigDecimal.ZERO;
-        }
+        } catch (Exception e) { return BigDecimal.ZERO; }
     }
 
     private void actualizarTotales() {
@@ -304,26 +466,22 @@ public class VentaFormController {
                 .map(FilaVenta::subtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal descuentoPct = obtenerDescuento();
-        BigDecimal montoDescuento = subtotal
-                .multiply(descuentoPct)
+        BigDecimal descPct = obtenerDescuento();
+        BigDecimal monto   = subtotal.multiply(descPct)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        BigDecimal total = subtotal.subtract(montoDescuento)
+        BigDecimal total   = subtotal.subtract(monto)
                 .setScale(2, RoundingMode.HALF_UP);
 
         lblSubtotal.setText("RD$" + subtotal.setScale(2).toPlainString());
 
-        if (descuentoPct.compareTo(BigDecimal.ZERO) > 0) {
-            lblDescuentoLabel.setText("Descuento (" +
-                    descuentoPct.stripTrailingZeros().toPlainString() + "%):");
-            lblDescuentoMonto.setText("- RD$" + montoDescuento.toPlainString());
-            lblDescuentoLabel.setVisible(true);
-            lblDescuentoMonto.setVisible(true);
+        if (descPct.compareTo(BigDecimal.ZERO) > 0) {
+            lblDescuentoLabel.setText("Descuento ("
+                    + descPct.stripTrailingZeros().toPlainString() + "%):");
+            lblDescuentoMonto.setText("- RD$" + monto.toPlainString());
         } else {
             lblDescuentoLabel.setText("Descuento (0%):");
             lblDescuentoMonto.setText("—");
         }
-
         lblTotal.setText("RD$" + total.toPlainString());
     }
 
@@ -331,7 +489,8 @@ public class VentaFormController {
         ((Stage) btnGuardar.getScene().getWindow()).close();
     }
 
-    record FilaVenta(Producto producto, int cantidad) {
+    record FilaVenta(Producto producto, int cantidad,
+                     String garantiaDesc, int garantiaMeses) {
         BigDecimal subtotal() {
             return producto.getPrecioUnitario()
                     .multiply(BigDecimal.valueOf(cantidad));

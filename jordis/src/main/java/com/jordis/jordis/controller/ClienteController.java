@@ -28,6 +28,7 @@ public class ClienteController {
     @FXML private TableColumn<Cliente, String> colTipo;
     @FXML private TableColumn<Cliente, String> colIdentificador;
     @FXML private TableColumn<Cliente, String> colTelefono;
+    @FXML private TableColumn<Cliente, String> colContacto;
     @FXML private TableColumn<Cliente, String> colDireccion;
     @FXML private TableColumn<Cliente, Void>   colAcciones;
     @FXML private TextField txtBuscar;
@@ -54,6 +55,14 @@ public class ClienteController {
         colTelefono.setCellValueFactory(d ->
                 new SimpleStringProperty(
                         d.getValue().getTelefono() != null ? d.getValue().getTelefono() : "—"));
+        colContacto.setCellValueFactory(d -> {
+            Cliente c = d.getValue();
+            if (c.esEmpresa() && c.getContactoPrincipal() != null
+                    && !c.getContactoPrincipal().isBlank()) {
+                return new SimpleStringProperty(c.getContactoPrincipal());
+            }
+            return new SimpleStringProperty("—");
+        });
         colDireccion.setCellValueFactory(d ->
                 new SimpleStringProperty(
                         d.getValue().getDireccion() != null ? d.getValue().getDireccion() : "—"));
