@@ -5,6 +5,7 @@ import com.jordis.jordis.config.StageManager;
 import com.jordis.jordis.model.Usuario;
 import com.jordis.jordis.service.AlertaService;
 import com.jordis.jordis.service.AutenticacionService;
+import com.jordis.jordis.service.SesionService;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -37,8 +38,10 @@ public class MainController {
     @FXML private Button btnCuentasPorPagar;
 
     // Botones del menú lateral — administración
+    @FXML private Button btnCategorias;
     @FXML private Button  btnReportes;
     @FXML private Button  btnUsuarios;
+    @FXML private Button btnConfiguracion;
     @FXML private Button  btnAlertas;
 
     // Sección y contador de alertas
@@ -50,6 +53,7 @@ public class MainController {
     private final StageManager         stageManager;
     private final SpringFXMLLoader     fxmlLoader;
     private final AlertaService        alertaService;
+    private final SesionService sesionService;
 
     private Button btnActivo;
 
@@ -70,10 +74,14 @@ public class MainController {
         // Ocultar sección de administración completa para cajeros
         lblSeccionAdmin.setVisible(esAdmin);
         lblSeccionAdmin.setManaged(esAdmin);
+        btnCategorias.setVisible(esAdmin);
+        btnCategorias.setManaged(esAdmin);
         btnReportes.setVisible(esAdmin);
         btnReportes.setManaged(esAdmin);
         btnUsuarios.setVisible(esAdmin);
         btnUsuarios.setManaged(esAdmin);
+        btnConfiguracion.setVisible(esAdmin);
+        btnConfiguracion.setManaged(esAdmin);
         btnAlertas.setVisible(esAdmin);
         btnAlertas.setManaged(esAdmin);
         btnAlertas.setVisible(esAdmin);
@@ -84,6 +92,15 @@ public class MainController {
             alertaService.escanearTodo();
             actualizarContadorAlertas();
         }
+        sesionService.iniciarTimer(() -> {
+            // Ejecutar en el hilo de JavaFX
+            javafx.application.Platform.runLater(() -> {
+                autenticacionService.cerrarSesion();
+                sesionService.detenerTimer();
+                stageManager.switchScene("/fxml/login.fxml",
+                        "Sesión expirada — Iniciar sesión");
+            });
+        });
     }
 
     // ---- Navegación ----
@@ -172,9 +189,12 @@ public class MainController {
     @FXML public void onAlertas() {
         cargarModulo("/fxml/alertas.fxml", btnAlertas, "Centro de Alertas");
     }
+    @FXML public void onCategorias() {cargarModulo("/fxml/categorias.fxml", btnCategorias, "Módulo: Categorías"); }
+    @FXML public void onConfiguracion() {cargarModulo("/fxml/configuracion.fxml", btnConfiguracion, "Configuración"); }
 
     @FXML
     public void onCerrarSesion() {
+        sesionService.detenerTimer();
         autenticacionService.cerrarSesion();
         stageManager.switchScene("/fxml/login.fxml", "Iniciar sesión");
     }

@@ -86,11 +86,12 @@ public class UsuarioController {
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar      = crearBtn("Editar",      "#2563EB", "#EFF6FF");
+            private final Button btnContrasena = crearBtn("Contraseña", "#6D28D9", "#EDE9FE");
             private final Button btnDesbloquear = crearBtn("Desbloquear", "#B45309", "#FEF3C7");
             private final Button btnDesactivar  = crearBtn("Desactivar",  "#64748B", "#F1F5F9");
             private final Button btnReactivar   = crearBtn("Reactivar",   "#15803D", "#DCFCE7");
-            private final HBox box = new HBox(6,
-                    btnEditar, btnDesbloquear, btnDesactivar, btnReactivar);
+            private final HBox box = new HBox(5,
+                    btnEditar, btnContrasena, btnDesbloquear, btnDesactivar, btnReactivar);
 
             {
                 btnEditar.setOnAction(e ->
@@ -116,6 +117,8 @@ public class UsuarioController {
                         activo.getIdUsuario().equals(u.getIdUsuario());
                 boolean estaActivo   = u.getActivo();
                 boolean estaBloqueado = u.getBloqueado();
+
+                btnContrasena.setOnAction(e -> abrirCambioContrasena(u));
 
                 // Desbloquear: solo si está bloqueado
                 btnDesbloquear.setVisible(estaBloqueado && estaActivo);
@@ -188,6 +191,23 @@ public class UsuarioController {
         lblMensaje.setText("");
     }
 
+    private void abrirCambioContrasena(Usuario usuario) {
+        try {
+            SpringFXMLLoader.LoadResult<CambiarContrasenaController> result =
+                    fxmlLoader.loadWithController("/fxml/cambiar_contrasena_form.fxml");
+            result.controller.setUsuario(usuario);
+            result.controller.setOnGuardado(() ->
+                    mostrarMensaje("Contraseña actualizada correctamente.", false));
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Cambiar contraseña — " + usuario.getNombreCompleto());
+            stage.setScene(new Scene(result.root, 440, 320));
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo cambio de contraseña", e);
+        }
+    }
+
     private void desbloquear(Usuario usuario) {
         confirmar("¿Desbloquear a " + usuario.getNombreCompleto() + "?",
                 "Confirmar desbloqueo", () -> {
@@ -217,7 +237,6 @@ public class UsuarioController {
                 });
     }
 
-    // Método auxiliar para no repetir el Alert de confirmación
     private void confirmar(String mensaje, String titulo, Runnable accion) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
                 mensaje, ButtonType.YES, ButtonType.NO);

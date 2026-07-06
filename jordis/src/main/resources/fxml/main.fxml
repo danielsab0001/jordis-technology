@@ -92,6 +92,12 @@
                    style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
                           -fx-padding: 16 16 4 16; -fx-font-weight: bold;"/>
 
+            <Button fx:id="btnCategorias" text="  Categorías"
+                    prefWidth="210" prefHeight="42" onAction="#onCategorias"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
             <Button fx:id="btnReportes" text="  Reportes"
                     prefWidth="210" prefHeight="42" onAction="#onReportes"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
@@ -103,6 +109,12 @@
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnConfiguracion" text="  Configuración"
+                    prefWidth="210" prefHeight="42" onAction="#onConfiguracion"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
             <!-- Alertas con contador — solo admin -->
             <!-- Alertas con contador superpuesto -->

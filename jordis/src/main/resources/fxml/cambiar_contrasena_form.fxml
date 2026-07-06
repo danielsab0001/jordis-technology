@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.CambiarContrasenaController"
+      spacing="14" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text fx:id="txtTitulo" text="Cambiar Contraseña"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <VBox spacing="4"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 10 14;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label fx:id="lblUsuario"
+               style="-fx-font-size: 12; -fx-text-fill: #1E40AF;"/>
+    </VBox>
+
+    <VBox spacing="4">
+        <Label text="Nueva contraseña *"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <PasswordField fx:id="txtNueva" promptText="Mínimo 6 caracteres"
+                       prefHeight="36"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+    </VBox>
+
+    <VBox spacing="4">
+        <Label text="Confirmar contraseña *"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <PasswordField fx:id="txtConfirmar" promptText="Repite la nueva contraseña"
+                       prefHeight="36"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+    </VBox>
+
+    <Label fx:id="lblError" text="" wrapText="true"
+           style="-fx-text-fill: #DC2626; -fx-font-size: 12;"/>
+
+    <HBox spacing="10">
+        <Button fx:id="btnGuardar" text="Cambiar contraseña" onAction="#onGuardar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 13; -fx-background-radius: 6;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+        <Button text="Cancelar" onAction="#onCancelar"
+                style="-fx-background-color: transparent; -fx-text-fill: #2563EB;
+                       -fx-border-color: #2563EB; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

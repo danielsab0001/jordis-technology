@@ -69,8 +69,9 @@ public class ClienteController {
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
             private final Button btnEditar   = crearBtn("Editar",   "#2563EB", "#EFF6FF");
+            private final Button btnHistorial = crearBtn("Historial", "#6D28D9", "#EDE9FE");
             private final Button btnEliminar = crearBtn("Eliminar", "#DC2626", "#FEF2F2");
-            private final HBox box = new HBox(6, btnEditar, btnEliminar);
+            private final HBox box = new HBox(5, btnEditar, btnHistorial, btnEliminar);
 
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -81,6 +82,7 @@ public class ClienteController {
                 }
                 Cliente cliente = (Cliente) getTableRow().getItem();
                 btnEditar.setOnAction(e -> abrirFormulario(cliente));
+                btnHistorial.setOnAction(e -> abrirHistorial(cliente));
                 btnEliminar.setOnAction(e -> eliminar(cliente));
                 setGraphic(box);
             }
@@ -155,6 +157,23 @@ public class ClienteController {
         } catch (Exception e) {
             log.error("Error abriendo formulario de cliente", e);
             mostrarMensaje("Error al abrir el formulario.", true);
+        }
+    }
+
+    private void abrirHistorial(Cliente cliente) {
+        try {
+            SpringFXMLLoader.LoadResult<ClienteHistorialController> result =
+                    fxmlLoader.loadWithController("/fxml/cliente_historial.fxml");
+            result.controller.setCliente(cliente);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Historial — " + cliente.getNombreCompleto());
+            stage.setScene(new Scene(result.root, 750, 520));
+            stage.setResizable(true);
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo historial de cliente", e);
+            mostrarMensaje("Error al abrir historial.", true);
         }
     }
 

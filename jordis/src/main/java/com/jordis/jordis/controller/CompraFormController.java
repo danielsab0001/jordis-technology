@@ -279,6 +279,20 @@ public class CompraFormController {
         lblTotal.setText("RD$" + total.setScale(2).toPlainString());
     }
 
+    public void preseleccionarProducto(Producto producto) {
+        // Asegurarse de que el producto esté en la lista
+        if (!cmbProducto.getItems().contains(producto)) {
+            cmbProducto.getItems().add(0, producto);
+        }
+        cmbProducto.setValue(producto);
+        // Sugerir el último precio de compra si existe
+        if (producto.getUltimoPrecioCompra() != null) {
+            txtCosto.setText(
+                    producto.getUltimoPrecioCompra().toPlainString());
+        }
+        txtCantidad.requestFocus();
+    }
+
     private void cerrar() {
         ((Stage) btnGuardar.getScene().getWindow()).close();
     }

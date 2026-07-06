@@ -57,7 +57,7 @@
                 <TableColumn fx:id="colApellido" text="Apellido" prefWidth="130"/>
                 <TableColumn fx:id="colRol" text="Rol" prefWidth="120"/>
                 <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
-                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="200"/>
+                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="280"/>
             </columns>
         </TableView>
     </VBox>

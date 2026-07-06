@@ -35,6 +35,11 @@
                        -fx-border-color: #BFDBFE; -fx-border-radius: 6;
                        -fx-background-radius: 6; -fx-font-size: 12;
                        -fx-padding: 7 12; -fx-cursor: hand;"/>
+        <Button text="Comprar producto" onAction="#onCompraRapida"
+                style="-fx-background-color: #DCFCE7; -fx-text-fill: #15803D;
+               -fx-border-color: #BBF7D0; -fx-border-radius: 6;
+               -fx-background-radius: 6; -fx-font-size: 12;
+               -fx-padding: 7 14; -fx-cursor: hand;"/>
         <Button text="Ajuste manual" onAction="#onAjusteManual"
                 style="-fx-background-color: #2563EB; -fx-text-fill: white;
                        -fx-font-size: 12; -fx-background-radius: 6;

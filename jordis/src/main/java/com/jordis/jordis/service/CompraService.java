@@ -3,6 +3,7 @@ package com.jordis.jordis.service;
 import com.jordis.jordis.model.*;
 import com.jordis.jordis.repository.CompraEdicionRepository;
 import com.jordis.jordis.repository.CompraRepository;
+import com.jordis.jordis.repository.CuentaPorPagarRepository;
 import com.jordis.jordis.repository.ProductoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class CompraService {
     private final AlertaService alertaService;
     private final CompraEdicionRepository edicionRepository;
     private final CuentaPorPagarService cuentaPorPagarService;
+    private final CuentaPorPagarRepository cuentaPorPagarRepository;
 
     // Margen de ganancia por defecto: 30%
     private static final BigDecimal MARGEN_DEFAULT = new BigDecimal("1.30");
@@ -210,5 +212,15 @@ public class CompraService {
         edicionRepository.save(edicion);
 
         log.info("Compra #{} editada. Cambios: {}", idCompra, cambios);
+
+        // Actualizar cuenta por pagar si existe
+        cuentaPorPagarRepository.findByCompra(idCompra).ifPresent(cuenta -> {
+            if (!cuenta.estaCancelada()) {
+                cuenta.setMontoTotal(nuevoTotal);
+                cuentaPorPagarRepository.save(cuenta);
+                log.info("Cuenta por pagar #{} actualizada a RD${}",
+                        cuenta.getIdCuenta(), nuevoTotal);
+            }
+        });
     }
 }

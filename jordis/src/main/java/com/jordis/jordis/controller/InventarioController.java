@@ -340,6 +340,34 @@ public class InventarioController {
     }
 
     @FXML
+    public void onCompraRapida() {
+        Producto seleccionado =
+                tablaInventario.getSelectionModel().getSelectedItem();
+        if (seleccionado == null) {
+            mostrarMensaje(
+                    "Selecciona un producto de la tabla primero.", true);
+            return;
+        }
+        try {
+            SpringFXMLLoader.LoadResult<CompraFormController> result =
+                    fxmlLoader.loadWithController("/fxml/compra_form.fxml");
+            result.controller.prepararNuevaCompra();
+            result.controller.preseleccionarProducto(seleccionado);
+            result.controller.setOnGuardado(() ->
+                    mostrarMensaje("Compra registrada. Stock pendiente de recepción.",
+                            false));
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Nueva Compra — " + seleccionado.getNombre());
+            stage.setScene(new Scene(result.root, 700, 600));
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo compra rápida", e);
+            mostrarMensaje("Error: " + e.getMessage(), true);
+        }
+    }
+
+    @FXML
     public void onAjusteManual() {
         Producto seleccionado =
                 tablaInventario.getSelectionModel().getSelectedItem();

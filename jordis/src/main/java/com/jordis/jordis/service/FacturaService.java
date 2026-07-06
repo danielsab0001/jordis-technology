@@ -7,6 +7,7 @@ import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.draw.LineSeparator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
 
 import java.awt.Color;
 import java.awt.Desktop;
@@ -23,8 +24,11 @@ import com.lowagie.text.pdf.*;
 
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class FacturaService {
+
+    private final ConfiguracionService configuracionService;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -41,6 +45,9 @@ public class FacturaService {
             new Font(Font.HELVETICA, 8, Font.NORMAL, new Color(100, 116, 139));
     private static final Font FONT_TOTAL =
             new Font(Font.HELVETICA, 12, Font.BOLD, new Color(37, 99, 235));
+    private String cfg(String clave, String defecto) {
+        return configuracionService.obtener(clave, defecto);
+    }
 
     /**
      * Genera la factura en PDF y la guarda en un archivo temporal.
@@ -74,45 +81,123 @@ public class FacturaService {
     }
 
     private void agregarEncabezado(Document doc, Venta venta) throws DocumentException {
-        // Nombre del negocio
-        Paragraph empresa = new Paragraph("Jordis Technology", FONT_TITULO);
-        empresa.setAlignment(Element.ALIGN_CENTER);
-        doc.add(empresa);
 
-        Paragraph slogan = new Paragraph("Dispositivos Electrónicos", FONT_SMALL);
-        slogan.setAlignment(Element.ALIGN_CENTER);
-        doc.add(slogan);
+        // Datos configurables del negocio
+        String nombreEmpresa = configuracionService.obtener(
+                "negocio.nombre", "Jordis Technology");
+
+        String rnc = configuracionService.obtener(
+                "negocio.rnc", "131-00000-0");
+
+        String telefono = configuracionService.obtener(
+                "negocio.telefono", "809-000-0000");
+
+        String direccion = configuracionService.obtener(
+                "negocio.direccion", "Santo Domingo, RD");
+
+        String email = configuracionService.obtener(
+                "negocio.email", "info@jordis.com");
+
+        // ==========================
+        // Encabezado de la empresa
+        // ==========================
+
+        Paragraph titulo = new Paragraph(nombreEmpresa, FONT_TITULO);
+        titulo.setAlignment(Element.ALIGN_CENTER);
+        doc.add(titulo);
+
+        if (!rnc.isBlank()) {
+            Paragraph p = new Paragraph("RNC: " + rnc, FONT_SMALL);
+            p.setAlignment(Element.ALIGN_CENTER);
+            doc.add(p);
+        }
+
+        if (!direccion.isBlank()) {
+            Paragraph p = new Paragraph(direccion, FONT_SMALL);
+            p.setAlignment(Element.ALIGN_CENTER);
+            doc.add(p);
+        }
+
+        if (!telefono.isBlank()) {
+            Paragraph p = new Paragraph("Tel: " + telefono, FONT_SMALL);
+            p.setAlignment(Element.ALIGN_CENTER);
+            doc.add(p);
+        }
+
+        if (!email.isBlank()) {
+            Paragraph p = new Paragraph(email, FONT_SMALL);
+            p.setAlignment(Element.ALIGN_CENTER);
+            doc.add(p);
+        }
 
         doc.add(new Paragraph(" "));
 
         // Separador
-        LineSeparator linea = new LineSeparator(1f, 100f,
-                new Color(219, 234, 254), Element.ALIGN_CENTER, -2);
+        LineSeparator linea = new LineSeparator(
+                1f,
+                100f,
+                new Color(219, 234, 254),
+                Element.ALIGN_CENTER,
+                -2);
+
         doc.add(new Chunk(linea));
         doc.add(new Paragraph(" "));
 
         // Número de factura
-        Paragraph numFac = new Paragraph("FACTURA  " + venta.getNumeroFactura(), FONT_SUBTITULO);
+        Paragraph numFac = new Paragraph(
+                "FACTURA " + venta.getNumeroFactura(),
+                FONT_SUBTITULO);
+
         numFac.setAlignment(Element.ALIGN_CENTER);
         doc.add(numFac);
 
-        if (venta.getEsCredito()) {
-            Paragraph credBadge = new Paragraph("[ VENTA A CRÉDITO ]",
-                    new Font(Font.HELVETICA, 10, Font.BOLD, new Color(220, 38, 38)));
+        // Mostrar NCF si existe
+        if (venta.getNcf() != null && !venta.getNcf().isBlank()) {
+            Paragraph ncf = new Paragraph(
+                    "NCF: " + venta.getNcf(),
+                    FONT_BOLD);
+
+            ncf.setAlignment(Element.ALIGN_CENTER);
+            doc.add(ncf);
+        }
+
+        // Venta a crédito
+        if (Boolean.TRUE.equals(venta.getEsCredito())) {
+
+            Paragraph credBadge = new Paragraph(
+                    "[ VENTA A CRÉDITO ]",
+                    new Font(
+                            Font.HELVETICA,
+                            10,
+                            Font.BOLD,
+                            new Color(220, 38, 38)));
+
             credBadge.setAlignment(Element.ALIGN_CENTER);
             doc.add(credBadge);
         }
 
         doc.add(new Paragraph(" "));
 
-        // Fecha y cajero
+        // Información general
         PdfPTable infoTabla = new PdfPTable(2);
         infoTabla.setWidthPercentage(100);
         infoTabla.setSpacingAfter(10);
-        agregarCeldaInfo(infoTabla, "Fecha:",
+
+        agregarCeldaInfo(
+                infoTabla,
+                "Fecha:",
                 venta.getFechaHora().format(FMT));
-        agregarCeldaInfo(infoTabla, "Atendido por:",
+
+        agregarCeldaInfo(
+                infoTabla,
+                "Atendido por:",
                 venta.getCajero().getNombreCompleto());
+
+        agregarCeldaInfo(
+                infoTabla,
+                "Método de pago:",
+                venta.getMetodoPago());
+
         doc.add(infoTabla);
     }
 
@@ -330,10 +415,12 @@ public class FacturaService {
             doc.add(limite);
         }
 
+        String empresa = cfg("negocio.nombre", "Jordis Technology");
+
         doc.add(new Paragraph(
                 "El incumplimiento en el pago en la fecha acordada puede conllevar "
-                        + "acciones de cobro por parte de Jordis Technology.", FONT_SMALL));
-        doc.add(new Paragraph(" "));
+                        + "acciones de cobro por parte de " + empresa + ".",
+                FONT_SMALL));
     }
 
     private void agregarPiePagina(Document doc, Venta venta) throws DocumentException {
@@ -347,8 +434,12 @@ public class FacturaService {
             doc.add(new Paragraph(" "));
         }
 
+        String nombreEmpresa = cfg("negocio.nombre", "Jordis Technology");
+        String pie = cfg("factura.pie", "¡Gracias por su compra!");
+
         Paragraph gracias = new Paragraph(
-                "¡Gracias por su compra! — Jordis Technology", FONT_SMALL);
+                pie + " — " + nombreEmpresa,
+                FONT_SMALL);
         gracias.setAlignment(Element.ALIGN_CENTER);
         doc.add(gracias);
 
