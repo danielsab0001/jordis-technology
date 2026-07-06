@@ -75,8 +75,14 @@
                            -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                            -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
 
-            <Button fx:id="btnCreditos" text="  Créditos"
+            <Button fx:id="btnCreditos" text="  Cuentas por Cobrar"
                     prefWidth="210" prefHeight="42" onAction="#onCreditos"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnCuentasPorPagar" text="  Cuentas por Pagar"
+                    prefWidth="210" prefHeight="42" onAction="#onCuentasPorPagar"
                     style="-fx-background-color: transparent; -fx-text-fill: white;
                -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
                -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>

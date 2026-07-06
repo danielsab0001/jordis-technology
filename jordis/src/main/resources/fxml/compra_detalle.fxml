@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.CompraDetalleController"
+      spacing="14" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text text="Detalle de Compra"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <!-- Resumen -->
+    <VBox spacing="4"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 10 14;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label fx:id="lblResumen"
+               style="-fx-font-size: 12; -fx-text-fill: #1E40AF;"/>
+        <Label fx:id="lblEstado"
+               style="-fx-font-size: 12; -fx-font-weight: bold;"/>
+    </VBox>
+
+    <!-- Tabla de productos con pedido vs recibido -->
+    <Label text="Productos — Pedido vs Recibido:"
+           style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+
+    <TableView fx:id="tablaProductos" prefHeight="200"
+               style="-fx-border-color: #DBEAFE; -fx-border-radius: 6; -fx-font-size: 12;">
+        <columns>
+            <TableColumn fx:id="colProducto"  text="Producto"       prefWidth="220"/>
+            <TableColumn fx:id="colPedido"    text="Pedido"         prefWidth="80"/>
+            <TableColumn fx:id="colRecibido"  text="Recibido"       prefWidth="80"/>
+            <TableColumn fx:id="colDiferencia" text="Diferencia"    prefWidth="90"/>
+            <TableColumn fx:id="colCosto"     text="Costo unit."    prefWidth="110"/>
+            <TableColumn fx:id="colSubtotal"  text="Subtotal"       prefWidth="110"/>
+        </columns>
+    </TableView>
+
+    <!-- Historial de ediciones -->
+    <Label text="Historial de cambios:"
+           style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+    <TableView fx:id="tablaEdiciones" prefHeight="120"
+               style="-fx-border-color: #DBEAFE; -fx-border-radius: 6; -fx-font-size: 11;">
+        <columns>
+            <TableColumn fx:id="colEdFecha"   text="Fecha"     prefWidth="120"/>
+            <TableColumn fx:id="colEdUsuario" text="Usuario"   prefWidth="120"/>
+            <TableColumn fx:id="colEdMotivo"  text="Motivo"    prefWidth="180"/>
+            <TableColumn fx:id="colEdCambios" text="Cambios"   prefWidth="200"/>
+            <TableColumn fx:id="colEdNota"    text="Nota cred." prefWidth="80"/>
+        </columns>
+    </TableView>
+
+    <HBox alignment="CENTER_RIGHT">
+        <Button text="Cerrar" onAction="#onCerrar"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

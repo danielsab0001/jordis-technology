@@ -57,6 +57,21 @@ public class Venta {
     @Column(name = "notas", columnDefinition = "TEXT")
     private String notas;
 
+    @Column(name = "es_credito_fiscal", nullable = false)
+    private Boolean esCreditoFiscal = false;
+
+    @Column(name = "ncf", length = 19)
+    private String ncf;
+
+    @Column(name = "tipo_ncf", length = 10)
+    private String tipoNcf; // B01, B02, B14, B15
+
+    @Column(name = "itbis_porcentual", nullable = false, precision = 5, scale = 2)
+    private BigDecimal itbisPorcentual = BigDecimal.ZERO;
+
+    @Column(name = "monto_itbis", nullable = false, precision = 12, scale = 2)
+    private BigDecimal montoItbis = BigDecimal.ZERO;
+
     @Column(name = "anulada", nullable = false)
     private Boolean anulada = false;
 

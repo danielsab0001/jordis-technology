@@ -1,19 +1,13 @@
 package com.jordis.jordis.service;
 
-import com.jordis.jordis.model.AlertaSistema;
-import com.jordis.jordis.model.Producto;
-import com.jordis.jordis.model.Usuario;
-import com.jordis.jordis.model.Venta;
-import com.jordis.jordis.repository.AlertaSistemaRepository;
-import com.jordis.jordis.repository.ProductoRepository;
-import com.jordis.jordis.repository.UsuarioRepository;
-import com.jordis.jordis.repository.VentaRepository;
+import com.jordis.jordis.model.*;
+import com.jordis.jordis.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.LocalDateTime;
 
+import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -28,6 +22,7 @@ public class AlertaService {
     private final ProductoRepository      productoRepository;
     private final UsuarioRepository       usuarioRepository;
     private final VentaRepository ventaRepository;
+    private final CuentaPorPagarRepository cuentaPorPagarRepository;
 
     private static final BigDecimal UMBRAL_PRECIO_DIFERENCIA = new BigDecimal("20");
 
@@ -111,6 +106,7 @@ public class AlertaService {
         escanearDiferenciaPrecios();
         limpiarAlertasUsuariosBloqueados();
         escanearCreditosPorVencer();
+        escanearCuentasPorPagar();
     }
 
     @Transactional
@@ -283,6 +279,63 @@ public class AlertaService {
                 nueva.setTitulo(titulo);
                 nueva.setDescripcion(desc);
                 nueva.setIdReferencia(v.getIdVenta());
+                alertaRepository.save(nueva);
+            }
+        }
+    }
+
+    @Transactional
+    public void escanearCuentasPorPagar() {
+        List<CuentaPorPagar> cuentas = cuentaPorPagarRepository.findTodas();
+        LocalDateTime ahora      = LocalDateTime.now();
+        LocalDateTime limiteAviso = ahora.plusDays(7);
+
+        for (CuentaPorPagar c : cuentas) {
+            Optional<AlertaSistema> existente = alertaRepository.findNoLeidas()
+                    .stream()
+                    .filter(a -> "CUENTA_POR_PAGAR".equals(a.getTipo())
+                            && c.getIdCuenta().equals(a.getIdReferencia()))
+                    .findFirst();
+
+            // Si ya está pagada, eliminar alerta
+            if (c.estaCancelada()) {
+                existente.ifPresent(alertaRepository::delete);
+                continue;
+            }
+
+            if (c.getFechaLimite() == null) continue;
+
+            boolean vencida   = c.getFechaLimite().isBefore(ahora);
+            boolean porVencer = !vencida && c.getFechaLimite().isBefore(limiteAviso);
+
+            if (!vencida && !porVencer) {
+                existente.ifPresent(alertaRepository::delete);
+                continue;
+            }
+
+            String titulo = vencida
+                    ? "Cuenta VENCIDA: " + c.getProveedor().getNombre()
+                    : "Cuenta por vencer: " + c.getProveedor().getNombre();
+
+            String desc = String.format(
+                    "Compra #%d — Saldo: RD$%s — %s: %s",
+                    c.getCompra().getIdCompra(),
+                    c.getSaldoPendiente().toPlainString(),
+                    vencida ? "Venció el" : "Vence el",
+                    c.getFechaLimite().toLocalDate().toString());
+
+            if (existente.isPresent()) {
+                AlertaSistema a = existente.get();
+                a.setTitulo(titulo);
+                a.setDescripcion(desc);
+                a.setLeida(false);
+                alertaRepository.save(a);
+            } else {
+                AlertaSistema nueva = new AlertaSistema();
+                nueva.setTipo("CUENTA_POR_PAGAR");
+                nueva.setTitulo(titulo);
+                nueva.setDescripcion(desc);
+                nueva.setIdReferencia(c.getIdCuenta());
                 alertaRepository.save(nueva);
             }
         }

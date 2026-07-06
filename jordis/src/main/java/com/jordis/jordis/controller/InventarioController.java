@@ -1,5 +1,6 @@
 package com.jordis.jordis.controller;
 
+import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Categoria;
 import com.jordis.jordis.model.Producto;
 import com.jordis.jordis.service.AutenticacionService;
@@ -8,9 +9,12 @@ import com.jordis.jordis.service.ProductoService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -46,6 +50,7 @@ public class InventarioController {
     private final InventarioService inventarioService;
     private final ProductoService productoService;
     private final AutenticacionService autenticacionService;
+    private final SpringFXMLLoader     fxmlLoader;
 
     @FXML
     public void initialize() {
@@ -334,50 +339,36 @@ public class InventarioController {
         lblMensaje.setText("");
     }
 
-    @FXML public void onAjusteManual() {
-        Producto seleccionado = tablaInventario.getSelectionModel().getSelectedItem();
+    @FXML
+    public void onAjusteManual() {
+        Producto seleccionado =
+                tablaInventario.getSelectionModel().getSelectedItem();
         if (seleccionado == null) {
             mostrarMensaje("Selecciona un producto de la tabla primero.", true);
             return;
         }
-
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Ajuste de inventario");
-        dialog.setHeaderText("Producto: " + seleccionado.getNombre()
-                + " | Stock actual: " + seleccionado.getStock());
-
-        TextField txtCantidad = new TextField();
-        txtCantidad.setPromptText("Ej: 5 para sumar, -3 para restar");
-        TextField txtMotivo = new TextField();
-        txtMotivo.setPromptText("Motivo del ajuste");
-
-        VBox content = new VBox(10,
-                new Label("Cantidad (positivo = entrada, negativo = salida):"),
-                txtCantidad,
-                new Label("Motivo:"),
-                txtMotivo);
-        content.setStyle("-fx-padding: 16;");
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(bt -> {
-            if (bt == ButtonType.OK) {
-                try {
-                    int cantidad = Integer.parseInt(txtCantidad.getText().trim());
-                    inventarioService.ajustarStock(
-                            seleccionado.getIdProducto(),
-                            autenticacionService.getUsuarioActivo().getIdUsuario(),
-                            cantidad,
-                            txtMotivo.getText().trim());
-                    cargarInventario();
-                    mostrarMensaje("Ajuste realizado correctamente.", false);
-                } catch (NumberFormatException e) {
-                    mostrarMensaje("La cantidad debe ser un número entero.", true);
-                } catch (Exception e) {
-                    mostrarMensaje("Error: " + e.getMessage(), true);
-                }
-            }
-        });
+        try {
+            SpringFXMLLoader.LoadResult<AjusteInventarioController> result =
+                    fxmlLoader.loadWithController("/fxml/ajuste_inventario_form.fxml");
+            result.controller.setProducto(seleccionado);
+            result.controller.setOnGuardado(() -> {
+                // Actualizar solo la fila sin recargar toda la tabla
+                Producto actualizado = inventarioService
+                        .obtenerProductoPorId(seleccionado.getIdProducto());
+                int indice = tablaInventario.getItems().indexOf(seleccionado);
+                if (indice >= 0) tablaInventario.getItems().set(indice, actualizado);
+                mostrarMensaje("Ajuste realizado correctamente.", false);
+            });
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Ajuste de inventario — " + seleccionado.getNombre());
+            stage.setScene(new Scene(result.root, 500, 480));
+            stage.setResizable(false);
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo ajuste de inventario", e);
+            mostrarMensaje("Error al abrir: " + e.getMessage(), true);
+        }
     }
 
     private void mostrarMensaje(String texto, boolean esError) {

@@ -2,12 +2,14 @@ package com.jordis.jordis.controller;
 
 import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Venta;
+import com.jordis.jordis.service.FacturaService;
 import com.jordis.jordis.service.VentaService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -36,10 +39,13 @@ public class CreditoController {
     @FXML private Label lblMensaje;
 
     private final VentaService     ventaService;
+    private final FacturaService   facturaService;
     private final SpringFXMLLoader fxmlLoader;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter FMT_LARGO =
+            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @FXML
     public void initialize() {
@@ -52,22 +58,32 @@ public class CreditoController {
                 new SimpleStringProperty(
                         d.getValue().getNumeroFactura() != null
                                 ? d.getValue().getNumeroFactura() : "—"));
+
         colFecha.setCellValueFactory(d ->
-                new SimpleStringProperty(d.getValue().getFechaHora().format(FMT)));
+                new SimpleStringProperty(
+                        d.getValue().getFechaHora().format(FMT_LARGO)));
+
         colCliente.setCellValueFactory(d -> {
             var c = d.getValue().getCliente();
-            return new SimpleStringProperty(c != null ? c.getNombreCompleto() : "—");
+            return new SimpleStringProperty(
+                    c != null ? c.getNombreCompleto() : "—");
         });
-        colTotal.setCellValueFactory(d ->
-                new SimpleStringProperty("RD$" + d.getValue().getTotal().toPlainString()));
-        colPagado.setCellValueFactory(d ->
-                new SimpleStringProperty("RD$" + d.getValue().getTotalPagado().toPlainString()));
 
+        colTotal.setCellValueFactory(d ->
+                new SimpleStringProperty(
+                        "RD$" + d.getValue().getTotal().toPlainString()));
+
+        colPagado.setCellValueFactory(d ->
+                new SimpleStringProperty(
+                        "RD$" + d.getValue().getTotalPagado().toPlainString()));
+
+        // Saldo con color
         colSaldo.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                if (empty || getTableRow() == null
+                        || getTableRow().getItem() == null) {
                     setText(null); setStyle(""); return;
                 }
                 Venta v = (Venta) getTableRow().getItem();
@@ -79,43 +95,51 @@ public class CreditoController {
             }
         });
 
+        // Vencimiento con aviso visual
         colVencimiento.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                if (empty || getTableRow() == null
+                        || getTableRow().getItem() == null) {
                     setText(null); setStyle(""); return;
                 }
                 Venta v = (Venta) getTableRow().getItem();
                 if (v.getFechaLimiteCredito() == null) {
                     setText("—"); setStyle(""); return;
                 }
-                String fecha = v.getFechaLimiteCredito().format(FMT);
                 boolean vencido = v.getFechaLimiteCredito()
-                        .isBefore(java.time.LocalDateTime.now())
-                        && !v.estaCancelado();
-                setText(vencido ? "⚠ " + fecha : fecha);
-                setStyle(vencido ? "-fx-text-fill: #DC2626; -fx-font-weight: bold;" : "");
+                        .isBefore(LocalDateTime.now()) && !v.estaCancelado();
+                setText(vencido
+                        ? "⚠ " + v.getFechaLimiteCredito().format(FMT)
+                        : v.getFechaLimiteCredito().format(FMT));
+                setStyle(vencido
+                        ? "-fx-text-fill: #DC2626; -fx-font-weight: bold;" : "");
             }
         });
 
+        // Estado con badge
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                if (empty || getTableRow() == null
+                        || getTableRow().getItem() == null) {
                     setGraphic(null); return;
                 }
                 Venta v = (Venta) getTableRow().getItem();
                 String texto, fondo, color;
                 if (v.estaCancelado()) {
-                    texto = "Pagado"; fondo = "#DCFCE7"; color = "#15803D";
+                    texto = "Pagado";
+                    fondo = "#DCFCE7"; color = "#15803D";
                 } else if (v.getFechaLimiteCredito() != null
                         && v.getFechaLimiteCredito()
-                        .isBefore(java.time.LocalDateTime.now())) {
-                    texto = "Vencido"; fondo = "#FEE2E2"; color = "#DC2626";
+                        .isBefore(LocalDateTime.now())) {
+                    texto = "Vencido";
+                    fondo = "#FEE2E2"; color = "#DC2626";
                 } else {
-                    texto = "Pendiente"; fondo = "#FEF3C7"; color = "#B45309";
+                    texto = "Pendiente";
+                    fondo = "#FEF3C7"; color = "#B45309";
                 }
                 Label badge = new Label(texto);
                 badge.setStyle("-fx-background-color: " + fondo
@@ -126,33 +150,43 @@ public class CreditoController {
             }
         });
 
+        // Acciones
         colAcciones.setCellFactory(col -> new TableCell<>() {
-            private final Button btnPagar = new Button("Registrar pago");
-            private final Button btnFactura = new Button("Factura");
-            {
-                btnPagar.setStyle("-fx-background-color: #DCFCE7; -fx-text-fill: #15803D;"
-                        + " -fx-border-color: #BBF7D0; -fx-border-radius: 4;"
-                        + " -fx-background-radius: 4; -fx-font-size: 10; -fx-padding: 3 7;");
-                btnFactura.setStyle("-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;"
-                        + " -fx-border-color: #BFDBFE; -fx-border-radius: 4;"
-                        + " -fx-background-radius: 4; -fx-font-size: 10; -fx-padding: 3 7;");
-            }
+            private final Button btnPagar   = crearBtn("Registrar pago",
+                    "#15803D", "#DCFCE7");
+            private final Button btnFactura = crearBtn("Ver factura",
+                    "#2563EB", "#EFF6FF");
+            private final HBox box = new HBox(5, btnPagar, btnFactura);
 
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                if (empty || getTableRow() == null
+                        || getTableRow().getItem() == null) {
                     setGraphic(null); return;
                 }
                 Venta v = (Venta) getTableRow().getItem();
                 btnPagar.setOnAction(e -> abrirFormPago(v));
-                btnFactura.setOnAction(e -> regenerarFactura(v));
+                btnFactura.setOnAction(e -> verFactura(v));
+
+                // Ocultar botón de pago si ya está cancelado
                 btnPagar.setVisible(!v.estaCancelado());
                 btnPagar.setManaged(!v.estaCancelado());
-                var box = new javafx.scene.layout.HBox(5, btnPagar, btnFactura);
+
                 setGraphic(box);
             }
         });
+    }
+
+    private Button crearBtn(String texto, String colorTexto, String colorFondo) {
+        Button btn = new Button(texto);
+        btn.setStyle(
+                "-fx-background-color: " + colorFondo
+                        + "; -fx-text-fill: " + colorTexto
+                        + "; -fx-border-color: " + colorTexto
+                        + "; -fx-border-radius: 4; -fx-background-radius: 4;"
+                        + " -fx-font-size: 10; -fx-padding: 4 8; -fx-cursor: hand;");
+        return btn;
     }
 
     private void cargarCreditos() {
@@ -160,7 +194,8 @@ public class CreditoController {
                 FXCollections.observableArrayList(ventaService.obtenerCreditos()));
     }
 
-    @FXML public void onVerPendientes() {
+    @FXML
+    public void onVerPendientes() {
         List<Venta> pendientes = ventaService.obtenerCreditos().stream()
                 .filter(v -> !v.estaCancelado())
                 .toList();
@@ -168,7 +203,8 @@ public class CreditoController {
         mostrarMensaje(pendientes.size() + " crédito(s) pendiente(s).", false);
     }
 
-    @FXML public void onVerTodos() {
+    @FXML
+    public void onVerTodos() {
         cargarCreditos();
         lblMensaje.setText("");
     }
@@ -185,7 +221,8 @@ public class CreditoController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Registrar pago — " + venta.getNumeroFactura());
-            stage.setScene(new Scene(result.root, 560, 460));
+            stage.setScene(new Scene(result.root, 580, 460));
+            stage.setResizable(true);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de pago", e);
@@ -193,9 +230,14 @@ public class CreditoController {
         }
     }
 
-    private void regenerarFactura(Venta venta) {
-        // Implementar con FacturaService si se necesita
-        mostrarMensaje("Función de reimpresión de factura próximamente.", false);
+    private void verFactura(Venta venta) {
+        try {
+            String ruta = facturaService.generarFactura(venta);
+            facturaService.abrirPDF(ruta);
+        } catch (Exception e) {
+            log.error("Error generando factura", e);
+            mostrarMensaje("Error al generar factura: " + e.getMessage(), true);
+        }
     }
 
     private void mostrarMensaje(String texto, boolean esError) {

@@ -23,6 +23,7 @@ public class VentaService {
     private final CreditoPagoRepository  creditoPagoRepository;
     private final ClienteRepository      clienteRepository;
     private final AlertaService alertaService;
+    private final NCFService ncfService;
 
     public List<Venta> obtenerTodas() {
         return ventaRepository.findActivas();
@@ -52,15 +53,15 @@ public class VentaService {
     /**
      * Registra una venta completa con garantías y soporte de crédito.
      *
-     * @param idCliente            null = cliente ocasional
-     * @param cajero               usuario que realiza la venta
-     * @param metodoPago           EFECTIVO, TARJETA, TRANSFERENCIA, CREDITO
-     * @param descuentoPorcentual  0-100
-     * @param items                Map<idProducto, cantidad>
-     * @param garantias            Map<idProducto, [descripcion, meses]>
-     * @param notas                notas adicionales de la venta
-     * @param esCredito            si la venta es a crédito
-     * @param fechaLimiteCredito   fecha límite de pago (solo si esCredito=true)
+     * @param idCliente           null = cliente ocasional
+     * @param cajero              usuario que realiza la venta
+     * @param metodoPago          EFECTIVO, TARJETA, TRANSFERENCIA, CREDITO
+     * @param descuentoPorcentual 0-100
+     * @param items               Map<idProducto, cantidad>
+     * @param garantias           Map<idProducto, [descripcion, meses]>
+     * @param notas               notas adicionales de la venta
+     * @param esCredito           si la venta es a crédito
+     * @param fechaLimiteCredito  fecha límite de pago (solo si esCredito=true)
      */
     @Transactional
     public Venta registrarVenta(Integer idCliente,
@@ -71,7 +72,10 @@ public class VentaService {
                                 Map<Integer, String[]> garantias,
                                 String notas,
                                 boolean esCredito,
-                                LocalDateTime fechaLimiteCredito) {
+                                LocalDateTime fechaLimiteCredito,
+                                boolean esCreditoFiscal,
+                                String tipoNcf,
+                                BigDecimal itbisPorcentual) {
 
         if (items.isEmpty()) {
             throw new VentaInvalidaException("La venta debe tener al menos un producto.");
@@ -170,10 +174,32 @@ public class VentaService {
             }
         }
 
+        // NCF e ITBIS
+        venta.setEsCreditoFiscal(esCreditoFiscal);
+        if (esCreditoFiscal && tipoNcf != null) {
+            String ncf = ncfService.generarNCF(tipoNcf);
+            venta.setNcf(ncf);
+            venta.setTipoNcf(tipoNcf);
+        }
+
+// Calcular ITBIS sobre el total con descuento
+        venta.setItbisPorcentual(
+                itbisPorcentual != null ? itbisPorcentual : BigDecimal.ZERO);
+
         venta.setSubtotal(subtotal);
         BigDecimal factor = BigDecimal.ONE.subtract(
                 descuentoPorcentual.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
         venta.setTotal(subtotal.multiply(factor).setScale(2, RoundingMode.HALF_UP));
+
+        // Calcular monto ITBIS
+        if (itbisPorcentual != null && itbisPorcentual.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal montoItbis = venta.getTotal()
+                    .multiply(itbisPorcentual)
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            venta.setMontoItbis(montoItbis);
+        } else {
+            venta.setMontoItbis(BigDecimal.ZERO);
+        }
 
         Venta guardada = ventaRepository.save(venta);
         log.info("Venta #{} registrada — Factura: {} — Total: {} — Cajero: {}",

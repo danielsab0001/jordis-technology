@@ -201,10 +201,11 @@ public class FacturaService {
         tabla.setSpacingAfter(10);
 
         // Subtotal
-        agregarFilaTotal(tabla, "Subtotal:", "RD$" + venta.getSubtotal().toPlainString(),
+        agregarFilaTotal(tabla,
+                "Subtotal:", "RD$" + venta.getSubtotal().toPlainString(),
                 FONT_NORMAL, FONT_NORMAL);
 
-        // Descuento si aplica
+        // Descuento
         BigDecimal desc = venta.getDescuentoPorcentual();
         if (desc != null && desc.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal montoDesc = venta.getSubtotal()
@@ -217,26 +218,75 @@ public class FacturaService {
                     new Font(Font.HELVETICA, 10, Font.NORMAL, new Color(220, 38, 38)));
         }
 
+        // ITBIS
+        if (venta.getMontoItbis() != null
+                && venta.getMontoItbis().compareTo(BigDecimal.ZERO) > 0) {
+            agregarFilaTotal(tabla,
+                    "ITBIS (" + venta.getItbisPorcentual().toPlainString() + "%):",
+                    "+ RD$" + venta.getMontoItbis().toPlainString(),
+                    new Font(Font.HELVETICA, 10, Font.NORMAL, new Color(100, 116, 139)),
+                    new Font(Font.HELVETICA, 10, Font.NORMAL, new Color(100, 116, 139)));
+        }
+
         // Total
-        agregarFilaTotal(tabla, "TOTAL:", "RD$" + venta.getTotal().toPlainString(),
+        agregarFilaTotal(tabla,
+                "TOTAL:", "RD$" + venta.getTotal().toPlainString(),
                 FONT_TOTAL, FONT_TOTAL);
 
-        // Si es crédito mostrar pagado y saldo
+        // Crédito
         if (venta.getEsCredito()) {
             BigDecimal pagado = venta.getTotalPagado();
             BigDecimal saldo  = venta.getSaldoPendiente();
-
-            agregarFilaTotal(tabla, "Pagado:",
-                    "RD$" + pagado.toPlainString(), FONT_BOLD, FONT_BOLD);
-
+            agregarFilaTotal(tabla,
+                    "Pagado:", "RD$" + pagado.toPlainString(),
+                    FONT_BOLD, FONT_BOLD);
             Font fontSaldo = saldo.compareTo(BigDecimal.ZERO) > 0
                     ? new Font(Font.HELVETICA, 10, Font.BOLD, new Color(220, 38, 38))
                     : new Font(Font.HELVETICA, 10, Font.BOLD, new Color(21, 128, 61));
-            agregarFilaTotal(tabla, "Saldo pendiente:",
-                    "RD$" + saldo.toPlainString(), fontSaldo, fontSaldo);
+            agregarFilaTotal(tabla,
+                    "Saldo pendiente:", "RD$" + saldo.toPlainString(),
+                    fontSaldo, fontSaldo);
         }
 
         doc.add(tabla);
+
+        // NCF — si aplica, mostrar después de los totales
+        if (venta.getNcf() != null) {
+            doc.add(new Paragraph(" "));
+            PdfPTable tablaNCF = new PdfPTable(1);
+            tablaNCF.setWidthPercentage(100);
+
+            PdfPCell celdaNCF = new PdfPCell();
+            celdaNCF.setBackgroundColor(new Color(240, 253, 244));
+            celdaNCF.setBorderColor(new Color(187, 247, 208));
+            celdaNCF.setPadding(8);
+
+            Paragraph pNCF = new Paragraph();
+            pNCF.add(new Chunk("Comprobante Fiscal (NCF): ",
+                    new Font(Font.HELVETICA, 10, Font.BOLD,
+                            new Color(21, 128, 61))));
+            pNCF.add(new Chunk(venta.getNcf(),
+                    new Font(Font.HELVETICA, 11, Font.BOLD,
+                            new Color(21, 128, 61))));
+
+            if (venta.getTipoNcf() != null) {
+                pNCF.add(new Chunk("\nTipo: " + venta.getTipoNcf()
+                        + switch (venta.getTipoNcf()) {
+                    case "B01" -> " — Crédito Fiscal";
+                    case "B02" -> " — Consumidor Final";
+                    case "B14" -> " — Régimen Especial";
+                    case "B15" -> " — Gubernamental";
+                    default    -> "";
+                },
+                        new Font(Font.HELVETICA, 9, Font.NORMAL,
+                                new Color(100, 116, 139))));
+            }
+
+            celdaNCF.setPhrase(new Phrase(pNCF.getContent()));
+            celdaNCF.addElement(pNCF);
+            tablaNCF.addCell(celdaNCF);
+            doc.add(tablaNCF);
+        }
     }
 
     private void agregarGarantias(Document doc, Venta venta) throws DocumentException {

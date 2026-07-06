@@ -184,6 +184,7 @@ public class AlertaController {
             case "USUARIO_BLOQUEADO"     -> "Usuario bloqueado";
             case "PRECIO_COMPRA_INUSUAL" -> "Precio inusual";
             case "CREDITO_VENCIMIENTO"   -> "Crédito por vencer";
+            case "CUENTA_POR_PAGAR" -> "Cuenta por pagar";
             default                      -> tipo;
         };
     }
@@ -195,6 +196,7 @@ public class AlertaController {
             case "USUARIO_BLOQUEADO"     -> new String[]{"#FEE2E2", "#DC2626"};
             case "PRECIO_COMPRA_INUSUAL" -> new String[]{"#FFEDD5", "#C2410C"};
             case "CREDITO_VENCIMIENTO"   -> new String[]{"#FEE2E2", "#B91C1C"};
+            case "CUENTA_POR_PAGAR"      -> new String[]{"#FEE2E2", "#B91C1C"};
             default                      -> new String[]{"#F1F5F9", "#64748B"};
         };
     }

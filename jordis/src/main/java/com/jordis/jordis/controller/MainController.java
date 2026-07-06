@@ -34,6 +34,7 @@ public class MainController {
     @FXML private Button btnCompras;
     @FXML private Button btnProveedores;
     @FXML private Button btnCreditos;
+    @FXML private Button btnCuentasPorPagar;
 
     // Botones del menú lateral — administración
     @FXML private Button  btnReportes;
@@ -161,6 +162,7 @@ public class MainController {
     @FXML public void onCreditos() {
         cargarModulo("/fxml/creditos.fxml", btnCreditos, "Módulo: Créditos");
     }
+    @FXML public void onCuentasPorPagar() {cargarModulo("/fxml/cuentas_por_pagar.fxml", btnCuentasPorPagar, "Módulo: Cuentas por Pagar"); }
     @FXML public void onReportes() {
         cargarModulo("/fxml/reportes.fxml", btnReportes, "Módulo: Reportes");
     }

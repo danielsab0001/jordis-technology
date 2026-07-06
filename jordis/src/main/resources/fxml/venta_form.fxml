@@ -46,6 +46,31 @@
                     style="-fx-font-size: 12;"/>
     </HBox>
 
+    <!-- Crédito fiscal / NCF -->
+    <HBox spacing="14" alignment="CENTER_LEFT"
+          style="-fx-background-color: #F0FDF4; -fx-padding: 8 12;
+             -fx-border-radius: 6; -fx-background-radius: 6;">
+        <CheckBox fx:id="chkCreditoFiscal"
+                  text="Generar comprobante fiscal (NCF)"
+                  onAction="#onToggleCreditoFiscal"
+                  style="-fx-font-size: 12; -fx-font-weight: bold;
+                     -fx-text-fill: #15803D;"/>
+        <Label text="Tipo NCF:" fx:id="lblTipoNcf"
+               visible="false" managed="false"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <ComboBox fx:id="cmbTipoNcf" visible="false" managed="false"
+                  prefWidth="220" prefHeight="32"
+                  style="-fx-font-size: 12; -fx-border-color: #BBF7D0;
+                     -fx-border-radius: 6; -fx-background-radius: 6;"/>
+        <Label text="ITBIS %:" fx:id="lblItbis"
+               visible="false" managed="false"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <ComboBox fx:id="cmbItbis" visible="false" managed="false"
+                  prefWidth="100" prefHeight="32"
+                  style="-fx-font-size: 12; -fx-border-color: #BBF7D0;
+                     -fx-border-radius: 6; -fx-background-radius: 6;"/>
+    </HBox>
+
     <!-- Agregar producto -->
     <HBox spacing="10" alignment="BOTTOM_LEFT">
         <VBox spacing="4" HBox.hgrow="ALWAYS">
@@ -149,6 +174,16 @@
                 <Label fx:id="lblDescuentoMonto" text="—"
                        style="-fx-font-size: 12; -fx-text-fill: #DC2626;
                               -fx-min-width: 100; -fx-alignment: CENTER_RIGHT;"/>
+            </HBox>
+            <Separator/>
+            <HBox spacing="24" alignment="CENTER_RIGHT">
+                <Label fx:id="lblItbisLabel" text="ITBIS (18%):"
+                       visible="false" managed="false"
+                       style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                <Label fx:id="lblItbisMonto" text="RD$0.00"
+                       visible="false" managed="false"
+                       style="-fx-font-size: 13; -fx-text-fill: #64748B;
+                  -fx-min-width: 100; -fx-alignment: CENTER_RIGHT;"/>
             </HBox>
             <Separator/>
             <HBox spacing="24" alignment="CENTER_RIGHT">

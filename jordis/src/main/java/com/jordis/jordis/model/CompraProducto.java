@@ -27,6 +27,9 @@ public class CompraProducto {
     @JoinColumn(name = "id_producto")
     private Producto producto;
 
+    @Column(name = "cantidad_pedida", updatable = false)
+    private Integer cantidadPedida;
+
     @Column(name = "cantidad", nullable = false)
     private Integer cantidad;
 

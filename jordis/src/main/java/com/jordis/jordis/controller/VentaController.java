@@ -34,6 +34,7 @@ public class VentaController {
     @FXML private TableColumn<Venta, String> colEstado;
     @FXML private TableColumn<Venta, Void>   colAnular;
     @FXML private Label lblMensaje;
+    @FXML private TableColumn<Venta, String> colNcf;
 
     private final VentaService ventaService;
     private final SpringFXMLLoader fxmlLoader;
@@ -62,6 +63,27 @@ public class VentaController {
                     .map(vp -> vp.getProducto().getNombre() + " x" + vp.getCantidad())
                     .collect(Collectors.joining(", "));
             return new SimpleStringProperty(resumen.isEmpty() ? "—" : resumen);
+        });
+        colNcf.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null
+                        || getTableRow().getItem() == null) {
+                    setGraphic(null); setText(null); return;
+                }
+                Venta v = (Venta) getTableRow().getItem();
+                if (v.getNcf() == null) {
+                    setText("—"); setGraphic(null); return;
+                }
+                Label badge = new Label(v.getNcf());
+                badge.setStyle(
+                        "-fx-background-color: #DCFCE7; -fx-text-fill: #15803D;"
+                                + " -fx-padding: 2 6; -fx-background-radius: 4;"
+                                + " -fx-font-size: 10; -fx-font-weight: bold;");
+                setGraphic(badge);
+                setText(null);
+            }
         });
         colSubtotal.setCellValueFactory(d ->
                 new SimpleStringProperty("RD$" + d.getValue().getSubtotal().toPlainString()));

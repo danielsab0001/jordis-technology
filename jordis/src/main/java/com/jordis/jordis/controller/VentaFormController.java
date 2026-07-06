@@ -2,11 +2,7 @@ package com.jordis.jordis.controller;
 
 import com.jordis.jordis.model.Cliente;
 import com.jordis.jordis.model.Producto;
-import com.jordis.jordis.service.AutenticacionService;
-import com.jordis.jordis.service.ClienteService;
-import com.jordis.jordis.service.FacturaService;
-import com.jordis.jordis.service.ProductoService;
-import com.jordis.jordis.service.VentaService;
+import com.jordis.jordis.service.*;
 import com.jordis.jordis.model.Venta;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -56,6 +52,15 @@ public class VentaFormController {
     @FXML private TextField            txtNotas;
     @FXML private Label                lblError;
     @FXML private Button               btnGuardar;
+    @FXML private CheckBox       chkCreditoFiscal;
+    @FXML private Label          lblTipoNcf;
+    @FXML private ComboBox<String> cmbTipoNcf;
+    @FXML private Label          lblItbis;
+    @FXML private ComboBox<String> cmbItbis;
+    @FXML private Label lblItbisLabel;
+    @FXML private Label lblItbisMonto;
+
+    private final NCFService ncfService;
 
     private final VentaService         ventaService;
     private final ClienteService       clienteService;
@@ -76,6 +81,11 @@ public class VentaFormController {
         configurarDescuento();
         configurarTabla();
         tablaDetalle.setItems(detalles);
+        cmbTipoNcf.getItems().setAll(ncfService.obtenerTiposDisponibles());
+        cmbTipoNcf.setValue("B01 — Crédito Fiscal");
+        cmbItbis.getItems().setAll("0%", "18%"); // 18% es el ITBIS estándar en RD
+        cmbItbis.setValue("18%");
+        cmbItbis.setOnAction(e -> actualizarTotales());
     }
 
     public void prepararNuevaVenta() {
@@ -101,6 +111,8 @@ public class VentaFormController {
         lblFechaLimite.setManaged(false);
         dpFechaLimite.setVisible(false);
         dpFechaLimite.setManaged(false);
+        chkCreditoFiscal.setSelected(false);
+        onToggleCreditoFiscal();
 
         txtCantidad.clear();
         txtGarantiaDesc.clear();
@@ -305,6 +317,16 @@ public class VentaFormController {
     }
 
     @FXML
+    public void onToggleCreditoFiscal() {
+        boolean activo = chkCreditoFiscal.isSelected();
+        lblTipoNcf.setVisible(activo); lblTipoNcf.setManaged(activo);
+        cmbTipoNcf.setVisible(activo); cmbTipoNcf.setManaged(activo);
+        lblItbis.setVisible(activo);   lblItbis.setManaged(activo);
+        cmbItbis.setVisible(activo);   cmbItbis.setManaged(activo);
+        actualizarTotales(); // recalcular al cambiar
+    }
+
+    @FXML
     public void onAgregarProducto() {
         lblError.setText("");
         Producto producto = cmbProducto.getValue();
@@ -401,6 +423,20 @@ public class VentaFormController {
         String metodoPago = esCredito
                 ? "CREDITO" : cmbMetodoPago.getValue();
 
+        boolean esCreditoFiscal = chkCreditoFiscal.isSelected();
+        String tipoNcf = null;
+        BigDecimal itbis = BigDecimal.ZERO;
+
+        if (esCreditoFiscal) {
+            tipoNcf = ncfService.extraerCodigo(cmbTipoNcf.getValue());
+            try {
+                itbis = new BigDecimal(
+                        cmbItbis.getValue().replace("%", "").trim());
+            } catch (Exception e) {
+                itbis = BigDecimal.ZERO;
+            }
+        }
+
         try {
             Venta venta = ventaService.registrarVenta(
                     clienteSel != null ? clienteSel.getIdCliente() : null,
@@ -411,7 +447,11 @@ public class VentaFormController {
                     garantias,
                     txtNotas.getText().trim(),
                     esCredito,
-                    fechaLimite);
+                    fechaLimite,
+                    esCreditoFiscal,
+                    tipoNcf,
+                    itbis
+            );
 
             // Preguntar si desea imprimir la factura
             Alert pregunta = new Alert(Alert.AlertType.CONFIRMATION,
@@ -467,30 +507,60 @@ public class VentaFormController {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal descPct = obtenerDescuento();
-        BigDecimal monto   = subtotal.multiply(descPct)
+        BigDecimal montoDesc = subtotal.multiply(descPct)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        BigDecimal total   = subtotal.subtract(monto)
+        BigDecimal totalSinItbis = subtotal.subtract(montoDesc)
                 .setScale(2, RoundingMode.HALF_UP);
+
+        // Calcular ITBIS si está activo
+        BigDecimal itbisPct = BigDecimal.ZERO;
+        BigDecimal montoItbis = BigDecimal.ZERO;
+        if (chkCreditoFiscal.isSelected() && cmbItbis.getValue() != null) {
+            try {
+                itbisPct = new BigDecimal(
+                        cmbItbis.getValue().replace("%", "").trim());
+                montoItbis = totalSinItbis.multiply(itbisPct)
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            } catch (Exception ignored) {}
+        }
+
+        BigDecimal totalFinal = totalSinItbis.add(montoItbis);
 
         lblSubtotal.setText("RD$" + subtotal.setScale(2).toPlainString());
 
         if (descPct.compareTo(BigDecimal.ZERO) > 0) {
             lblDescuentoLabel.setText("Descuento ("
                     + descPct.stripTrailingZeros().toPlainString() + "%):");
-            lblDescuentoMonto.setText("- RD$" + monto.toPlainString());
+            lblDescuentoMonto.setText("- RD$" + montoDesc.toPlainString());
         } else {
             lblDescuentoLabel.setText("Descuento (0%):");
             lblDescuentoMonto.setText("—");
         }
-        lblTotal.setText("RD$" + total.toPlainString());
-    }
 
+        // Mostrar/ocultar ITBIS
+        boolean hayItbis = montoItbis.compareTo(BigDecimal.ZERO) > 0;
+        lblItbisLabel.setVisible(hayItbis);
+        lblItbisLabel.setManaged(hayItbis);
+        lblItbisMonto.setVisible(hayItbis);
+        lblItbisMonto.setManaged(hayItbis);
+        if (hayItbis) {
+            lblItbisLabel.setText("ITBIS ("
+                    + itbisPct.toPlainString() + "%):");
+            lblItbisMonto.setText("+ RD$" + montoItbis.toPlainString());
+        }
+
+        lblTotal.setText("RD$" + totalFinal.toPlainString());
+    }
     private void cerrar() {
         ((Stage) btnGuardar.getScene().getWindow()).close();
     }
 
-    record FilaVenta(Producto producto, int cantidad,
-                     String garantiaDesc, int garantiaMeses) {
+    record FilaVenta(
+            Producto producto,
+            int cantidad,
+            String garantiaDesc,
+            int garantiaMeses
+    ) {
         BigDecimal subtotal() {
             return producto.getPrecioUnitario()
                     .multiply(BigDecimal.valueOf(cantidad));

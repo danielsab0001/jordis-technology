@@ -25,6 +25,7 @@ public class CompraService {
     private final ProveedorService proveedorService;
     private final AlertaService alertaService;
     private final CompraEdicionRepository edicionRepository;
+    private final CuentaPorPagarService cuentaPorPagarService;
 
     // Margen de ganancia por defecto: 30%
     private static final BigDecimal MARGEN_DEFAULT = new BigDecimal("1.30");
@@ -72,6 +73,7 @@ public class CompraService {
             detalle.setCompra(compra);
             detalle.setProducto(producto);
             detalle.setCantidad(cantidad);
+            detalle.setCantidadPedida(cantidad);
             detalle.setCostoUnitario(costo);
             detalle.setSubtotal(costo.multiply(BigDecimal.valueOf(cantidad)));
             compra.getDetalles().add(detalle);
@@ -127,6 +129,7 @@ public class CompraService {
         compra.setFechaRecepcion(LocalDateTime.now());
         Compra actualizada = compraRepository.save(compra);
         log.info("Compra #{} marcada como RECIBIDA", idCompra);
+
         return actualizada;
     }
 
@@ -143,35 +146,54 @@ public class CompraService {
     }
 
     @Transactional
-    public void editarCompra(Integer idCompra, Map<Integer, Integer> cantidadesRecibidas,
-                             String motivo, boolean notaCredito, Integer idUsuario) {
+    public void editarCompra(Integer idCompra,
+                             Map<Integer, Integer> cantidadesRecibidas,
+                             String motivo, boolean notaCredito,
+                             Integer idUsuario) {
 
         Compra compra = compraRepository.findById(idCompra)
-                .orElseThrow(() -> new RuntimeException("Compra no encontrada: " + idCompra));
+                .orElseThrow(() -> new RuntimeException(
+                        "Compra no encontrada: " + idCompra));
+
+        if ("RECIBIDA".equals(compra.getEstado())) {
+            throw new RuntimeException(
+                    "No se puede editar una compra ya recibida.");
+        }
+        if ("CANCELADA".equals(compra.getEstado())) {
+            throw new RuntimeException(
+                    "No se puede editar una compra cancelada.");
+        }
 
         StringBuilder cambios = new StringBuilder();
 
         for (CompraProducto detalle : compra.getDetalles()) {
-            Integer idProducto = detalle.getProducto().getIdProducto();
+            Integer idProducto   = detalle.getProducto().getIdProducto();
             Integer cantRecibida = cantidadesRecibidas.getOrDefault(
                     idProducto, detalle.getCantidad());
 
+            // Preservar la cantidad pedida original
+            int cantPedida = detalle.getCantidadPedida() != null
+                    ? detalle.getCantidadPedida()
+                    : detalle.getCantidad();
+
             if (!cantRecibida.equals(detalle.getCantidad())) {
-                cambios.append(String.format("%s: pedido %d → recibido %d. ",
+                cambios.append(String.format(
+                        "%s: pedido %d → recibido %d. ",
                         detalle.getProducto().getNombre(),
-                        detalle.getCantidad(),
+                        detalle.getCantidadPedida(),
                         cantRecibida));
+
                 detalle.setCantidad(cantRecibida);
                 detalle.setSubtotal(
                         detalle.getCostoUnitario()
-                                .multiply(java.math.BigDecimal.valueOf(cantRecibida)));
+                                .multiply(BigDecimal.valueOf(cantRecibida)));
             }
         }
 
-        // Recalcular total
-        java.math.BigDecimal nuevoTotal = compra.getDetalles().stream()
+        // Recalcular total con cantidades recibidas
+        BigDecimal nuevoTotal = compra.getDetalles().stream()
                 .map(CompraProducto::getSubtotal)
-                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         compra.setTotalCompra(nuevoTotal);
         compraRepository.save(compra);
 
@@ -182,7 +204,8 @@ public class CompraService {
         usuario.setIdUsuario(idUsuario);
         edicion.setUsuario(usuario);
         edicion.setMotivo(motivo);
-        edicion.setCambios(cambios.length() > 0 ? cambios.toString() : "Sin cambios en cantidades.");
+        edicion.setCambios(cambios.length() > 0
+                ? cambios.toString() : "Sin cambios en cantidades.");
         edicion.setNotaCredito(notaCredito);
         edicionRepository.save(edicion);
 
