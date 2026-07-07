@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.ProductoFormController"
+      spacing="12" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text fx:id="txtTitulo" text="Nuevo Producto"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <HBox spacing="12">
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Nombre" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtNombre" promptText="Ej: iPhone 15" prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
+        </VBox>
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Marca" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtMarca" promptText="Ej: Apple" prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="12">
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Categoría" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <ComboBox fx:id="cmbCategoria" prefWidth="220" prefHeight="34"
+                      style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                             -fx-border-radius: 6; -fx-background-radius: 6;"/>
+        </VBox>
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Modelo" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtModelo" promptText="Ej: A3090" prefWidth="220" prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
+        </VBox>
+    </HBox>
+
+    <!-- Solo precio — el stock lo gestiona inventario -->
+    <HBox spacing="12">
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Precio de venta (RD$)"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtPrecio" promptText="Ej: 55000.00" prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
+        </VBox>
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Stock mínimo (alerta)"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtStockMinimo" promptText="Ej: 3" prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
+        </VBox>
+    </HBox>
+
+    <!-- Precio sugerido (solo lectura, informativo) -->
+    <HBox spacing="8" alignment="CENTER_LEFT"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 8 12;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label text="💡 Precio sugerido basado en última compra:"
+               style="-fx-font-size: 12; -fx-text-fill: #1E40AF;"/>
+        <Label fx:id="lblPrecioSugerido" text="—"
+               style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #2563EB;"/>
+    </HBox>
+
+    <VBox spacing="4">
+        <Label text="Descripción" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextArea fx:id="txtDescripcion" promptText="Descripción del producto..."
+                  prefHeight="70" wrapText="true"
+                  style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                         -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 4 10;"/>
+    </VBox>
+
+    <Label fx:id="lblError" text="" wrapText="true"
+           style="-fx-text-fill: #DC2626; -fx-font-size: 12;" maxWidth="460"/>
+
+    <HBox spacing="10">
+        <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 13; -fx-background-radius: 6;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+        <Button text="Cancelar" onAction="#onCancelar"
+                style="-fx-background-color: transparent; -fx-text-fill: #2563EB;
+                       -fx-border-color: #2563EB; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

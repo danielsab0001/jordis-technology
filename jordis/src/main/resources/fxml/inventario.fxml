@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.InventarioController"
+      spacing="0" style="-fx-background-color: #F8FAFF;">
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
+                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="12">
+        <Text text="Inventario"
+              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Margen %:"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtMargen" text="30" prefWidth="60" prefHeight="32"
+                   style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                  -fx-border-radius: 6; -fx-background-radius: 6;
+                  -fx-padding: 4 8;"/>
+        <Button text="Aplicar" onAction="#onAplicarMargen"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+               -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+               -fx-background-radius: 6; -fx-font-size: 12;
+               -fx-padding: 6 10; -fx-cursor: hand;"/>
+        <Button text="⚠ Stock bajo" onAction="#onVerStockBajo"
+                style="-fx-background-color: #FEF3C7; -fx-text-fill: #B45309;
+                       -fx-border-color: #FDE68A; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 7 12; -fx-cursor: hand;"/>
+        <Button text="Ver todo" onAction="#onVerTodo"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 7 12; -fx-cursor: hand;"/>
+        <Button text="Comprar producto" onAction="#onCompraRapida"
+                style="-fx-background-color: #DCFCE7; -fx-text-fill: #15803D;
+               -fx-border-color: #BBF7D0; -fx-border-radius: 6;
+               -fx-background-radius: 6; -fx-font-size: 12;
+               -fx-padding: 7 14; -fx-cursor: hand;"/>
+        <Button text="Ajuste manual" onAction="#onAjusteManual"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 12; -fx-background-radius: 6;
+                       -fx-padding: 7 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <!-- Barra de búsqueda y filtros -->
+    <HBox style="-fx-padding: 12 24;" spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="txtBuscar"
+                   promptText="Buscar por nombre o marca..."
+                   prefWidth="220" prefHeight="34"
+                   style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 10;"/>
+
+        <ComboBox fx:id="cmbCategoria" promptText="Categoría"
+                  prefWidth="150" prefHeight="34"
+                  style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                         -fx-border-radius: 6; -fx-background-radius: 6;"/>
+
+        <Label text="Precio:"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtPrecioMin" promptText="Mín"
+                   prefWidth="70" prefHeight="34"
+                   style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 8;"/>
+        <Label text="—" style="-fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtPrecioMax" promptText="Máx"
+                   prefWidth="70" prefHeight="34"
+                   style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 8;"/>
+
+        <Button text="Filtrar" onAction="#onFiltrar"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 6 14; -fx-cursor: hand;"/>
+        <Button text="Limpiar" onAction="#onVerTodo"
+                style="-fx-background-color: transparent; -fx-text-fill: #64748B;
+                       -fx-border-color: #CBD5E1; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 6 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 0 24 16 24;">
+        <TableView fx:id="tablaInventario" VBox.vgrow="ALWAYS"
+                   style="-fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                          -fx-font-size: 12;">
+            <columns>
+                <TableColumn fx:id="colNombre"      text="Producto"       prefWidth="170"/>
+                <TableColumn fx:id="colMarca"       text="Marca"          prefWidth="90"/>
+                <TableColumn fx:id="colCategoria"   text="Categoría"      prefWidth="100"/>
+                <TableColumn fx:id="colStock"       text="Stock"          prefWidth="65"/>
+                <TableColumn fx:id="colMinimo"      text="Mínimo"         prefWidth="65"/>
+                <TableColumn fx:id="colEstado"      text="Estado"         prefWidth="95"/>
+                <TableColumn fx:id="colRecomendado" text="Sugerido comprar" prefWidth="115"/>
+                <TableColumn fx:id="colPrecioVenta" text="Precio venta"   prefWidth="105"/>
+                <TableColumn fx:id="colPrecioComp"  text="Último costo"   prefWidth="105"/>
+                <TableColumn fx:id="colPrecioSug"   text="Precio sug."   prefWidth="110"/>
+                <TableColumn fx:id="colMargen" text="Margen %" prefWidth="90"/>
+            </columns>
+        </TableView>
+    </VBox>
+    <Label fx:id="lblMensaje" text=""
+           style="-fx-padding: 0 24 10 24; -fx-font-size: 12;"/>
+</VBox>

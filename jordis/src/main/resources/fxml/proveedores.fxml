@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.ProveedorController"
+      spacing="0" style="-fx-background-color: #F8FAFF;">
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
+                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="12">
+        <Text text="Gestión de Proveedores"
+              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="+ Nuevo proveedor" onAction="#onNuevoProveedor"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 12; -fx-background-radius: 6;
+                       -fx-padding: 7 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <HBox style="-fx-padding: 12 24;" spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="txtBuscar" promptText="Buscar proveedor..."
+                   prefWidth="280" prefHeight="34"
+                   style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 10;"/>
+        <Button text="Buscar" onAction="#onBuscar"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 6 14; -fx-cursor: hand;"/>
+        <Button text="Ver todos" onAction="#onVerTodos"
+                style="-fx-background-color: transparent; -fx-text-fill: #64748B;
+                       -fx-border-color: #CBD5E1; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 6 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 0 24 16 24;">
+        <TableView fx:id="tablaProveedores" VBox.vgrow="ALWAYS"
+                   style="-fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                          -fx-font-size: 12;">
+            <columns>
+                <TableColumn fx:id="colId"        text="ID"        prefWidth="50"/>
+                <TableColumn fx:id="colNombre"    text="Nombre"    prefWidth="150"/>
+                <TableColumn fx:id="colContacto"  text="Contacto"  prefWidth="120"/>
+                <TableColumn fx:id="colTelefono"  text="Teléfono"  prefWidth="110"/>
+                <TableColumn fx:id="colEstado"    text="Estado"    prefWidth="80"/>
+                <TableColumn fx:id="colAcciones"  text="Acciones"  prefWidth="220"/>
+            </columns>
+        </TableView>
+    </VBox>
+    <Label fx:id="lblMensaje" text=""
+           style="-fx-padding: 0 24 10 24; -fx-font-size: 12;"/>
+</VBox>

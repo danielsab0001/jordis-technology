@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.CompraEdicionFormController"
+      spacing="14" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text fx:id="txtTitulo" text="Editar Compra"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <!-- Resumen de la compra -->
+    <VBox spacing="4"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 10 14;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label fx:id="lblResumenCompra" text=""
+               style="-fx-font-size: 12; -fx-text-fill: #1E40AF;"/>
+    </VBox>
+
+    <!-- Productos actuales con cantidad editable -->
+    <Label text="Cantidades recibidas (editar si difiere de lo pedido):"
+           style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+
+    <TableView fx:id="tablaProductos" prefHeight="160"
+               style="-fx-border-color: #DBEAFE; -fx-border-radius: 6; -fx-font-size: 12;">
+        <columns>
+            <TableColumn fx:id="colProducto"       text="Producto"          prefWidth="200"/>
+            <TableColumn fx:id="colCantidadPedida"  text="Pedido"           prefWidth="70"/>
+            <TableColumn fx:id="colCantidadRecibida" text="Recibido (editar)" prefWidth="120"/>
+            <TableColumn fx:id="colCosto"           text="Costo unit."       prefWidth="110"/>
+        </columns>
+    </TableView>
+
+    <!-- Motivo del cambio -->
+    <VBox spacing="4">
+        <Label text="Motivo del cambio *"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextArea fx:id="txtMotivo"
+                  promptText="Describe qué cambió y por qué (productos incorrectos, cantidades diferentes, etc.)"
+                  prefHeight="80" wrapText="true"
+                  style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                         -fx-border-radius: 6; -fx-background-radius: 6;
+                         -fx-padding: 4 10;"/>
+    </VBox>
+
+    <!-- Nota de crédito -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <CheckBox fx:id="chkNotaCredito"
+                  text="El proveedor maneja esto con nota de crédito"
+                  style="-fx-font-size: 12;"/>
+    </HBox>
+
+    <Label fx:id="lblError" text="" wrapText="true"
+           style="-fx-text-fill: #DC2626; -fx-font-size: 12;"/>
+
+    <HBox spacing="10">
+        <Button fx:id="btnGuardar" text="Guardar cambios" onAction="#onGuardar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 13; -fx-background-radius: 6;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+        <Button text="Cancelar" onAction="#onCancelar"
+                style="-fx-background-color: transparent; -fx-text-fill: #2563EB;
+                       -fx-border-color: #2563EB; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

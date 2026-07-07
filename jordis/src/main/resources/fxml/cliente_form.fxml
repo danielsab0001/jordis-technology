@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.ClienteFormController"
+      spacing="12" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <!-- ToggleGroup declarado fuera del árbol visual -->
+    <fx:define>
+        <ToggleGroup fx:id="grupoTipo"/>
+    </fx:define>
+
+    <Text fx:id="txtTitulo" text="Nuevo Cliente"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <!-- Selector de tipo -->
+    <HBox spacing="16" alignment="CENTER_LEFT"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 10 14;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label text="Tipo de cliente:"
+               style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #1E40AF;"/>
+        <RadioButton fx:id="rbPersona" text="Persona física"
+                     toggleGroup="$grupoTipo" selected="true"
+                     style="-fx-font-size: 13;"/>
+        <RadioButton fx:id="rbEmpresa" text="Empresa / RNC"
+                     toggleGroup="$grupoTipo"
+                     style="-fx-font-size: 13;"/>
+    </HBox>
+
+    <!-- Campos PERSONA -->
+    <VBox fx:id="panelPersona" spacing="12">
+        <HBox spacing="12">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="Nombre" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                <TextField fx:id="txtNombre" promptText="Ej: Juan" prefHeight="34"
+                           style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                  -fx-border-radius: 6; -fx-background-radius: 6;
+                                  -fx-padding: 4 10;"/>
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="Apellido" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                <TextField fx:id="txtApellido" promptText="Ej: Pérez" prefHeight="34"
+                           style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                  -fx-border-radius: 6; -fx-background-radius: 6;
+                                  -fx-padding: 4 10;"/>
+            </VBox>
+        </HBox>
+        <VBox spacing="4">
+            <Label text="Cédula de identidad"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtCedula" promptText="Ej: 402-1234567-8"
+                       prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+        </VBox>
+    </VBox>
+
+    <!-- Campos EMPRESA -->
+    <VBox fx:id="panelEmpresa" spacing="12" visible="false" managed="false">
+        <VBox spacing="4">
+            <Label text="Razón social"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtRazonSocial"
+                       promptText="Ej: Tech Solutions SRL" prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+        </VBox>
+        <HBox spacing="12">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="RNC" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                <TextField fx:id="txtRnc" promptText="Ej: 130-12345-6"
+                           prefHeight="34"
+                           style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                  -fx-border-radius: 6; -fx-background-radius: 6;
+                                  -fx-padding: 4 10;"/>
+            </VBox>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="Contacto principal"
+                       style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                <TextField fx:id="txtContactoPrincipal"
+                           promptText="Ej: María González" prefHeight="34"
+                           style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                  -fx-border-radius: 6; -fx-background-radius: 6;
+                                  -fx-padding: 4 10;"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- Campos comunes -->
+    <HBox spacing="12">
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Teléfono" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtTelefono" promptText="Ej: 809-555-0100"
+                       prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+        </VBox>
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="Dirección" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <TextField fx:id="txtDireccion" promptText="Ej: Calle 5, Santiago"
+                       prefHeight="34"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+        </VBox>
+    </HBox>
+
+    <Label fx:id="lblError" text="" wrapText="true"
+           style="-fx-text-fill: #DC2626; -fx-font-size: 12;" maxWidth="480"/>
+
+    <HBox spacing="10">
+        <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 13; -fx-background-radius: 6;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+        <Button text="Cancelar" onAction="#onCancelar"
+                style="-fx-background-color: transparent; -fx-text-fill: #2563EB;
+                       -fx-border-color: #2563EB; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.AlertaController"
+      spacing="0" style="-fx-background-color: #F8FAFF;">
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
+                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="12">
+        <Text text="Centro de Alertas"
+              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+        <Label fx:id="lblContador" text=""
+               style="-fx-background-color: #DC2626; -fx-text-fill: white;
+                      -fx-padding: 2 8; -fx-background-radius: 10;
+                      -fx-font-size: 11; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Escanear ahora" onAction="#onEscanear"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 7 12; -fx-cursor: hand;"/>
+        <Button text="Marcar todas leídas" onAction="#onMarcarTodasLeidas"
+                style="-fx-background-color: #F0FDF4; -fx-text-fill: #15803D;
+                       -fx-border-color: #BBF7D0; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 7 12; -fx-cursor: hand;"/>
+        <Button text="Solo no leídas" onAction="#onFiltrarNoLeidas"
+                style="-fx-background-color: #FEF3C7; -fx-text-fill: #B45309;
+                       -fx-border-color: #FDE68A; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 7 12; -fx-cursor: hand;"/>
+        <Button text="Ver todas" onAction="#onVerTodas"
+                style="-fx-background-color: transparent; -fx-text-fill: #64748B;
+                       -fx-border-color: #CBD5E1; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 7 12; -fx-cursor: hand;"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 24;">
+        <TableView fx:id="tablaAlertas" VBox.vgrow="ALWAYS"
+                   style="-fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                          -fx-font-size: 12;">
+            <columns>
+                <TableColumn fx:id="colTipo"        text="Tipo"        prefWidth="140"/>
+                <TableColumn fx:id="colTitulo"      text="Título"      prefWidth="220"/>
+                <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="600"/>
+                <TableColumn fx:id="colFecha"       text="Fecha"       prefWidth="130"/>
+                <TableColumn fx:id="colEstado"      text="Estado"      prefWidth="90"/>
+                <TableColumn fx:id="colAcciones"    text="Acciones"    prefWidth="140"/>
+            </columns>
+        </TableView>
+    </VBox>
+    <Label fx:id="lblMensaje" text=""
+           style="-fx-padding: 0 24 10 24; -fx-font-size: 12;"/>
+</VBox>

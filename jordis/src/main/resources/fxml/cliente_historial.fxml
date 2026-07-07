@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.ClienteHistorialController"
+      spacing="14" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text text="Historial del Cliente"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <!-- Resumen del cliente -->
+    <VBox spacing="4"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 12 14;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label fx:id="lblNombre"
+               style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #1E40AF;"/>
+        <Label fx:id="lblIdentificador"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <HBox spacing="24">
+            <Label fx:id="lblTotalCompras"
+                   style="-fx-font-size: 12; -fx-text-fill: #0F172A;"/>
+            <Label fx:id="lblTotalGastado"
+                   style="-fx-font-size: 12; -fx-font-weight: bold;
+                          -fx-text-fill: #2563EB;"/>
+            <Label fx:id="lblCreditoPendiente"
+                   style="-fx-font-size: 12; -fx-font-weight: bold;
+                          -fx-text-fill: #DC2626;"/>
+        </HBox>
+    </VBox>
+
+    <Label text="Ventas realizadas:"
+           style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+
+    <TableView fx:id="tablaVentas" prefHeight="300"
+               style="-fx-border-color: #DBEAFE; -fx-border-radius: 6;
+                      -fx-font-size: 12;">
+        <columns>
+            <TableColumn fx:id="colFactura"  text="Factura"    prefWidth="100"/>
+            <TableColumn fx:id="colFecha"    text="Fecha"      prefWidth="130"/>
+            <TableColumn fx:id="colProductos" text="Productos" prefWidth="200"/>
+            <TableColumn fx:id="colTotal"    text="Total"      prefWidth="100"/>
+            <TableColumn fx:id="colPago"     text="Pago"       prefWidth="90"/>
+            <TableColumn fx:id="colEstado"   text="Estado"     prefWidth="90"/>
+        </columns>
+    </TableView>
+
+    <HBox alignment="CENTER_RIGHT">
+        <Button text="Cerrar" onAction="#onCerrar"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

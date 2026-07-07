@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.ConfiguracionController"
+      spacing="0" style="-fx-background-color: #F8FAFF;">
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
+                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="12">
+        <Text text="Configuración del Sistema"
+              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Guardar cambios" onAction="#onGuardar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 12; -fx-background-radius: 6;
+                       -fx-padding: 7 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background: #F8FAFF; -fx-background-color: #F8FAFF;">
+        <VBox spacing="16" style="-fx-padding: 24;">
+
+            <!-- Datos del negocio -->
+            <VBox spacing="10"
+                  style="-fx-background-color: white; -fx-padding: 16 20;
+                         -fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                         -fx-background-radius: 8;">
+                <Text text="Datos del negocio"
+                      style="-fx-font-size: 14; -fx-font-weight: bold;
+                             -fx-fill: #1E40AF;"/>
+
+                <HBox spacing="16">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Nombre del negocio"
+                               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtNombre" prefHeight="34"
+                                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                          -fx-border-radius: 6; -fx-background-radius: 6;
+                                          -fx-padding: 4 10;"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="RNC"
+                               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtRnc" prefHeight="34"
+                                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                          -fx-border-radius: 6; -fx-background-radius: 6;
+                                          -fx-padding: 4 10;"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="16">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Teléfono"
+                               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtTelefono" prefHeight="34"
+                                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                          -fx-border-radius: 6; -fx-background-radius: 6;
+                                          -fx-padding: 4 10;"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Correo electrónico"
+                               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtEmail" prefHeight="34"
+                                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                          -fx-border-radius: 6; -fx-background-radius: 6;
+                                          -fx-padding: 4 10;"/>
+                    </VBox>
+                </HBox>
+
+                <VBox spacing="4">
+                    <Label text="Dirección"
+                           style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                    <TextField fx:id="txtDireccion" prefHeight="34"
+                               style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                      -fx-border-radius: 6; -fx-background-radius: 6;
+                                      -fx-padding: 4 10;"/>
+                </VBox>
+            </VBox>
+
+            <!-- Parámetros del sistema -->
+            <VBox spacing="10"
+                  style="-fx-background-color: white; -fx-padding: 16 20;
+                         -fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                         -fx-background-radius: 8;">
+                <Text text="Parámetros del sistema"
+                      style="-fx-font-size: 14; -fx-font-weight: bold;
+                             -fx-fill: #1E40AF;"/>
+
+                <HBox spacing="16">
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Días para alertar créditos por vencer"
+                               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtDiasCredito" prefHeight="34"
+                                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                          -fx-border-radius: 6; -fx-background-radius: 6;
+                                          -fx-padding: 4 10;"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Días para alertar cuentas por pagar"
+                               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtDiasCuenta" prefHeight="34"
+                                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                          -fx-border-radius: 6; -fx-background-radius: 6;
+                                          -fx-padding: 4 10;"/>
+                    </VBox>
+                    <VBox spacing="4" HBox.hgrow="ALWAYS">
+                        <Label text="Margen de ganancia por defecto (%)"
+                               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtMargen" prefHeight="34"
+                                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                          -fx-border-radius: 6; -fx-background-radius: 6;
+                                          -fx-padding: 4 10;"/>
+                    </VBox>
+                </HBox>
+            </VBox>
+
+            <!-- Factura -->
+            <VBox spacing="10"
+                  style="-fx-background-color: white; -fx-padding: 16 20;
+                         -fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                         -fx-background-radius: 8;">
+                <Text text="Factura"
+                      style="-fx-font-size: 14; -fx-font-weight: bold;
+                             -fx-fill: #1E40AF;"/>
+                <VBox spacing="4">
+                    <Label text="Mensaje al pie de la factura"
+                           style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                    <TextField fx:id="txtPieFactura" prefHeight="34"
+                               style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                                      -fx-border-radius: 6; -fx-background-radius: 6;
+                                      -fx-padding: 4 10;"/>
+                </VBox>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
+    <Label fx:id="lblMensaje" text=""
+           style="-fx-padding: 10 24; -fx-font-size: 12;"/>
+</VBox>

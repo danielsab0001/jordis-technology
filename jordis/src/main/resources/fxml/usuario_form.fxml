@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.UsuarioFormController"
+      spacing="16" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text fx:id="txtTitulo" text="Nuevo Usuario"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <!-- Nombre -->
+    <VBox spacing="4">
+        <Label text="Nombre" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtNombre" promptText="Ej: Juan"
+                   prefHeight="36"
+                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 10;"/>
+    </VBox>
+
+    <!-- Apellido -->
+    <VBox spacing="4">
+        <Label text="Apellido" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtApellido" promptText="Ej: Pérez"
+                   prefHeight="36"
+                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 10;"/>
+    </VBox>
+
+    <!-- Contraseña (solo en creación) -->
+    <VBox fx:id="vboxContrasena" spacing="4">
+        <Label text="Contraseña" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <PasswordField fx:id="txtContrasena" promptText="Mínimo 6 caracteres"
+                       prefHeight="36"
+                       style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+    </VBox>
+
+    <!-- Rol -->
+    <VBox spacing="4">
+        <Label text="Rol" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <ComboBox fx:id="cmbRol" prefWidth="400" prefHeight="36"
+                  style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                         -fx-border-radius: 6; -fx-background-radius: 6;"/>
+    </VBox>
+
+    <!-- Error -->
+    <Label fx:id="lblError" text="" wrapText="true"
+           style="-fx-text-fill: #DC2626; -fx-font-size: 12;" maxWidth="400"/>
+
+    <!-- Botones -->
+    <HBox spacing="10">
+        <Button fx:id="btnGuardar" text="Guardar" onAction="#onGuardar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 13; -fx-background-radius: 6;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+        <Button text="Cancelar" onAction="#onCancelar"
+                style="-fx-background-color: transparent; -fx-text-fill: #2563EB;
+                       -fx-border-color: #2563EB; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.VentaController"
+      spacing="0" style="-fx-background-color: #F8FAFF;">
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
+                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="12">
+        <Text text="Gestión de Ventas"
+              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="+ Nueva venta" onAction="#onNuevaVenta"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 12; -fx-background-radius: 6;
+                       -fx-padding: 7 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 24;">
+        <TableView fx:id="tablaVentas" VBox.vgrow="ALWAYS"
+                   style="-fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                          -fx-font-size: 12;">
+            <columns>
+                <TableColumn fx:id="colId"        text="#"          prefWidth="50"/>
+                <TableColumn fx:id="colFecha"     text="Fecha"      prefWidth="130"/>
+                <TableColumn fx:id="colCliente"   text="Cliente"    prefWidth="140"/>
+                <TableColumn fx:id="colProductos" text="Productos"  prefWidth="220"/>
+                <TableColumn fx:id="colNcf" text="NCF" prefWidth="110"/>
+                <TableColumn fx:id="colSubtotal"  text="Subtotal"   prefWidth="100"/>
+                <TableColumn fx:id="colDescuento" text="Descuento"  prefWidth="80"/>
+                <TableColumn fx:id="colTotal"     text="Total"      prefWidth="100"/>
+                <TableColumn fx:id="colPago"      text="Pago"       prefWidth="90"/>
+                <TableColumn fx:id="colEstado"    text="Estado"     prefWidth="80"/>
+                <TableColumn fx:id="colAnular"    text="Acciones"   prefWidth="90"/>
+            </columns>
+        </TableView>
+    </VBox>
+    <Label fx:id="lblMensaje" text=""
+           style="-fx-padding: 0 24 10 24; -fx-font-size: 12;"/>
+</VBox>

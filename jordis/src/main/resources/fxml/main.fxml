@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.jordis.jordis.controller.MainController">
+
+    <!-- Barra superior -->
+    <top>
+        <HBox style="-fx-background-color: #2563EB; -fx-padding: 12 20;"
+              alignment="CENTER_LEFT" spacing="16">
+            <Text text="Jordis"
+                  style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: white;"/>
+            <Text text="Technology"
+                  style="-fx-font-size: 11; -fx-fill: #BFDBFE; -fx-translate-y: 3;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblBienvenida"
+                   style="-fx-text-fill: #BFDBFE; -fx-font-size: 13;"/>
+            <Label fx:id="lblRol"
+                   style="-fx-text-fill: white; -fx-font-size: 11;
+                          -fx-background-color: rgba(255,255,255,0.2);
+                          -fx-padding: 3 10; -fx-background-radius: 10;"/>
+            <Button text="Cerrar sesión" onAction="#onCerrarSesion"
+                    style="-fx-background-color: transparent; -fx-text-fill: #FCA5A5;
+                           -fx-border-color: #FCA5A5; -fx-border-radius: 4;
+                           -fx-background-radius: 4; -fx-cursor: hand;
+                           -fx-font-size: 12; -fx-padding: 4 12;"/>
+        </HBox>
+    </top>
+
+    <!-- Menú lateral -->
+    <left>
+        <VBox style="-fx-background-color: #1D4ED8; -fx-padding: 12 0;"
+              spacing="2" prefWidth="210">
+
+            <Label text="MÓDULOS"
+                   style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
+                          -fx-padding: 8 16 4 16; -fx-font-weight: bold;"/>
+
+            <Button fx:id="btnVentas" text="  Ventas"
+                    prefWidth="210" prefHeight="42" onAction="#onVentas"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnClientes" text="  Clientes"
+                    prefWidth="210" prefHeight="42" onAction="#onClientes"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnProductos" text="  Productos"
+                    prefWidth="210" prefHeight="42" onAction="#onProductos"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnInventario" text="  Inventario"
+                    prefWidth="210" prefHeight="42" onAction="#onInventario"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnCompras" text="  Compras"
+                    prefWidth="210" prefHeight="42" onAction="#onCompras"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnProveedores" text="  Proveedores"
+                    prefWidth="210" prefHeight="42" onAction="#onProveedores"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnCreditos" text="  Cuentas por Cobrar"
+                    prefWidth="210" prefHeight="42" onAction="#onCreditos"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnCuentasPorPagar" text="  Cuentas por Pagar"
+                    prefWidth="210" prefHeight="42" onAction="#onCuentasPorPagar"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <!-- Sección solo visible para administradores -->
+            <Label fx:id="lblSeccionAdmin" text="ADMINISTRACIÓN"
+                   style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
+                          -fx-padding: 16 16 4 16; -fx-font-weight: bold;"/>
+
+            <Button fx:id="btnCategorias" text="  Categorías"
+                    prefWidth="210" prefHeight="42" onAction="#onCategorias"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnReportes" text="  Reportes"
+                    prefWidth="210" prefHeight="42" onAction="#onReportes"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnUsuarios" text="  Usuarios"
+                    prefWidth="210" prefHeight="42" onAction="#onUsuarios"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <Button fx:id="btnConfiguracion" text="  Configuración"
+                    prefWidth="210" prefHeight="42" onAction="#onConfiguracion"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
+            <!-- Alertas con contador — solo admin -->
+            <!-- Alertas con contador superpuesto -->
+            <StackPane prefWidth="210" prefHeight="42">
+                <Button fx:id="btnAlertas" text="  Alertas"
+                        prefWidth="210" prefHeight="42" onAction="#onAlertas"
+                        style="-fx-background-color: transparent; -fx-text-fill: white;
+                   -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+                   -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+                <Label fx:id="lblAlertaContador" text="0"
+                       StackPane.alignment="CENTER_RIGHT"
+                       style="-fx-background-color: #DC2626; -fx-text-fill: white;
+                  -fx-padding: 1 7; -fx-background-radius: 10;
+                  -fx-font-size: 11; -fx-font-weight: bold;
+                  -fx-translate-x: -14;"
+                       visible="false" mouseTransparent="true"/>
+            </StackPane>
+
+        </VBox>
+    </left>
+
+    <!-- Área de contenido central -->
+    <center>
+        <AnchorPane fx:id="contenidoCentral"
+                    style="-fx-background-color: #F8FAFF;"/>
+    </center>
+
+    <!-- Barra inferior -->
+    <bottom>
+        <HBox style="-fx-background-color: #EFF6FF; -fx-padding: 6 16;
+                     -fx-border-color: #DBEAFE; -fx-border-width: 1 0 0 0;"
+              alignment="CENTER_LEFT" spacing="16">
+            <Label fx:id="lblEstado" text="Sistema listo"
+                   style="-fx-text-fill: #2563EB; -fx-font-size: 12;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="v1.0.0"
+                   style="-fx-text-fill: #94A3B8; -fx-font-size: 11;"/>
+        </HBox>
+    </bottom>
+</BorderPane>

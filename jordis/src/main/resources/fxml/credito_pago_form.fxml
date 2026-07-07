@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.CreditoPagoFormController"
+      spacing="14" style="-fx-background-color: white; -fx-padding: 18;">
+
+    <Text text="Registrar Pago de Crédito"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <!-- Resumen del crédito -->
+    <VBox spacing="4"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 10 14;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label fx:id="lblResumen" text=""
+               style="-fx-font-size: 12; -fx-text-fill: #1E40AF;"/>
+        <Label fx:id="lblSaldo" text=""
+               style="-fx-font-size: 14; -fx-font-weight: bold; -fx-text-fill: #DC2626;"/>
+    </VBox>
+
+    <!-- Monto -->
+    <VBox spacing="4">
+        <Label text="Monto a pagar (RD$)"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtMonto" promptText="0.00" prefHeight="36"
+                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 10;"/>
+    </VBox>
+
+    <!-- Método de pago -->
+    <VBox spacing="4">
+        <Label text="Método de pago"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <ComboBox fx:id="cmbMetodoPago" prefWidth="300" prefHeight="36"
+                  style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                         -fx-border-radius: 6; -fx-background-radius: 6;"/>
+    </VBox>
+
+    <!-- Notas -->
+    <VBox spacing="4">
+        <Label text="Notas (opcional)"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtNotas" promptText="Referencia de transferencia, cheque, etc."
+                   prefHeight="34"
+                   style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 10;"/>
+    </VBox>
+
+    <Label fx:id="lblError" text="" wrapText="true"
+           style="-fx-text-fill: #DC2626; -fx-font-size: 12;"/>
+
+    <HBox spacing="10">
+        <Button fx:id="btnGuardar" text="Registrar pago" onAction="#onGuardar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 13; -fx-background-radius: 6;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+        <Button text="Cancelar" onAction="#onCancelar"
+                style="-fx-background-color: transparent; -fx-text-fill: #2563EB;
+                       -fx-border-color: #2563EB; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>
