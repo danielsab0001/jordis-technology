@@ -39,6 +39,12 @@
                    style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
                           -fx-padding: 8 16 4 16; -fx-font-weight: bold;"/>
 
+            <Button fx:id="btnDashboard" text="  Dashboard"
+                    prefWidth="210" prefHeight="42" onAction="#onDashboard"
+                    style="-fx-background-color: transparent; -fx-text-fill: white;
+               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
+               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+
             <Button fx:id="btnVentas" text="  Ventas"
                     prefWidth="210" prefHeight="42" onAction="#onVentas"
                     style="-fx-background-color: transparent; -fx-text-fill: white;

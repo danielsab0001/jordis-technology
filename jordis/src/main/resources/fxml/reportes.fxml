@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.ReportesController"
+      spacing="0" style="-fx-background-color: #F8FAFF;">
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
+                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="12">
+        <Text text="Reportes"
+              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+    </HBox>
+
+    <SplitPane dividerPositions="0.28" VBox.vgrow="ALWAYS">
+
+        <!-- Panel izquierdo: selección de reporte -->
+        <VBox spacing="8" style="-fx-padding: 16; -fx-background-color: white;">
+            <Label text="Tipo de reporte"
+                   style="-fx-font-size: 12; -fx-font-weight: bold;
+                          -fx-text-fill: #64748B;"/>
+
+            <Separator style="-fx-padding: 8 0;"/>
+
+            <VBox spacing="8">
+
+                <RadioButton fx:id="rbVentas"
+                             text="Ventas"/>
+
+                <RadioButton fx:id="rbInventario"
+                             text="Inventario"/>
+
+                <RadioButton fx:id="rbCobrar"
+                             text="Cuentas por cobrar"/>
+
+                <RadioButton fx:id="rbPagar"
+                             text="Cuentas por pagar"/>
+
+            </VBox>
+
+            <!-- Filtros de fecha (solo para ventas) -->
+            <VBox fx:id="panelFechas" spacing="8">
+                <Label text="Rango de fechas"
+                       style="-fx-font-size: 12; -fx-font-weight: bold;
+                              -fx-text-fill: #64748B;"/>
+                <VBox spacing="4">
+                    <Label text="Desde:"
+                           style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                    <DatePicker fx:id="dpDesde" prefWidth="220"/>
+                </VBox>
+                <VBox spacing="4">
+                    <Label text="Hasta:"
+                           style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                    <DatePicker fx:id="dpHasta" prefWidth="220"/>
+                </VBox>
+            </VBox>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Botones de acción -->
+            <Button text="🔍  Generar reporte" onAction="#onGenerar"
+                    prefWidth="220" prefHeight="38"
+                    style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                           -fx-font-size: 13; -fx-background-radius: 6;
+                           -fx-cursor: hand;"/>
+            <Button text="📄  Exportar PDF" onAction="#onExportarPDF"
+                    prefWidth="220" prefHeight="36"
+                    style="-fx-background-color: #FEE2E2; -fx-text-fill: #DC2626;
+                           -fx-border-color: #FCA5A5; -fx-border-radius: 6;
+                           -fx-background-radius: 6; -fx-font-size: 12;
+                           -fx-cursor: hand;"/>
+
+            <Label fx:id="lblEstado" text="" wrapText="true"
+                   style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+        </VBox>
+
+        <!-- Panel derecho: tabla de resultados -->
+        <VBox spacing="8" style="-fx-padding: 16; -fx-background-color: #F8FAFF;"
+              VBox.vgrow="ALWAYS">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Label fx:id="lblTituloReporte" text="Selecciona un reporte"
+                       style="-fx-font-size: 14; -fx-font-weight: bold;
+                              -fx-text-fill: #1E40AF;"/>
+                <Label fx:id="lblConteo" text=""
+                       style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            </HBox>
+
+            <TableView fx:id="tablaReporte" VBox.vgrow="ALWAYS"
+                       style="-fx-border-color: #DBEAFE; -fx-border-radius: 8;
+                              -fx-font-size: 12;"/>
+        </VBox>
+    </SplitPane>
+</VBox>

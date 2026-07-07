@@ -28,6 +28,7 @@ public class MainController {
     @FXML private AnchorPane contenidoCentral;
 
     // Botones del menú lateral — módulos
+    @FXML private Button btnDashboard;
     @FXML private Button btnVentas;
     @FXML private Button btnClientes;
     @FXML private Button btnProductos;
@@ -91,6 +92,9 @@ public class MainController {
         if (esAdmin) {
             alertaService.escanearTodo();
             actualizarContadorAlertas();
+            onDashboard();
+        } else {
+            onVentas();
         }
         sesionService.iniciarTimer(() -> {
             // Ejecutar en el hilo de JavaFX
@@ -123,7 +127,7 @@ public class MainController {
             log.debug("Módulo cargado: {}", fxml);
         } catch (Exception e) {
             lblEstado.setText("Error cargando módulo.");
-            log.error("Error cargando módulo {}: {}", fxml, e.getMessage());
+            log.error("Error cargando módulo {}", fxml, e);
         }
     }
 
@@ -197,5 +201,22 @@ public class MainController {
         sesionService.detenerTimer();
         autenticacionService.cerrarSesion();
         stageManager.switchScene("/fxml/login.fxml", "Iniciar sesión");
+    }
+
+    @FXML public void onDashboard() {
+        try {
+            SpringFXMLLoader.LoadResult<DashboardController> result =
+                    fxmlLoader.loadWithController("/fxml/dashboard.fxml");
+            result.controller.setMainController(this);
+            contenidoCentral.getChildren().setAll(result.root);
+            AnchorPane.setTopAnchor(result.root, 0.0);
+            AnchorPane.setBottomAnchor(result.root, 0.0);
+            AnchorPane.setLeftAnchor(result.root, 0.0);
+            AnchorPane.setRightAnchor(result.root, 0.0);
+            lblEstado.setText("Dashboard");
+            marcarBotonActivo(btnDashboard);
+        } catch (Exception e) {
+            log.error("Error cargando dashboard", e);
+        }
     }
 }
