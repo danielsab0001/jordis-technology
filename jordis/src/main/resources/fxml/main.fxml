@@ -2,10 +2,12 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.jordis.jordis.controller.MainController">
+            fx:controller="com.jordis.jordis.controller.MainController"
+            stylesheets="@../css/sidebar.css">
 
     <!-- Barra superior -->
     <top>
@@ -32,112 +34,135 @@
 
     <!-- Menú lateral -->
     <left>
-        <VBox style="-fx-background-color: #1D4ED8; -fx-padding: 12 0;"
-              spacing="2" prefWidth="210">
+        <VBox styleClass="sidebar" style="-fx-padding: 8 0;"
+              spacing="2" prefWidth="220">
 
-            <Label text="MÓDULOS"
-                   style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
-                          -fx-padding: 8 16 4 16; -fx-font-weight: bold;"/>
+            <!-- Logo / nombre -->
+            <HBox style="-fx-padding: 16 20 20 20;" alignment="CENTER_LEFT"
+                  spacing="10">
+                <Label text="⚡"
+                       style="-fx-font-size: 20; -fx-background-color: #2563EB;
+                          -fx-background-radius: 8; -fx-padding: 4 6;"/>
+                <VBox spacing="1">
+                    <Label text="Jordis" styleClass="sidebar-logo-title"/>
+                    <Label text="Technology" styleClass="sidebar-logo-subtitle"/>
+                </VBox>
+            </HBox>
 
-            <Button fx:id="btnDashboard" text="  Dashboard"
-                    prefWidth="210" prefHeight="42" onAction="#onDashboard"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+            <!-- Separador -->
+            <Separator styleClass="sidebar-separator"/>
+            <Region prefHeight="4"/>
 
-            <Button fx:id="btnVentas" text="  Ventas"
-                    prefWidth="210" prefHeight="42" onAction="#onVentas"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+            <!-- Sección MÓDULOS -->
+            <Label text="MÓDULOS" styleClass="sidebar-section-label"
+                   style="-fx-padding: 8 20 4 20; -fx-letter-spacing: 1;"/>
 
-            <Button fx:id="btnClientes" text="  Clientes"
-                    prefWidth="210" prefHeight="42" onAction="#onClientes"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+            <Button fx:id="btnDashboard" text="Dashboard" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onDashboard">
+                <graphic><Label text="📊" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnVentas" text="Ventas" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onVentas">
+                <graphic><Label text="💰" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnClientes" text="Clientes" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onClientes">
+                <graphic><Label text="👥" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnProductos" text="Productos" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onProductos">
+                <graphic><Label text="📦" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnInventario" text="Inventario" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onInventario">
+                <graphic><Label text="🗃" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnCompras" text="Compras" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onCompras">
+                <graphic><Label text="🛒" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnProveedores" text="Proveedores" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onProveedores">
+                <graphic><Label text="🏭" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnCreditos" text="Créditos" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onCreditos">
+                <graphic><Label text="📋" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnCuentasPorPagar" text="Cuentas x Pagar" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onCuentasPorPagar">
+                <graphic><Label text="💳" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
 
-            <Button fx:id="btnProductos" text="  Productos"
-                    prefWidth="210" prefHeight="42" onAction="#onProductos"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+            <!-- Separador -->
+            <Region prefHeight="4"/>
+            <Separator styleClass="sidebar-separator"/>
+            <Region prefHeight="4"/>
 
-            <Button fx:id="btnInventario" text="  Inventario"
-                    prefWidth="210" prefHeight="42" onAction="#onInventario"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+            <!-- Sección ADMINISTRACIÓN -->
+            <Label fx:id="lblSeccionAdmin" text="ADMINISTRACIÓN" styleClass="sidebar-section-label"
+                   style="-fx-padding: 4 20 4 20;"/>
 
-            <Button fx:id="btnCompras" text="  Compras"
-                    prefWidth="210" prefHeight="42" onAction="#onCompras"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+            <Button fx:id="btnReportes" text="Reportes" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onReportes">
+                <graphic><Label text="📄" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnUsuarios" text="Usuarios" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onUsuarios">
+                <graphic><Label text="👤" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnCategorias" text="Categorías" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onCategorias">
+                <graphic><Label text="🏷" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnConfiguracion" text="Configuración" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onConfiguracion">
+                <graphic><Label text="⚙" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
 
-            <Button fx:id="btnProveedores" text="  Proveedores"
-                    prefWidth="210" prefHeight="42" onAction="#onProveedores"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
-
-            <Button fx:id="btnCreditos" text="  Cuentas por Cobrar"
-                    prefWidth="210" prefHeight="42" onAction="#onCreditos"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
-
-            <Button fx:id="btnCuentasPorPagar" text="  Cuentas por Pagar"
-                    prefWidth="210" prefHeight="42" onAction="#onCuentasPorPagar"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
-
-            <!-- Sección solo visible para administradores -->
-            <Label fx:id="lblSeccionAdmin" text="ADMINISTRACIÓN"
-                   style="-fx-text-fill: #93C5FD; -fx-font-size: 10;
-                          -fx-padding: 16 16 4 16; -fx-font-weight: bold;"/>
-
-            <Button fx:id="btnCategorias" text="  Categorías"
-                    prefWidth="210" prefHeight="42" onAction="#onCategorias"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
-
-            <Button fx:id="btnReportes" text="  Reportes"
-                    prefWidth="210" prefHeight="42" onAction="#onReportes"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
-
-            <Button fx:id="btnUsuarios" text="  Usuarios"
-                    prefWidth="210" prefHeight="42" onAction="#onUsuarios"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                           -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
-
-            <Button fx:id="btnConfiguracion" text="  Configuración"
-                    prefWidth="210" prefHeight="42" onAction="#onConfiguracion"
-                    style="-fx-background-color: transparent; -fx-text-fill: white;
-               -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-               -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
-
-            <!-- Alertas con contador — solo admin -->
-            <!-- Alertas con contador superpuesto -->
-            <StackPane prefWidth="210" prefHeight="42">
-                <Button fx:id="btnAlertas" text="  Alertas"
-                        prefWidth="210" prefHeight="42" onAction="#onAlertas"
-                        style="-fx-background-color: transparent; -fx-text-fill: white;
-                   -fx-font-size: 13; -fx-alignment: CENTER_LEFT;
-                   -fx-cursor: hand; -fx-padding: 0 0 0 16;"/>
+            <!-- Alertas con contador -->
+            <StackPane prefWidth="220" prefHeight="40" mouseTransparent="false">
+                <Button fx:id="btnAlertas" text="Alertas" styleClass="sidebar-button"
+                        contentDisplay="LEFT" prefWidth="204" prefHeight="40"
+                        onAction="#onAlertas" mouseTransparent="false">
+                    <graphic><Label text="🔔" styleClass="sidebar-icon"/></graphic>
+                    <StackPane.margin><Insets left="8" right="8"/></StackPane.margin>
+                </Button>
                 <Label fx:id="lblAlertaContador" text="0"
                        StackPane.alignment="CENTER_RIGHT"
                        style="-fx-background-color: #DC2626; -fx-text-fill: white;
-                  -fx-padding: 1 7; -fx-background-radius: 10;
-                  -fx-font-size: 11; -fx-font-weight: bold;
-                  -fx-translate-x: -14;"
+                          -fx-padding: 1 7; -fx-background-radius: 10;
+                          -fx-font-size: 10; -fx-font-weight: bold;
+                          -fx-translate-x: -14;"
                        visible="false" mouseTransparent="true"/>
             </StackPane>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <!-- Pie de barra -->
+            <Separator styleClass="sidebar-separator"/>
+            <HBox style="-fx-padding: 12 16;" alignment="CENTER_LEFT" spacing="10">
+                <Label fx:id="lblRolMenu"
+                       style="-fx-background-color: #2563EB;
+                          -fx-text-fill: white; -fx-font-size: 10;
+                          -fx-font-weight: bold; -fx-padding: 2 8;
+                          -fx-background-radius: 4;"/>
+                <Label fx:id="lblUsuarioMenu"
+                       style="-fx-font-size: 12; -fx-text-fill: #94A3B8;"/>
+            </HBox>
 
         </VBox>
     </left>

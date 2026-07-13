@@ -7,7 +7,6 @@ import com.jordis.jordis.service.AlertaService;
 import com.jordis.jordis.service.AutenticacionService;
 import com.jordis.jordis.service.SesionService;
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
@@ -15,6 +14,8 @@ import javafx.scene.layout.StackPane;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -39,10 +40,10 @@ public class MainController {
     @FXML private Button btnCuentasPorPagar;
 
     // Botones del menú lateral — administración
-    @FXML private Button btnCategorias;
+    @FXML private Button  btnCategorias;
     @FXML private Button  btnReportes;
     @FXML private Button  btnUsuarios;
-    @FXML private Button btnConfiguracion;
+    @FXML private Button  btnConfiguracion;
     @FXML private Button  btnAlertas;
 
     // Sección y contador de alertas
@@ -89,6 +90,14 @@ public class MainController {
         btnAlertas.setManaged(esAdmin);
         lblAlertaContador.setVisible(false);
 
+        List<Button> botonesMenu = List.of(
+                btnDashboard, btnVentas, btnClientes, btnProductos,
+                btnInventario, btnCompras, btnProveedores, btnCreditos,
+                btnCuentasPorPagar, btnReportes, btnUsuarios,
+                btnCategorias, btnConfiguracion, btnAlertas);
+
+        botonesMenu.forEach(this::configurarAnimacionHover);
+
         if (esAdmin) {
             alertaService.escanearTodo();
             actualizarContadorAlertas();
@@ -110,13 +119,23 @@ public class MainController {
     // ---- Navegación ----
 
     private void cargarModulo(String fxml, Button boton, String etiqueta) {
+        cargarModulo(fxml, boton, etiqueta, null);
+    }
+
+    // Variante que además da acceso al controller recién cargado, para
+    // poder aplicarle un filtro (p. ej. al navegar desde una alerta).
+    private <C> void cargarModulo(String fxml, Button boton, String etiqueta,
+                                  java.util.function.Consumer<C> configurador) {
         try {
-            Parent vista = fxmlLoader.load(fxml);
-            contenidoCentral.getChildren().setAll(vista);
-            AnchorPane.setTopAnchor(vista, 0.0);
-            AnchorPane.setBottomAnchor(vista, 0.0);
-            AnchorPane.setLeftAnchor(vista, 0.0);
-            AnchorPane.setRightAnchor(vista, 0.0);
+            SpringFXMLLoader.LoadResult<C> result = fxmlLoader.loadWithController(fxml);
+            if (configurador != null) {
+                configurador.accept(result.controller);
+            }
+            contenidoCentral.getChildren().setAll(result.root);
+            AnchorPane.setTopAnchor(result.root, 0.0);
+            AnchorPane.setBottomAnchor(result.root, 0.0);
+            AnchorPane.setLeftAnchor(result.root, 0.0);
+            AnchorPane.setRightAnchor(result.root, 0.0);
             lblEstado.setText(etiqueta);
             marcarBotonActivo(boton);
             // Actualizar contador cada vez que se navega
@@ -131,23 +150,47 @@ public class MainController {
         }
     }
 
+    // Clase CSS que marca el botón del módulo activo (ver /css/sidebar.css)
+    private static final String CLASE_BTN_ACTIVO = "sidebar-button-active";
+
     private void marcarBotonActivo(Button boton) {
-        // Quitar resaltado del anterior
         if (btnActivo != null) {
-            btnActivo.setStyle(
-                    "-fx-background-color: transparent; -fx-text-fill: white;"
-                            + "-fx-font-size: 13; -fx-alignment: CENTER_LEFT;"
-                            + "-fx-cursor: hand; -fx-padding: 0 0 0 16;");
+            btnActivo.getStyleClass().remove(CLASE_BTN_ACTIVO);
+            btnActivo.setScaleX(1.0);
+            btnActivo.setScaleY(1.0);
         }
         btnActivo = boton;
         if (btnActivo != null) {
-            btnActivo.setStyle(
-                    "-fx-background-color: rgba(255,255,255,0.15); -fx-text-fill: white;"
-                            + "-fx-font-size: 13; -fx-alignment: CENTER_LEFT;"
-                            + "-fx-cursor: hand; -fx-padding: 0 0 0 16;"
-                            + "-fx-border-color: transparent transparent transparent white;"
-                            + "-fx-border-width: 0 0 0 3;");
+            btnActivo.getStyleClass().add(CLASE_BTN_ACTIVO);
+            // Pequeña animación de aparición al seleccionar el módulo (~180ms)
+            javafx.animation.FadeTransition ft = new javafx.animation.FadeTransition(
+                    javafx.util.Duration.millis(180), btnActivo);
+            ft.setFromValue(0.55);
+            ft.setToValue(1.0);
+            ft.play();
         }
+    }
+
+    // Pequeño efecto de "hover" (escala sutil, ~160ms) para los botones
+    // del menú lateral. Los colores del estado normal/hover/activo viven
+    // en /css/sidebar.css (clases "sidebar-button" y "sidebar-button-active").
+    private void configurarAnimacionHover(Button btn) {
+        btn.setOnMouseEntered(e -> {
+            if (btn == btnActivo) return;
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(
+                    javafx.util.Duration.millis(160), btn);
+            st.setToX(1.015);
+            st.setToY(1.015);
+            st.play();
+        });
+        btn.setOnMouseExited(e -> {
+            if (btn == btnActivo) return;
+            javafx.animation.ScaleTransition st = new javafx.animation.ScaleTransition(
+                    javafx.util.Duration.millis(160), btn);
+            st.setToX(1.0);
+            st.setToY(1.0);
+            st.play();
+        });
     }
 
     public void actualizarContadorAlertas() {
@@ -181,7 +224,7 @@ public class MainController {
         cargarModulo("/fxml/proveedores.fxml", btnProveedores, "Módulo: Proveedores");
     }
     @FXML public void onCreditos() {
-        cargarModulo("/fxml/creditos.fxml", btnCreditos, "Módulo: Créditos");
+        cargarModulo("/fxml/creditos.fxml", btnCreditos, "Módulo: Cuentas por Cobrar");
     }
     @FXML public void onCuentasPorPagar() {cargarModulo("/fxml/cuentas_por_pagar.fxml", btnCuentasPorPagar, "Módulo: Cuentas por Pagar"); }
     @FXML public void onReportes() {
@@ -191,10 +234,33 @@ public class MainController {
         cargarModulo("/fxml/usuarios.fxml", btnUsuarios, "Módulo: Usuarios");
     }
     @FXML public void onAlertas() {
-        cargarModulo("/fxml/alertas.fxml", btnAlertas, "Centro de Alertas");
+        cargarModulo("/fxml/alertas.fxml", btnAlertas, "Centro de Alertas",
+                (AlertaController c) -> c.setMainController(this));
     }
     @FXML public void onCategorias() {cargarModulo("/fxml/categorias.fxml", btnCategorias, "Módulo: Categorías"); }
     @FXML public void onConfiguracion() {cargarModulo("/fxml/configuracion.fxml", btnConfiguracion, "Configuración"); }
+
+    // ---- Navegación filtrada (usada desde el Centro de Alertas) ----
+
+    public void onInventarioFiltrado(Integer idProducto) {
+        cargarModulo("/fxml/inventario.fxml", btnInventario, "Módulo: Inventario",
+                (InventarioController c) -> c.filtrarPorProductoId(idProducto));
+    }
+
+    public void onUsuariosFiltrado(Integer idUsuario) {
+        cargarModulo("/fxml/usuarios.fxml", btnUsuarios, "Módulo: Usuarios",
+                (UsuarioController c) -> c.filtrarPorId(idUsuario));
+    }
+
+    public void onCreditosFiltrado(Integer idVenta) {
+        cargarModulo("/fxml/creditos.fxml", btnCreditos, "Módulo: Cuentas por Cobrar",
+                (CreditoController c) -> c.filtrarPorVenta(idVenta));
+    }
+
+    public void onCuentasPorPagarFiltrado(Integer idCuenta) {
+        cargarModulo("/fxml/cuentas_por_pagar.fxml", btnCuentasPorPagar, "Módulo: Cuentas por Pagar",
+                (CuentaPorPagarController c) -> c.filtrarPorId(idCuenta));
+    }
 
     @FXML
     public void onCerrarSesion() {

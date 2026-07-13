@@ -66,7 +66,7 @@ public class CuentaPorPagarService {
     @Transactional
     public CuentaPago registrarPago(Integer idCuenta, BigDecimal monto,
                                     String metodoPago, String notas,
-                                    Usuario cajero) {
+                                    Usuario cajero, LocalDateTime fechaPago) {
         CuentaPorPagar cuenta = obtenerPorId(idCuenta);
 
         if (cuenta.estaCancelada()) {
@@ -88,7 +88,7 @@ public class CuentaPorPagarService {
         pago.setMetodoPago(metodoPago);
         pago.setNotas(notas);
         pago.setCajero(cajero);
-        pago.setFechaPago(LocalDateTime.now());
+        pago.setFechaPago(fechaPago);
 
         CuentaPago guardado = pagoRepository.save(pago);
 

@@ -7,206 +7,808 @@
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.jordis.jordis.controller.DashboardController"
-      spacing="0" style="-fx-background-color: #F8FAFF;">
+      spacing="0" style="-fx-background-color: #F1F5F9;">
 
-    <!-- Encabezado -->
-    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
-                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
-          alignment="CENTER_LEFT" spacing="12">
-        <Text text="Dashboard"
-              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
-        <Label fx:id="lblFecha"
-               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+    <!-- ── Barra superior ── -->
+    <HBox style="-fx-background-color: white; -fx-padding: 12 24;
+                 -fx-border-color: #E2E8F0; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="16">
+        <VBox spacing="1">
+            <Label fx:id="lblTituloPeriodo" text="Resumen del día"
+                   style="-fx-font-size: 15; -fx-font-weight: bold;
+                          -fx-text-fill: #0F172A;"/>
+            <Label fx:id="lblUltimaActualizacion" text=""
+                   style="-fx-font-size: 10; -fx-text-fill: #94A3B8;"/>
+        </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="↻ Actualizar" onAction="#onActualizar"
+        <Label fx:id="lblFecha"
+               style="-fx-font-size: 11; -fx-text-fill: #94A3B8;"/>
+
+        <!-- Selector de período con Buttons normales -->
+        <HBox fx:id="selectorPeriodo" spacing="2" alignment="CENTER"
+              style="-fx-background-color: #F8FAFC;
+                     -fx-border-color: #E2E8F0; -fx-border-radius: 8;
+                     -fx-background-radius: 8; -fx-padding: 3;">
+            <Button fx:id="btnHoy"    text="Hoy"
+                    onAction="#onCambiarPeriodo"/>
+            <Button fx:id="btnSemana" text="Semana"
+                    onAction="#onCambiarPeriodo"/>
+            <Button fx:id="btnMes"    text="Mes"
+                    onAction="#onCambiarPeriodo"/>
+            <Button fx:id="btnAnio"   text="Año"
+                    onAction="#onCambiarPeriodo"/>
+        </HBox>
+
+        <Button text="↻" onAction="#onActualizar"
                 style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
                        -fx-border-color: #BFDBFE; -fx-border-radius: 6;
-                       -fx-background-radius: 6; -fx-font-size: 12;
-                       -fx-padding: 7 12; -fx-cursor: hand;"/>
+                       -fx-background-radius: 6; -fx-font-size: 14;
+                       -fx-padding: 4 10; -fx-cursor: hand;"/>
     </HBox>
 
-    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
-                style="-fx-background: #F8FAFF; -fx-background-color: #F8FAFF;">
-        <VBox spacing="16" style="-fx-padding: 20 24;">
+    <!-- ── Pestañas ── -->
+    <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS"
+             tabClosingPolicy="UNAVAILABLE"
+             style="-fx-background-color: #F1F5F9; -fx-tab-min-height: 36;">
 
-            <!-- Fila 1: Tarjetas del día -->
-            <HBox spacing="12">
-                <!-- Ventas hoy -->
-                <VBox fx:id="cardVentasHoy" spacing="4" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: white; -fx-padding: 16;
-                             -fx-border-color: #DBEAFE; -fx-border-radius: 10;
-                             -fx-background-radius: 10;">
-                    <Label text="VENTAS HOY"
-                           style="-fx-font-size: 10; -fx-font-weight: bold;
-                                  -fx-text-fill: #64748B; -fx-letter-spacing: 1;"/>
-                    <Label fx:id="lblVentasHoy" text="RD$0.00"
-                           style="-fx-font-size: 22; -fx-font-weight: bold;
-                                  -fx-text-fill: #2563EB;"/>
-                    <Label fx:id="lblVariacion" text=""
-                           style="-fx-font-size: 11;"/>
+        <!-- ═══════════════ RESUMEN ═══════════════ -->
+        <Tab text="  📊  Resumen  ">
+            <ScrollPane fitToWidth="true"
+                        style="-fx-background: #F1F5F9;
+                               -fx-background-color: #F1F5F9;">
+                <VBox spacing="14" style="-fx-padding: 18 22;">
+
+                    <!-- KPIs principales -->
+                    <HBox spacing="10">
+                        <VBox fx:id="cardVentas" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);
+                                     -fx-cursor: hand;">
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Label text="💰"
+                                       style="-fx-font-size: 20;
+                                              -fx-background-color: #EFF6FF;
+                                              -fx-background-radius: 8;
+                                              -fx-padding: 5 7;"/>
+                                <VBox spacing="1">
+                                    <Label text="VENTAS"
+                                           style="-fx-font-size: 9;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #94A3B8;"/>
+                                    <Label fx:id="lblVentas" text="RD$0"
+                                           style="-fx-font-size: 20;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #0F172A;"/>
+                                    <Label fx:id="lblVarVentas" text=""
+                                           style="-fx-font-size: 11;"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="cardTransacciones" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);
+                                     -fx-cursor: hand;">
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Label text="🛒"
+                                       style="-fx-font-size: 20;
+                                              -fx-background-color: #F0FDF4;
+                                              -fx-background-radius: 8;
+                                              -fx-padding: 5 7;"/>
+                                <VBox spacing="1">
+                                    <Label text="TRANSACCIONES"
+                                           style="-fx-font-size: 9;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #94A3B8;"/>
+                                    <Label fx:id="lblTransacciones" text="0"
+                                           style="-fx-font-size: 20;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #0F172A;"/>
+                                    <Label fx:id="lblVarTrans"
+                                           text=""
+                                           style="-fx-font-size: 11;"/>
+                                    <Label fx:id="lblTicketPromedio" text=""
+                                           style="-fx-font-size: 11;
+                                                  -fx-text-fill: #64748B;"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="cardCreditos" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);
+                                     -fx-cursor: hand;">
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Label text="📋"
+                                       style="-fx-font-size: 20;
+                                              -fx-background-color: #FEF3C7;
+                                              -fx-background-radius: 8;
+                                              -fx-padding: 5 7;"/>
+                                <VBox spacing="1">
+                                    <Label text="POR COBRAR"
+                                           style="-fx-font-size: 9;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #94A3B8;"/>
+                                    <Label fx:id="lblCreditosPendientes"
+                                           text="RD$0"
+                                           style="-fx-font-size: 20;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #B45309;"/>
+                                    <Label fx:id="lblCreditosDetalle" text=""
+                                           style="-fx-font-size: 11;
+                                                  -fx-text-fill: #64748B;"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+
+                        <VBox fx:id="cardCuentasPagar" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);
+                                     -fx-cursor: hand;">
+                            <HBox spacing="10" alignment="CENTER_LEFT">
+                                <Label text="💳"
+                                       style="-fx-font-size: 20;
+                                              -fx-background-color: #FEF2F2;
+                                              -fx-background-radius: 8;
+                                              -fx-padding: 5 7;"/>
+                                <VBox spacing="1">
+                                    <Label text="POR PAGAR"
+                                           style="-fx-font-size: 9;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #94A3B8;"/>
+                                    <Label fx:id="lblCuentasPorPagar"
+                                           text="RD$0"
+                                           style="-fx-font-size: 20;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #DC2626;"/>
+                                    <Label fx:id="lblCuentasDetalle" text=""
+                                           style="-fx-font-size: 11;
+                                                  -fx-text-fill: #64748B;"/>
+                                </VBox>
+                            </HBox>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Fila 2: Alertas + Accesos rápidos -->
+                    <HBox spacing="10">
+                        <!-- Alertas -->
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <HBox style="-fx-padding: 12 16 8 16;"
+                                  alignment="CENTER_LEFT">
+                                <Label text="🔔  Alertas activas"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblNumAlertas" text=""
+                                       style="-fx-background-color: #DC2626;
+                                              -fx-text-fill: white;
+                                              -fx-padding: 1 7;
+                                              -fx-background-radius: 10;
+                                              -fx-font-size: 10;
+                                              -fx-font-weight: bold;"/>
+                            </HBox>
+                            <Separator/>
+                            <VBox fx:id="panelAlertas" spacing="0"/>
+                        </VBox>
+
+                        <!-- Accesos rápidos + Actividad -->
+                        <VBox spacing="10" prefWidth="260">
+                            <!-- Accesos rápidos -->
+                            <VBox style="-fx-background-color: white;
+                                         -fx-border-radius: 10;
+                                         -fx-background-radius: 10;
+                                         -fx-padding: 12 14;
+                                         -fx-effect: dropshadow(gaussian,
+                                             rgba(0,0,0,0.05),6,0,0,2);">
+                                <Label text="⚡  Acceso rápido"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;
+                                              -fx-padding: 0 0 8 0;"/>
+                                <Button text="＋  Nueva venta"
+                                        onAction="#onAccesoVenta"
+                                        prefWidth="232" prefHeight="36"
+                                        style="-fx-background-color: #2563EB;
+                                               -fx-text-fill: white;
+                                               -fx-font-size: 12;
+                                               -fx-background-radius: 7;
+                                               -fx-cursor: hand;"/>
+                                <Region prefHeight="5"/>
+                                <Button text="＋  Nueva compra"
+                                        onAction="#onAccesoCompra"
+                                        prefWidth="232" prefHeight="32"
+                                        style="-fx-background-color: #F8FAFC;
+                                               -fx-text-fill: #374151;
+                                               -fx-border-color: #E2E8F0;
+                                               -fx-border-radius: 7;
+                                               -fx-background-radius: 7;
+                                               -fx-font-size: 11;
+                                               -fx-cursor: hand;"/>
+                                <Region prefHeight="3"/>
+                                <Button text="＋  Nuevo cliente"
+                                        onAction="#onAccesoCliente"
+                                        prefWidth="232" prefHeight="32"
+                                        style="-fx-background-color: #F8FAFC;
+                                               -fx-text-fill: #374151;
+                                               -fx-border-color: #E2E8F0;
+                                               -fx-border-radius: 7;
+                                               -fx-background-radius: 7;
+                                               -fx-font-size: 11;
+                                               -fx-cursor: hand;"/>
+                                <Region prefHeight="3"/>
+                                <Button text="📦  Inventario"
+                                        onAction="#onAccesoInventario"
+                                        prefWidth="232" prefHeight="32"
+                                        style="-fx-background-color: #F8FAFC;
+                                               -fx-text-fill: #374151;
+                                               -fx-border-color: #E2E8F0;
+                                               -fx-border-radius: 7;
+                                               -fx-background-radius: 7;
+                                               -fx-font-size: 11;
+                                               -fx-cursor: hand;"/>
+                                <Region prefHeight="3"/>
+                                <Button text="🔔  Centro de alertas"
+                                        onAction="#onAccesoAlertas"
+                                        prefWidth="232" prefHeight="32"
+                                        style="-fx-background-color: #F8FAFC;
+                                               -fx-text-fill: #374151;
+                                               -fx-border-color: #E2E8F0;
+                                               -fx-border-radius: 7;
+                                               -fx-background-radius: 7;
+                                               -fx-font-size: 11;
+                                               -fx-cursor: hand;"/>
+                            </VBox>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Fila 3: Actividad reciente -->
+                    <VBox style="-fx-background-color: white;
+                                 -fx-border-radius: 10;
+                                 -fx-background-radius: 10;
+                                 -fx-effect: dropshadow(gaussian,
+                                     rgba(0,0,0,0.05),6,0,0,2);">
+                        <HBox style="-fx-padding: 12 16 8 16;"
+                              alignment="CENTER_LEFT">
+                            <Label text="🕐  Actividad reciente"
+                                   style="-fx-font-size: 12;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #0F172A;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="Ver ventas →"
+                                    onAction="#onAccesoVentas"
+                                    style="-fx-background-color: transparent;
+                                           -fx-text-fill: #2563EB;
+                                           -fx-font-size: 11;
+                                           -fx-cursor: hand;"/>
+                        </HBox>
+                        <Separator/>
+                        <VBox fx:id="panelActividad" spacing="0"/>
+                    </VBox>
                 </VBox>
+            </ScrollPane>
+        </Tab>
 
-                <!-- Transacciones hoy -->
-                <VBox spacing="4" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: white; -fx-padding: 16;
-                             -fx-border-color: #DBEAFE; -fx-border-radius: 10;
-                             -fx-background-radius: 10;">
-                    <Label text="TRANSACCIONES HOY"
-                           style="-fx-font-size: 10; -fx-font-weight: bold;
-                                  -fx-text-fill: #64748B;"/>
-                    <Label fx:id="lblTransacciones" text="0"
-                           style="-fx-font-size: 22; -fx-font-weight: bold;
-                                  -fx-text-fill: #0F172A;"/>
-                    <Label text="ventas registradas"
-                           style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+        <!-- ═══════════════ VENTAS ═══════════════ -->
+        <Tab text="  📈  Ventas  ">
+            <ScrollPane fitToWidth="true"
+                        style="-fx-background: #F1F5F9;
+                               -fx-background-color: #F1F5F9;">
+                <VBox spacing="14" style="-fx-padding: 18 22;">
+
+                    <!-- Mini KPIs -->
+                    <HBox spacing="8">
+                        <VBox fx:id="mkVentas" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;
+                                     -fx-padding: 10 14;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.04),4,0,0,1);">
+                            <Label text="TOTAL VENDIDO"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #94A3B8;"/>
+                            <Label fx:id="mkLblVentas" text="RD$0"
+                                   style="-fx-font-size: 17;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #2563EB;"/>
+                            <Label fx:id="mkVarVentas" text=""
+                                   style="-fx-font-size: 10;"/>
+                        </VBox>
+                        <VBox fx:id="mkCantidad" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;
+                                     -fx-padding: 10 14;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.04),4,0,0,1);">
+                            <Label text="VENTAS"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #94A3B8;"/>
+                            <Label fx:id="mkLblCantidad" text="0"
+                                   style="-fx-font-size: 17;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #0F172A;"/>
+                            <Label fx:id="mkVarCantidad" text=""
+                                   style="-fx-font-size: 10;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;
+                                     -fx-padding: 10 14;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.04),4,0,0,1);">
+                            <Label text="TICKET PROMEDIO"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #94A3B8;"/>
+                            <Label fx:id="mkLblTicket" text="RD$0"
+                                   style="-fx-font-size: 17;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #0F172A;"/>
+                            <Label text="por transacción"
+                                   style="-fx-font-size: 10;
+                                          -fx-text-fill: #94A3B8;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 8;
+                                     -fx-background-radius: 8;
+                                     -fx-padding: 10 14;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.04),4,0,0,1);">
+                            <Label text="PRODUCTOS VENDIDOS"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #94A3B8;"/>
+                            <Label fx:id="mkLblProductos" text="0"
+                                   style="-fx-font-size: 17;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #0F172A;"/>
+                            <Label text="unidades vendidas"
+                                   style="-fx-font-size: 10;
+                                          -fx-text-fill: #94A3B8;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Gráfica principal con selector de métrica -->
+                    <VBox style="-fx-background-color: white;
+                                 -fx-border-radius: 10;
+                                 -fx-background-radius: 10;
+                                 -fx-effect: dropshadow(gaussian,
+                                     rgba(0,0,0,0.05),6,0,0,2);">
+                        <HBox style="-fx-padding: 12 16 8 16;"
+                              alignment="CENTER_LEFT" spacing="12">
+                            <Label text="Evolución de ventas"
+                                   style="-fx-font-size: 13;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #0F172A;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <!-- Selector de métrica -->
+                            <ComboBox fx:id="cmbMetrica"
+                                      onAction="#onCambiarMetrica"
+                                      prefHeight="30" prefWidth="180"
+                                      style="-fx-font-size: 12;"/>
+                            <Label fx:id="lblTotalGrafica"
+                                   style="-fx-font-size: 12;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #2563EB;"/>
+                        </HBox>
+                        <Separator/>
+                        <AreaChart fx:id="graficaVentas" prefHeight="240"
+                                   animated="false" legendVisible="false"
+                                   style="-fx-background-color: transparent;
+                                          -fx-padding: 8;">
+                            <xAxis><CategoryAxis/></xAxis>
+                            <yAxis><NumberAxis fx:id="ejeY"/></yAxis>
+                        </AreaChart>
+                    </VBox>
+
+                    <!-- Top productos + Métodos + Comparativa -->
+                    <HBox spacing="10">
+                        <!-- Top productos enriquecido -->
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <HBox style="-fx-padding: 12 16 8 16;">
+                                <Label text="🏆  Top productos"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;"/>
+                            </HBox>
+                            <Separator/>
+                            <VBox fx:id="panelTopProductos"
+                                  spacing="0"
+                                  style="-fx-padding: 4 0;"/>
+                        </VBox>
+
+                        <!-- Métodos + Comparativa período anterior -->
+                        <VBox spacing="10" prefWidth="290">
+                            <!-- Métodos de pago -->
+                            <VBox style="-fx-background-color: white;
+                                          -fx-border-radius: 10;
+                                          -fx-background-radius: 10;
+                                          -fx-effect: dropshadow(gaussian,
+                                              rgba(0,0,0,0.05),6,0,0,2);">
+                                <HBox style="-fx-padding: 12 16 8 16;">
+                                    <Label text="💳  Métodos de pago"
+                                           style="-fx-font-size: 12;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #0F172A;"/>
+                                </HBox>
+                                <Separator/>
+                                <VBox fx:id="panelMetodosPago"
+                                      spacing="0"
+                                      style="-fx-padding: 10 16;"/>
+                            </VBox>
+                            <!-- Comparativa período anterior -->
+                            <VBox style="-fx-background-color: white;
+                                          -fx-border-radius: 10;
+                                          -fx-background-radius: 10;
+                                          -fx-effect: dropshadow(gaussian,
+                                              rgba(0,0,0,0.05),6,0,0,2);">
+                                <HBox style="-fx-padding: 12 16 8 16;">
+                                    <Label text="📊  vs período anterior"
+                                           style="-fx-font-size: 12;
+                                                  -fx-font-weight: bold;
+                                                  -fx-text-fill: #0F172A;"/>
+                                </HBox>
+                                <Separator/>
+                                <VBox fx:id="panelComparativa"
+                                      spacing="0"
+                                      style="-fx-padding: 10 16;"/>
+                            </VBox>
+                        </VBox>
+                    </HBox>
                 </VBox>
+            </ScrollPane>
+        </Tab>
 
-                <!-- Ventas del mes -->
-                <VBox spacing="4" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: white; -fx-padding: 16;
-                             -fx-border-color: #DBEAFE; -fx-border-radius: 10;
-                             -fx-background-radius: 10;">
-                    <Label text="VENTAS DEL MES"
-                           style="-fx-font-size: 10; -fx-font-weight: bold;
-                                  -fx-text-fill: #64748B;"/>
-                    <Label fx:id="lblVentasMes" text="RD$0.00"
-                           style="-fx-font-size: 22; -fx-font-weight: bold;
-                                  -fx-text-fill: #15803D;"/>
-                    <Label text="mes actual"
-                           style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+        <!-- ═══════════════ INVENTARIO ═══════════════ -->
+        <Tab text="  📦  Inventario  ">
+            <ScrollPane fitToWidth="true"
+                        style="-fx-background: #F1F5F9;
+                               -fx-background-color: #F1F5F9;">
+                <VBox spacing="14" style="-fx-padding: 18 22;">
+
+                    <!-- KPIs inventario -->
+                    <HBox spacing="10">
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <Label text="📦  TOTAL PRODUCTOS"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #94A3B8;"/>
+                            <Label fx:id="lblTotalProductos" text="0"
+                                   style="-fx-font-size: 22;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #0F172A;"/>
+                            <Label fx:id="lblValorInventario" text=""
+                                   style="-fx-font-size: 11;
+                                          -fx-text-fill: #2563EB;"/>
+                        </VBox>
+                        <VBox fx:id="cardStockBajo" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);
+                                     -fx-cursor: hand;">
+                            <Label text="⚠  STOCK BAJO"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #B45309;"/>
+                            <Label fx:id="lblStockBajo" text="0"
+                                   style="-fx-font-size: 22;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #B45309;"/>
+                            <Label text="necesitan reposición"
+                                   style="-fx-font-size: 11;
+                                          -fx-text-fill: #94A3B8;"/>
+                        </VBox>
+                        <VBox fx:id="cardSinStock" HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);
+                                     -fx-cursor: hand;">
+                            <Label text="❌  SIN STOCK"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #DC2626;"/>
+                            <Label fx:id="lblSinStock" text="0"
+                                   style="-fx-font-size: 22;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #DC2626;"/>
+                            <Label text="sin unidades"
+                                   style="-fx-font-size: 11;
+                                          -fx-text-fill: #94A3B8;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <Label text="✅  STOCK NORMAL"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #15803D;"/>
+                            <Label fx:id="lblStockNormal" text="0"
+                                   style="-fx-font-size: 22;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #15803D;"/>
+                            <Label fx:id="lblPctNormal" text=""
+                                   style="-fx-font-size: 11;
+                                          -fx-text-fill: #94A3B8;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Barra de salud del inventario -->
+                    <VBox style="-fx-background-color: white;
+                                 -fx-border-radius: 10;
+                                 -fx-background-radius: 10;
+                                 -fx-padding: 14 18;
+                                 -fx-effect: dropshadow(gaussian,
+                                     rgba(0,0,0,0.05),6,0,0,2);">
+                        <Label text="Estado general del inventario"
+                               style="-fx-font-size: 12;
+                                      -fx-font-weight: bold;
+                                      -fx-text-fill: #0F172A;
+                                      -fx-padding: 0 0 10 0;"/>
+                        <StackPane fx:id="barraInventario"
+                                   prefHeight="16"
+                                   style="-fx-background-radius: 8;
+                                          -fx-background-color: #F1F5F9;"/>
+                        <HBox style="-fx-padding: 6 0 0 0;" spacing="16">
+                            <Label fx:id="lblLeyendaNormal"
+                                   text="● Normal"
+                                   style="-fx-text-fill: #15803D;
+                                          -fx-font-size: 11;"/>
+                            <Label fx:id="lblLeyendaBajo"
+                                   text="● Stock bajo"
+                                   style="-fx-text-fill: #B45309;
+                                          -fx-font-size: 11;"/>
+                            <Label fx:id="lblLeyendaSinStock"
+                                   text="● Sin stock"
+                                   style="-fx-text-fill: #DC2626;
+                                          -fx-font-size: 11;"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Productos críticos + Distribución por categoría -->
+                    <HBox spacing="10">
+                        <!-- Productos críticos / mayor stock -->
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <HBox style="-fx-padding: 12 16 8 16;"
+                                  alignment="CENTER_LEFT">
+                                <Label fx:id="lblTituloProductosCrit"
+                                       text="⚠  Productos críticos"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="Ver inventario →"
+                                        onAction="#onAccesoInventario"
+                                        style="-fx-background-color: transparent;
+                                               -fx-text-fill: #2563EB;
+                                               -fx-font-size: 11;
+                                               -fx-cursor: hand;"/>
+                            </HBox>
+                            <Separator/>
+                            <VBox fx:id="panelProductosCriticos"
+                                  spacing="0"
+                                  style="-fx-padding: 4 0;"/>
+                        </VBox>
+
+                        <!-- Distribución por categoría -->
+                        <VBox prefWidth="280"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <HBox style="-fx-padding: 12 16 8 16;">
+                                <Label text="📂  Por categoría"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;"/>
+                            </HBox>
+                            <Separator/>
+                            <VBox fx:id="panelCategorias"
+                                  spacing="0"
+                                  style="-fx-padding: 10 16;"/>
+                        </VBox>
+                    </HBox>
+
                 </VBox>
+            </ScrollPane>
+        </Tab>
 
-                <!-- Créditos pendientes -->
-                <VBox spacing="4" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: white; -fx-padding: 16;
-                             -fx-border-color: #DBEAFE; -fx-border-radius: 10;
-                             -fx-background-radius: 10;">
-                    <Label text="CRÉDITOS PENDIENTES"
-                           style="-fx-font-size: 10; -fx-font-weight: bold;
-                                  -fx-text-fill: #64748B;"/>
-                    <Label fx:id="lblCreditosPendientes" text="RD$0.00"
-                           style="-fx-font-size: 22; -fx-font-weight: bold;
-                                  -fx-text-fill: #B45309;"/>
-                    <Label text="por cobrar"
-                           style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+        <!-- ═══════════════ CLIENTES ═══════════════ -->
+        <Tab text="  👥  Clientes  ">
+            <ScrollPane fitToWidth="true"
+                        style="-fx-background: #F1F5F9;
+                               -fx-background-color: #F1F5F9;">
+                <VBox spacing="14" style="-fx-padding: 18 22;">
+
+                    <!-- KPIs clientes -->
+                    <HBox spacing="10">
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <Label text="👥  CLIENTES TOTALES"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #94A3B8;"/>
+                            <Label fx:id="lblTotalClientes" text="0"
+                                   style="-fx-font-size: 22;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #0F172A;"/>
+                            <Label fx:id="lblClientesNuevos" text=""
+                                   style="-fx-font-size: 11;
+                                          -fx-text-fill: #15803D;"/>
+                        </VBox>
+                        <VBox fx:id="cardCreditosVencidos"
+                              HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);
+                                     -fx-cursor: hand;">
+                            <Label text="🔴  CRÉDITOS VENCIDOS"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #DC2626;"/>
+                            <Label fx:id="lblCreditosVencidos" text="0"
+                                   style="-fx-font-size: 22;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #DC2626;"/>
+                            <Label text="atención inmediata"
+                                   style="-fx-font-size: 11;
+                                          -fx-text-fill: #94A3B8;"/>
+                        </VBox>
+                        <VBox fx:id="cardCreditosPorVencer"
+                              HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);
+                                     -fx-cursor: hand;">
+                            <Label text="⏰  POR VENCER"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #B45309;"/>
+                            <Label fx:id="lblCreditosPorVencer" text="0"
+                                   style="-fx-font-size: 22;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #B45309;"/>
+                            <Label text="próximos 7 días"
+                                   style="-fx-font-size: 11;
+                                          -fx-text-fill: #94A3B8;"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-padding: 14 16;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <Label text="💰  TOTAL POR COBRAR"
+                                   style="-fx-font-size: 9;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #94A3B8;"/>
+                            <Label fx:id="lblTotalPorCobrar" text="RD$0"
+                                   style="-fx-font-size: 22;
+                                          -fx-font-weight: bold;
+                                          -fx-text-fill: #B45309;"/>
+                            <Label text="saldo pendiente total"
+                                   style="-fx-font-size: 11;
+                                          -fx-text-fill: #94A3B8;"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Top clientes + Panel dinámico -->
+                    <HBox spacing="10">
+                        <!-- Top clientes enriquecido -->
+                        <VBox HBox.hgrow="ALWAYS"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <HBox style="-fx-padding: 12 16 8 16;">
+                                <Label text="👑  Top clientes del período"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;"/>
+                            </HBox>
+                            <Separator/>
+                            <VBox fx:id="panelTopClientes"
+                                  spacing="0"
+                                  style="-fx-padding: 4 0;"/>
+                        </VBox>
+
+                        <!-- Panel dinámico: créditos o estadísticas -->
+                        <VBox prefWidth="310"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <HBox style="-fx-padding: 12 16 8 16;"
+                                  alignment="CENTER_LEFT">
+                                <Label fx:id="lblTituloPanelDin"
+                                       text="🔴  Créditos vencidos"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="Ver →"
+                                        onAction="#onAccesoCreditos"
+                                        style="-fx-background-color: transparent;
+                                               -fx-text-fill: #2563EB;
+                                               -fx-font-size: 11;
+                                               -fx-cursor: hand;"/>
+                            </HBox>
+                            <Separator/>
+                            <VBox fx:id="panelDinamico"
+                                  spacing="0"
+                                  style="-fx-padding: 4 0;"/>
+                        </VBox>
+                    </HBox>
                 </VBox>
-            </HBox>
+            </ScrollPane>
+        </Tab>
 
-            <!-- Fila 2: Alertas rápidas -->
-            <HBox spacing="12">
-                <VBox fx:id="cardStockBajo" spacing="4" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #FEF3C7; -fx-padding: 12 16;
-                             -fx-border-color: #FDE68A; -fx-border-radius: 8;
-                             -fx-background-radius: 8; -fx-cursor: hand;">
-                    <Label text="⚠ STOCK BAJO"
-                           style="-fx-font-size: 10; -fx-font-weight: bold;
-                                  -fx-text-fill: #B45309;"/>
-                    <Label fx:id="lblStockBajo" text="0 productos"
-                           style="-fx-font-size: 18; -fx-font-weight: bold;
-                                  -fx-text-fill: #B45309;"/>
-                    <Label text="Ver inventario →"
-                           style="-fx-font-size: 11; -fx-text-fill: #D97706;"/>
-                </VBox>
-
-                <VBox fx:id="cardCreditosVencidos" spacing="4" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #FEE2E2; -fx-padding: 12 16;
-                             -fx-border-color: #FCA5A5; -fx-border-radius: 8;
-                             -fx-background-radius: 8; -fx-cursor: hand;">
-                    <Label text="🔴 CRÉDITOS VENCIDOS"
-                           style="-fx-font-size: 10; -fx-font-weight: bold;
-                                  -fx-text-fill: #DC2626;"/>
-                    <Label fx:id="lblCreditosVencidos" text="0"
-                           style="-fx-font-size: 18; -fx-font-weight: bold;
-                                  -fx-text-fill: #DC2626;"/>
-                    <Label text="Ver cuentas por cobrar →"
-                           style="-fx-font-size: 11; -fx-text-fill: #EF4444;"/>
-                </VBox>
-
-                <VBox fx:id="cardCuentasPorPagar" spacing="4" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #FFEDD5; -fx-padding: 12 16;
-                             -fx-border-color: #FDBA74; -fx-border-radius: 8;
-                             -fx-background-radius: 8; -fx-cursor: hand;">
-                    <Label text="💳 CUENTAS POR PAGAR"
-                           style="-fx-font-size: 10; -fx-font-weight: bold;
-                                  -fx-text-fill: #C2410C;"/>
-                    <Label fx:id="lblCuentasPorPagar" text="RD$0.00"
-                           style="-fx-font-size: 18; -fx-font-weight: bold;
-                                  -fx-text-fill: #C2410C;"/>
-                    <Label text="saldo pendiente a proveedores →"
-                           style="-fx-font-size: 11; -fx-text-fill: #EA580C;"/>
-                </VBox>
-
-                <VBox fx:id="cardAlertas" spacing="4" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #EDE9FE; -fx-padding: 12 16;
-                             -fx-border-color: #C4B5FD; -fx-border-radius: 8;
-                             -fx-background-radius: 8; -fx-cursor: hand;">
-                    <Label text="🔔 ALERTAS PENDIENTES"
-                           style="-fx-font-size: 10; -fx-font-weight: bold;
-                                  -fx-text-fill: #6D28D9;"/>
-                    <Label fx:id="lblAlertas" text="0"
-                           style="-fx-font-size: 18; -fx-font-weight: bold;
-                                  -fx-text-fill: #6D28D9;"/>
-                    <Label text="Ver centro de alertas →"
-                           style="-fx-font-size: 11; -fx-text-fill: #7C3AED;"/>
-                </VBox>
-            </HBox>
-
-            <!-- Fila 3: Gráfica + Top productos -->
-            <HBox spacing="16">
-
-                <!-- Gráfica ventas 7 días -->
-                <VBox spacing="8" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: white; -fx-padding: 16;
-                             -fx-border-color: #DBEAFE; -fx-border-radius: 10;
-                             -fx-background-radius: 10;">
-                    <Label text="Ventas — últimos 7 días"
-                           style="-fx-font-size: 13; -fx-font-weight: bold;
-                                  -fx-text-fill: #1E40AF;"/>
-                    <BarChart fx:id="graficaVentas" prefHeight="220"
-                              animated="false"
-                              style="-fx-background-color: transparent;">
-                        <xAxis>
-                            <CategoryAxis/>
-                        </xAxis>
-                        <yAxis>
-                            <NumberAxis/>
-                        </yAxis>
-                    </BarChart>
-                </VBox>
-
-                <!-- Top 5 productos -->
-                <VBox spacing="8" prefWidth="280"
-                      style="-fx-background-color: white; -fx-padding: 16;
-                             -fx-border-color: #DBEAFE; -fx-border-radius: 10;
-                             -fx-background-radius: 10;">
-                    <Label text="Top 5 productos del mes"
-                           style="-fx-font-size: 13; -fx-font-weight: bold;
-                                  -fx-text-fill: #1E40AF;"/>
-                    <VBox fx:id="panelTopProductos" spacing="8"/>
-                </VBox>
-            </HBox>
-
-            <!-- Fila 4: Últimas ventas -->
-            <VBox spacing="8"
-                  style="-fx-background-color: white; -fx-padding: 16;
-                         -fx-border-color: #DBEAFE; -fx-border-radius: 10;
-                         -fx-background-radius: 10;">
-                <Label text="Últimas ventas"
-                       style="-fx-font-size: 13; -fx-font-weight: bold;
-                              -fx-text-fill: #1E40AF;"/>
-                <TableView fx:id="tablaUltimasVentas" prefHeight="180"
-                           style="-fx-border-color: #DBEAFE; -fx-font-size: 12;">
-                    <columns>
-                        <TableColumn fx:id="colFactura"  text="Factura"   prefWidth="100"/>
-                        <TableColumn fx:id="colFecha"    text="Fecha"     prefWidth="130"/>
-                        <TableColumn fx:id="colCliente"  text="Cliente"   prefWidth="160"/>
-                        <TableColumn fx:id="colProductos" text="Productos" prefWidth="220"/>
-                        <TableColumn fx:id="colTotal"    text="Total"     prefWidth="110"/>
-                        <TableColumn fx:id="colPago"     text="Pago"      prefWidth="100"/>
-                    </columns>
-                </TableView>
-            </VBox>
-
-        </VBox>
-    </ScrollPane>
+    </TabPane>
 </VBox>

@@ -4,6 +4,7 @@ import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Usuario;
 import com.jordis.jordis.service.AutenticacionService;
 import com.jordis.jordis.service.UsuarioService;
+import com.jordis.jordis.util.Paginador;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -36,11 +37,39 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final AutenticacionService autenticacionService;
     private final SpringFXMLLoader fxmlLoader;
+    private Paginador<Usuario> paginador;
 
     @FXML
     public void initialize() {
         configurarColumnas();
+
+        paginador = new Paginador<>(tablaUsuarios);
+
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.layout.VBox padre =
+                    (javafx.scene.layout.VBox) tablaUsuarios.getParent();
+            if (padre != null && !padre.getChildren()
+                    .contains(paginador.getBarraNavegacion())) {
+                padre.getChildren().add(paginador.getBarraNavegacion());
+            }
+        });
+
+        txtBuscar.textProperty().addListener((obs, old, val) -> filtrarUsuarios(val));
+
         cargarUsuarios();
+    }
+
+    private void filtrarUsuarios(String texto) {
+        List<Usuario> base = usuarioService.obtenerTodos();
+        if (texto == null || texto.isBlank()) {
+            paginador.setDatos(base);
+            return;
+        }
+        String t = texto.toLowerCase();
+        paginador.setDatos(base.stream()
+                .filter(u -> u.getNombre().toLowerCase().contains(t)
+                        || u.getApellido().toLowerCase().contains(t))
+                .toList());
     }
 
     private void configurarColumnas() {
@@ -157,8 +186,23 @@ public class UsuarioController {
     }
 
     private void cargarUsuarios() {
-        tablaUsuarios.setItems(
-                FXCollections.observableArrayList(usuarioService.obtenerTodos()));
+        paginador.setDatos(usuarioService.obtenerTodos());
+    }
+
+    // Filtra la tabla para mostrar únicamente el usuario indicado.
+    // Se usa al navegar aquí desde el Centro de Alertas.
+    public void filtrarPorId(Integer idUsuario) {
+        if (idUsuario == null) return;
+        Usuario u;
+        try {
+            u = usuarioService.obtenerPorId(idUsuario);
+        } catch (Exception e) {
+            mostrarMensaje("El usuario de la alerta ya no existe.", true);
+            return;
+        }
+        txtBuscar.setText(u.getNombre());
+        paginador.setDatos(List.of(u));
+        mostrarMensaje("Mostrando: " + u.getNombreCompleto(), false);
     }
 
     @FXML public void onNuevoUsuario() { abrirFormulario(null); }
@@ -185,9 +229,8 @@ public class UsuarioController {
         mostrarMensaje("Mostrando usuarios bloqueados.", false);
     }
 
-    @FXML
-    public void onVerTodos() {
-        cargarUsuarios();
+    @FXML public void onVerTodos() {
+        txtBuscar.clear();
         lblMensaje.setText("");
     }
 

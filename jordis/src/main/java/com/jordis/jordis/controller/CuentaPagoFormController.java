@@ -24,6 +24,7 @@ public class CuentaPagoFormController {
     @FXML private TextField txtNotas;
     @FXML private Label     lblError;
     @FXML private Button    btnGuardar;
+    @FXML private DatePicker dpFechaPago;
 
     private final CuentaPorPagarService cuentaService;
     private final AutenticacionService  autenticacionService;
@@ -41,6 +42,7 @@ public class CuentaPagoFormController {
                 "EFECTIVO", "TARJETA", "TRANSFERENCIA",
                 "CHEQUE");
         cmbMetodoPago.setValue("TRANSFERENCIA");
+        dpFechaPago.setValue(java.time.LocalDate.now());
     }
 
     public void setCuenta(CuentaPorPagar c) {
@@ -73,13 +75,18 @@ public class CuentaPagoFormController {
             lblError.setText("El monto debe ser un número válido."); return;
         }
 
+        if (dpFechaPago.getValue() == null) {
+            lblError.setText("Selecciona la fecha del pago."); return;
+        }
+
         try {
             cuentaService.registrarPago(
                     cuenta.getIdCuenta(),
                     monto,
                     cmbMetodoPago.getValue(),
                     txtNotas.getText().trim(),
-                    autenticacionService.getUsuarioActivo());
+                    autenticacionService.getUsuarioActivo(),
+                    dpFechaPago.getValue().atTime(java.time.LocalTime.now()));
 
             // Actualizar alertas tras el pago
             alertaService.escanearCuentasPorPagar();

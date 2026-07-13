@@ -25,9 +25,11 @@ public class CreditoPagoFormController {
     @FXML private TextField txtNotas;
     @FXML private Label     lblError;
     @FXML private Button    btnGuardar;
+    @FXML private DatePicker dpFechaPago;
 
     private final VentaService         ventaService;
     private final AutenticacionService autenticacionService;
+
 
     private Venta    venta;
     private Runnable onGuardado;
@@ -37,6 +39,7 @@ public class CreditoPagoFormController {
 
     @FXML
     public void initialize() {
+        dpFechaPago.setValue(java.time.LocalDate.now());
         cmbMetodoPago.getItems().setAll(
                 "EFECTIVO", "TARJETA", "TRANSFERENCIA", "CHEQUE");
         cmbMetodoPago.setValue("EFECTIVO");
@@ -73,13 +76,18 @@ public class CreditoPagoFormController {
             lblError.setText("El monto debe ser un número válido."); return;
         }
 
+        if (dpFechaPago.getValue() == null) {
+            lblError.setText("Selecciona la fecha del pago."); return;
+        }
+
         try {
             ventaService.registrarPagoCredito(
                     venta.getIdVenta(),
                     monto,
                     cmbMetodoPago.getValue(),
                     txtNotas.getText().trim(),
-                    autenticacionService.getUsuarioActivo());
+                    autenticacionService.getUsuarioActivo(),
+                    dpFechaPago.getValue().atTime(java.time.LocalTime.now()));
 
             if (onGuardado != null) onGuardado.run();
             cerrar();

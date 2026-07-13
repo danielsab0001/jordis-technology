@@ -4,6 +4,8 @@ import com.jordis.jordis.model.*;
 import com.jordis.jordis.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class VentaService {
     private final ClienteRepository      clienteRepository;
     private final AlertaService alertaService;
     private final NCFService ncfService;
+    private final JdbcTemplate jdbcTemplate;
 
     public List<Venta> obtenerTodas() {
         return ventaRepository.findActivas();
@@ -122,7 +125,7 @@ public class VentaService {
 
         for (Map.Entry<Integer, Integer> entry : items.entrySet()) {
             Integer idProducto = entry.getKey();
-            Integer cantidad   = entry.getValue();
+            Integer cantidad = entry.getValue();
 
             Producto producto = productoRepository.findById(idProducto)
                     .orElseThrow(() -> new RuntimeException(
@@ -148,9 +151,15 @@ public class VentaService {
 
             subtotal = subtotal.add(lineaSubtotal);
 
-            // Descontar stock
             producto.setStock(producto.getStock() - cantidad);
-            productoRepository.save(producto);
+            try {
+                productoRepository.saveAndFlush(producto);
+            } catch (ObjectOptimisticLockingFailureException ex) {
+                throw new ConflictoConcurrenciaException(
+                        "El stock de '" + producto.getNombre()
+                                + "' cambió justo ahora — probablemente otra venta "
+                                + "se registró al mismo tiempo. Vuelve a intentar la venta.");
+            }
 
             // Agregar garantía si existe
             if (garantias != null && garantias.containsKey(idProducto)) {
@@ -174,31 +183,50 @@ public class VentaService {
             }
         }
 
-        // NCF e ITBIS
+        // Calcular descuento
+        BigDecimal descuento = subtotal.multiply(descuentoPorcentual)
+                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+
+        // Calcular total (el ITBIS ya está incluido en el precio)
+        BigDecimal total = subtotal.subtract(descuento)
+                .setScale(2, RoundingMode.HALF_UP);
+
+        // Guardar valores en la venta
+        venta.setSubtotal(subtotal.setScale(2, RoundingMode.HALF_UP));
+        venta.setTotal(total);
+
+        // NCF
         venta.setEsCreditoFiscal(esCreditoFiscal);
+
         if (esCreditoFiscal && tipoNcf != null) {
             String ncf = ncfService.generarNCF(tipoNcf);
             venta.setNcf(ncf);
             venta.setTipoNcf(tipoNcf);
         }
 
-// Calcular ITBIS sobre el total con descuento
-        venta.setItbisPorcentual(
-                itbisPorcentual != null ? itbisPorcentual : BigDecimal.ZERO);
+// ITBIS (solo se desglosa si hay comprobante fiscal)
+        if (esCreditoFiscal
+                && itbisPorcentual != null
+                && itbisPorcentual.compareTo(BigDecimal.ZERO) > 0) {
 
-        venta.setSubtotal(subtotal);
-        BigDecimal factor = BigDecimal.ONE.subtract(
-                descuentoPorcentual.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-        venta.setTotal(subtotal.multiply(factor).setScale(2, RoundingMode.HALF_UP));
+            venta.setItbisPorcentual(itbisPorcentual);
 
-        // Calcular monto ITBIS
-        if (itbisPorcentual != null && itbisPorcentual.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal tasa = itbisPorcentual.divide(
+                    BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+
+            BigDecimal divisor = BigDecimal.ONE.add(tasa);
+
             BigDecimal montoItbis = venta.getTotal()
-                    .multiply(itbisPorcentual)
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                    .multiply(tasa)
+                    .divide(divisor, 2, RoundingMode.HALF_UP);
+
             venta.setMontoItbis(montoItbis);
+
         } else {
+
+            venta.setItbisPorcentual(BigDecimal.ZERO);
             venta.setMontoItbis(BigDecimal.ZERO);
+
         }
 
         Venta guardada = ventaRepository.save(venta);
@@ -214,7 +242,7 @@ public class VentaService {
     @Transactional
     public CreditoPago registrarPagoCredito(Integer idVenta, BigDecimal monto,
                                             String metodoPago, String notas,
-                                            Usuario cajero) {
+                                            Usuario cajero, LocalDateTime fechaPago) {
         Venta venta = obtenerPorId(idVenta);
 
         if (!venta.getEsCredito()) {
@@ -242,7 +270,7 @@ public class VentaService {
         pago.setMetodoPago(metodoPago);
         pago.setNotas(notas);
         pago.setCajero(cajero);
-        pago.setFechaPago(LocalDateTime.now());
+        pago.setFechaPago(fechaPago);
 
         CreditoPago guardado = creditoPagoRepository.save(pago);
         log.info("Pago de crédito registrado — Venta #{} — Monto: RD${} — Saldo restante: RD${}",
@@ -261,7 +289,13 @@ public class VentaService {
         for (VentaProducto detalle : venta.getDetalles()) {
             Producto producto = detalle.getProducto();
             producto.setStock(producto.getStock() + detalle.getCantidad());
-            productoRepository.save(producto);
+            try {
+                productoRepository.saveAndFlush(producto);
+            } catch (ObjectOptimisticLockingFailureException ex) {
+                throw new ConflictoConcurrenciaException(
+                        "El stock de '" + producto.getNombre()
+                                + "' cambió justo ahora. Vuelve a intentar anular la venta.");
+            }
         }
         venta.setAnulada(true);
         venta.setMotivoAnulacion(motivo);
@@ -270,9 +304,9 @@ public class VentaService {
     }
 
     private String generarNumeroFactura() {
-        // Formato: FAC-00001, FAC-00002, etc.
-        long total = ventaRepository.count() + 1;
-        return String.format("FAC-%05d", total);
+        Long numero = jdbcTemplate.queryForObject(
+                "SELECT nextval('factura_seq')", Long.class);
+        return String.format("FAC-%05d", numero);
     }
 
     // ---- Excepciones ----
@@ -281,5 +315,8 @@ public class VentaService {
     }
     public static class VentaInvalidaException extends RuntimeException {
         public VentaInvalidaException(String msg) { super(msg); }
+    }
+    public static class ConflictoConcurrenciaException extends RuntimeException {
+        public ConflictoConcurrenciaException(String msg) { super(msg); }
     }
 }

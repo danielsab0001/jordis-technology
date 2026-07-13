@@ -25,6 +25,24 @@
                        -fx-background-radius: 6; -fx-font-size: 12;
                        -fx-padding: 7 12; -fx-cursor: hand;"/>
     </HBox>
+    <HBox style="-fx-padding: 12 24;" spacing="10" alignment="CENTER_LEFT">
+        <TextField fx:id="txtBuscar"
+                   promptText="Buscar por proveedor..."
+                   prefWidth="240" prefHeight="34"
+                   style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                      -fx-border-radius: 6; -fx-background-radius: 6;
+                      -fx-padding: 4 10;"/>
+        <Button text="Por vencer (7 días)" onAction="#onVerPorVencer"
+                style="-fx-background-color: #FEF3C7; -fx-text-fill: #B45309;
+                   -fx-border-color: #FDE68A; -fx-border-radius: 6;
+                   -fx-background-radius: 6; -fx-font-size: 12;
+                   -fx-padding: 6 12; -fx-cursor: hand;"/>
+        <Button text="Ver todas" onAction="#onVerTodas"
+                style="-fx-background-color: transparent; -fx-text-fill: #64748B;
+                   -fx-border-color: #CBD5E1; -fx-border-radius: 6;
+                   -fx-background-radius: 6; -fx-font-size: 12;
+                   -fx-padding: 6 14; -fx-cursor: hand;"/>
+    </HBox>
 
     <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 24;">
         <TableView fx:id="tablaCuentas" VBox.vgrow="ALWAYS"

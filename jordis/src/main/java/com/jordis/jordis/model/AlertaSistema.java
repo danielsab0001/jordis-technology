@@ -19,7 +19,9 @@ public class AlertaSistema {
     private Integer idAlerta;
 
     @Column(name = "tipo", nullable = false, length = 50)
-    private String tipo; // STOCK_BAJO, PRECIO_DIFERENCIA, USUARIO_BLOQUEADO, PRECIO_COMPRA_INUSUAL
+    private String tipo; // SIN_STOCK, STOCK_BAJO, PROXIMO_MINIMO,
+    // PRECIO_FUERA_RANGO_ALTA, PRECIO_FUERA_RANGO_MEDIA,
+    // USUARIO_BLOQUEADO, CREDITO_VENCIMIENTO, CUENTA_POR_PAGAR
 
     @Column(name = "titulo", nullable = false, length = 200)
     private String titulo;

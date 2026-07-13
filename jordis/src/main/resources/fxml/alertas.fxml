@@ -6,54 +6,171 @@
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.jordis.jordis.controller.AlertaController"
-      spacing="0" style="-fx-background-color: #F8FAFF;">
+      spacing="0" style="-fx-background-color: #F1F5F9;">
 
-    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
-                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
-          alignment="CENTER_LEFT" spacing="12">
-        <Text text="Centro de Alertas"
-              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
-        <Label fx:id="lblContador" text=""
-               style="-fx-background-color: #DC2626; -fx-text-fill: white;
-                      -fx-padding: 2 8; -fx-background-radius: 10;
-                      -fx-font-size: 11; -fx-font-weight: bold;"/>
+    <!-- Encabezado -->
+    <HBox style="-fx-background-color: white; -fx-padding: 14 24;
+                 -fx-border-color: #E2E8F0; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="14">
+        <VBox spacing="2">
+            <Label text="🔔  Centro de Alertas"
+                   style="-fx-font-size: 16; -fx-font-weight: bold;
+                          -fx-text-fill: #0F172A;"/>
+            <Label fx:id="lblSubtitulo" text="Solo se muestran situaciones activas"
+                   style="-fx-font-size: 11; -fx-text-fill: #94A3B8;"/>
+        </VBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="Escanear ahora" onAction="#onEscanear"
+        <Button text="↻  Actualizar" onAction="#onEscanear"
                 style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
                        -fx-border-color: #BFDBFE; -fx-border-radius: 6;
                        -fx-background-radius: 6; -fx-font-size: 12;
                        -fx-padding: 7 12; -fx-cursor: hand;"/>
-        <Button text="Marcar todas leídas" onAction="#onMarcarTodasLeidas"
+        <Button text="✓  Marcar todo leído" onAction="#onMarcarTodasLeidas"
                 style="-fx-background-color: #F0FDF4; -fx-text-fill: #15803D;
                        -fx-border-color: #BBF7D0; -fx-border-radius: 6;
                        -fx-background-radius: 6; -fx-font-size: 12;
                        -fx-padding: 7 12; -fx-cursor: hand;"/>
-        <Button text="Solo no leídas" onAction="#onFiltrarNoLeidas"
-                style="-fx-background-color: #FEF3C7; -fx-text-fill: #B45309;
-                       -fx-border-color: #FDE68A; -fx-border-radius: 6;
-                       -fx-background-radius: 6; -fx-font-size: 12;
-                       -fx-padding: 7 12; -fx-cursor: hand;"/>
-        <Button text="Ver todas" onAction="#onVerTodas"
-                style="-fx-background-color: transparent; -fx-text-fill: #64748B;
-                       -fx-border-color: #CBD5E1; -fx-border-radius: 6;
-                       -fx-background-radius: 6; -fx-font-size: 12;
-                       -fx-padding: 7 12; -fx-cursor: hand;"/>
     </HBox>
 
-    <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 24;">
-        <TableView fx:id="tablaAlertas" VBox.vgrow="ALWAYS"
-                   style="-fx-border-color: #DBEAFE; -fx-border-radius: 8;
-                          -fx-font-size: 12;">
-            <columns>
-                <TableColumn fx:id="colTipo"        text="Tipo"        prefWidth="140"/>
-                <TableColumn fx:id="colTitulo"      text="Título"      prefWidth="220"/>
-                <TableColumn fx:id="colDescripcion" text="Descripción" prefWidth="600"/>
-                <TableColumn fx:id="colFecha"       text="Fecha"       prefWidth="130"/>
-                <TableColumn fx:id="colEstado"      text="Estado"      prefWidth="90"/>
-                <TableColumn fx:id="colAcciones"    text="Acciones"    prefWidth="140"/>
-            </columns>
-        </TableView>
-    </VBox>
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background: #F1F5F9; -fx-background-color: #F1F5F9;">
+        <VBox spacing="14" style="-fx-padding: 16 22;">
+
+            <!-- Tarjetas de resumen por prioridad -->
+            <HBox spacing="10">
+                <VBox fx:id="cardCritica" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-padding: 12 16;
+                             -fx-border-radius: 10; -fx-background-radius: 10;
+                             -fx-border-color: #FCA5A5; -fx-border-width: 0 0 0 4;
+                             -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.05),5,0,0,2);
+                             -fx-cursor: hand;">
+                    <Label text="🔴  CRÍTICA"
+                           style="-fx-font-size: 9; -fx-font-weight: bold;
+                                  -fx-text-fill: #DC2626;"/>
+                    <Label fx:id="lblCritica" text="0"
+                           style="-fx-font-size: 26; -fx-font-weight: bold;
+                                  -fx-text-fill: #DC2626;"/>
+                    <Label text="alertas"
+                           style="-fx-font-size: 10; -fx-text-fill: #94A3B8;"/>
+                </VBox>
+                <VBox fx:id="cardAlta" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-padding: 12 16;
+                             -fx-border-radius: 10; -fx-background-radius: 10;
+                             -fx-border-color: #FDBA74; -fx-border-width: 0 0 0 4;
+                             -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.05),5,0,0,2);
+                             -fx-cursor: hand;">
+                    <Label text="🟠  ALTA"
+                           style="-fx-font-size: 9; -fx-font-weight: bold;
+                                  -fx-text-fill: #EA580C;"/>
+                    <Label fx:id="lblAlta" text="0"
+                           style="-fx-font-size: 26; -fx-font-weight: bold;
+                                  -fx-text-fill: #EA580C;"/>
+                    <Label text="alertas"
+                           style="-fx-font-size: 10; -fx-text-fill: #94A3B8;"/>
+                </VBox>
+                <VBox fx:id="cardMedia" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-padding: 12 16;
+                             -fx-border-radius: 10; -fx-background-radius: 10;
+                             -fx-border-color: #FDE68A; -fx-border-width: 0 0 0 4;
+                             -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.05),5,0,0,2);
+                             -fx-cursor: hand;">
+                    <Label text="🟡  MEDIA"
+                           style="-fx-font-size: 9; -fx-font-weight: bold;
+                                  -fx-text-fill: #B45309;"/>
+                    <Label fx:id="lblMedia" text="0"
+                           style="-fx-font-size: 26; -fx-font-weight: bold;
+                                  -fx-text-fill: #B45309;"/>
+                    <Label text="alertas"
+                           style="-fx-font-size: 10; -fx-text-fill: #94A3B8;"/>
+                </VBox>
+                <VBox fx:id="cardBaja" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-padding: 12 16;
+                             -fx-border-radius: 10; -fx-background-radius: 10;
+                             -fx-border-color: #BFDBFE; -fx-border-width: 0 0 0 4;
+                             -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.05),5,0,0,2);
+                             -fx-cursor: hand;">
+                    <Label text="🔵  BAJA"
+                           style="-fx-font-size: 9; -fx-font-weight: bold;
+                                  -fx-text-fill: #2563EB;"/>
+                    <Label fx:id="lblBaja" text="0"
+                           style="-fx-font-size: 26; -fx-font-weight: bold;
+                                  -fx-text-fill: #2563EB;"/>
+                    <Label text="alertas"
+                           style="-fx-font-size: 10; -fx-text-fill: #94A3B8;"/>
+                </VBox>
+                <VBox fx:id="cardLeidas" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-padding: 12 16;
+                             -fx-border-radius: 10; -fx-background-radius: 10;
+                             -fx-border-color: #CBD5E1; -fx-border-width: 0 0 0 4;
+                             -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.05),5,0,0,2);
+                             -fx-cursor: hand;">
+                    <Label text="⚪  LEÍDAS"
+                           style="-fx-font-size: 9; -fx-font-weight: bold;
+                                  -fx-text-fill: #64748B;"/>
+                    <Label fx:id="lblLeidas" text="0"
+                           style="-fx-font-size: 26; -fx-font-weight: bold;
+                                  -fx-text-fill: #64748B;"/>
+                    <Label text="sin resolver"
+                           style="-fx-font-size: 10; -fx-text-fill: #94A3B8;"/>
+                </VBox>
+                <VBox fx:id="cardTodas" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: white; -fx-padding: 12 16;
+                             -fx-border-radius: 10; -fx-background-radius: 10;
+                             -fx-border-color: #E2E8F0; -fx-border-width: 0 0 0 4;
+                             -fx-effect: dropshadow(gaussian,rgba(0,0,0,0.05),5,0,0,2);
+                             -fx-cursor: hand;">
+                    <Label text="📋  TODAS"
+                           style="-fx-font-size: 9; -fx-font-weight: bold;
+                                  -fx-text-fill: #64748B;"/>
+                    <Label fx:id="lblTodas" text="0"
+                           style="-fx-font-size: 26; -fx-font-weight: bold;
+                                  -fx-text-fill: #0F172A;"/>
+                    <Label text="alertas activas"
+                           style="-fx-font-size: 10; -fx-text-fill: #94A3B8;"/>
+                </VBox>
+            </HBox>
+
+            <!-- Barra de búsqueda y filtro por tipo -->
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="txtBuscar"
+                           promptText="Buscar en alertas..."
+                           prefWidth="240" prefHeight="34"
+                           style="-fx-font-size: 12; -fx-border-color: #E2E8F0;
+                                  -fx-border-radius: 6; -fx-background-radius: 6;
+                                  -fx-padding: 4 10;"/>
+                <ComboBox fx:id="cmbTipo" promptText="Todos los tipos"
+                          prefWidth="200" prefHeight="34"
+                          style="-fx-font-size: 12;"/>
+                <Button text="Limpiar" onAction="#onLimpiarFiltros"
+                        style="-fx-background-color: transparent;
+                               -fx-text-fill: #64748B;
+                               -fx-border-color: #E2E8F0; -fx-border-radius: 6;
+                               -fx-background-radius: 6; -fx-font-size: 12;
+                               -fx-padding: 6 14; -fx-cursor: hand;"/>
+                <Label fx:id="lblFiltroActivo" text=""
+                       style="-fx-font-size: 11; -fx-text-fill: #2563EB;
+                              -fx-background-color: #EFF6FF;
+                              -fx-background-radius: 4; -fx-padding: 3 8;"/>
+            </HBox>
+
+            <!-- Panel de grupos de alertas -->
+            <VBox fx:id="panelGrupos" spacing="10"/>
+
+            <!-- Estado vacío -->
+            <VBox fx:id="panelVacio" alignment="CENTER" spacing="12"
+                  style="-fx-padding: 40;" visible="false" managed="false">
+                <Label text="✅"
+                       style="-fx-font-size: 40; -fx-opacity: 0.4;"/>
+                <Label text="Sin alertas activas"
+                       style="-fx-font-size: 15; -fx-text-fill: #94A3B8;
+                              -fx-font-weight: bold;"/>
+                <Label text="Todas las condiciones están bajo control."
+                       style="-fx-font-size: 12; -fx-text-fill: #CBD5E1;"/>
+            </VBox>
+
+        </VBox>
+    </ScrollPane>
+
     <Label fx:id="lblMensaje" text=""
-           style="-fx-padding: 0 24 10 24; -fx-font-size: 12;"/>
+           style="-fx-padding: 8 24; -fx-font-size: 12;"/>
 </VBox>

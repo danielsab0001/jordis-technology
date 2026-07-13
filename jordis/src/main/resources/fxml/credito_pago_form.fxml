@@ -41,6 +41,13 @@
                          -fx-border-radius: 6; -fx-background-radius: 6;"/>
     </VBox>
 
+    <VBox spacing="4">
+        <Label text="Fecha del pago *"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <DatePicker fx:id="dpFechaPago" prefWidth="340" prefHeight="36"
+                    style="-fx-font-size: 13;"/>
+    </VBox>
+
     <!-- Notas -->
     <VBox spacing="4">
         <Label text="Notas (opcional)"

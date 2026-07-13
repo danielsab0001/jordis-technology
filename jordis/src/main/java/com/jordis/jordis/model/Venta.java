@@ -43,10 +43,10 @@ public class Venta {
     private BigDecimal descuentoPorcentual = BigDecimal.ZERO;
 
     @Column(name = "subtotal", nullable = false, precision = 12, scale = 2)
-    private BigDecimal subtotal;
+    private BigDecimal subtotal = BigDecimal.ZERO;
 
     @Column(name = "total", nullable = false, precision = 12, scale = 2)
-    private BigDecimal total;
+    private BigDecimal total = BigDecimal.ZERO;
 
     @Column(name = "es_credito", nullable = false)
     private Boolean esCredito = false;

@@ -4,6 +4,7 @@ import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Categoria;
 import com.jordis.jordis.model.Producto;
 import com.jordis.jordis.service.ProductoService;
+import com.jordis.jordis.util.Paginador;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -37,12 +38,47 @@ public class ProductoController {
 
     private final ProductoService productoService;
     private final SpringFXMLLoader fxmlLoader;
+    private Paginador<Producto> paginador;
 
     @FXML
     public void initialize() {
         cargarCategorias();
         configurarColumnas();
+        paginador = new Paginador<>(tablaProductos);
+
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.layout.VBox padre =
+                    (javafx.scene.layout.VBox) tablaProductos.getParent();
+            if (padre != null && !padre.getChildren()
+                    .contains(paginador.getBarraNavegacion())) {
+                padre.getChildren().add(paginador.getBarraNavegacion());
+            }
+        });
+        txtBuscar.textProperty().addListener((obs, old, val) ->
+                filtrarProductos(val, cmbCategoria.getValue()));
+
+        cmbCategoria.setOnAction(e ->
+                filtrarProductos(txtBuscar.getText(), cmbCategoria.getValue()));
+
         cargarProductos();
+    }
+
+    private void filtrarProductos(String texto, Categoria categoria) {
+        List<Producto> base = productoService.obtenerTodos();
+        List<Producto> resultado = base.stream()
+                .filter(p -> {
+                    boolean matchTexto = texto == null || texto.isBlank()
+                            || p.getNombre().toLowerCase().contains(texto.toLowerCase())
+                            || (p.getMarca() != null &&
+                            p.getMarca().toLowerCase().contains(texto.toLowerCase()));
+                    boolean matchCat = categoria == null
+                            || (p.getCategoria() != null &&
+                            p.getCategoria().getIdCategoria()
+                                    .equals(categoria.getIdCategoria()));
+                    return matchTexto && matchCat;
+                })
+                .toList();
+        paginador.setDatos(resultado);
     }
 
     private void cargarCategorias() {
@@ -105,8 +141,7 @@ public class ProductoController {
     }
 
     private void cargarProductos() {
-        tablaProductos.setItems(
-                FXCollections.observableArrayList(productoService.obtenerTodos()));
+        paginador.setDatos(productoService.obtenerTodos());
     }
 
     @FXML public void onNuevoProducto() { abrirFormulario(null); }
@@ -127,10 +162,8 @@ public class ProductoController {
 
     @FXML
     public void onVerTodos() {
-        cargarProductos();
         txtBuscar.clear();
         cmbCategoria.setValue(null);
-        lblMensaje.setText("");
     }
 
     private void eliminar(Producto producto) {

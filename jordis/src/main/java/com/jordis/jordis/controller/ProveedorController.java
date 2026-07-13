@@ -3,6 +3,7 @@ package com.jordis.jordis.controller;
 import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Proveedor;
 import com.jordis.jordis.service.ProveedorService;
+import com.jordis.jordis.util.Paginador;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -14,6 +15,8 @@ import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -32,11 +35,43 @@ public class ProveedorController {
 
     private final ProveedorService proveedorService;
     private final SpringFXMLLoader fxmlLoader;
+    private Paginador<Proveedor> paginador;
 
     @FXML
     public void initialize() {
         configurarColumnas();
+        paginador = new Paginador<>(tablaProveedores);
+
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.layout.VBox padre =
+                    (javafx.scene.layout.VBox) tablaProveedores.getParent();
+            if (padre != null && !padre.getChildren()
+                    .contains(paginador.getBarraNavegacion())) {
+                padre.getChildren().add(paginador.getBarraNavegacion());
+            }
+        });
+
+        txtBuscar.textProperty().addListener((obs, old, val) ->
+                filtrarProveedores(val));
+
         cargarProveedores();
+    }
+
+    private void filtrarProveedores(String texto) {
+        List<Proveedor> base =
+                proveedorService.obtenerTodosIncluyendoInactivos();
+        if (texto == null || texto.isBlank()) {
+            paginador.setDatos(base);
+            return;
+        }
+        String t = texto.toLowerCase();
+        paginador.setDatos(base.stream()
+                .filter(p -> p.getNombre().toLowerCase().contains(t)
+                        || (p.getContacto() != null
+                        && p.getContacto().toLowerCase().contains(t))
+                        || (p.getTelefono() != null
+                        && p.getTelefono().toLowerCase().contains(t)))
+                .toList());
     }
 
     private void configurarColumnas() {
@@ -110,9 +145,7 @@ public class ProveedorController {
     }
 
     private void cargarProveedores() {
-        tablaProveedores.setItems(
-                FXCollections.observableArrayList(
-                        proveedorService.obtenerTodosIncluyendoInactivos()));
+        paginador.setDatos(proveedorService.obtenerTodosIncluyendoInactivos());
     }
 
     @FXML public void onNuevoProveedor() { abrirFormulario(null); }
@@ -126,7 +159,6 @@ public class ProveedorController {
 
     @FXML
     public void onVerTodos() {
-        cargarProveedores();
         txtBuscar.clear();
         lblMensaje.setText("");
     }

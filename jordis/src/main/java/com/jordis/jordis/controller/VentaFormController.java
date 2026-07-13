@@ -502,31 +502,36 @@ public class VentaFormController {
     }
 
     private void actualizarTotales() {
-        BigDecimal subtotal = detalles.stream()
+        BigDecimal subtotalBruto = detalles.stream()
                 .map(FilaVenta::subtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal descPct = obtenerDescuento();
-        BigDecimal montoDesc = subtotal.multiply(descPct)
+        BigDecimal montoDesc = subtotalBruto.multiply(descPct)
                 .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        BigDecimal totalSinItbis = subtotal.subtract(montoDesc)
+
+        // Total final no cambia con ITBIS — el impuesto está incluido
+        BigDecimal totalFinal = subtotalBruto.subtract(montoDesc)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        // Calcular ITBIS si está activo
         BigDecimal itbisPct = BigDecimal.ZERO;
         BigDecimal montoItbis = BigDecimal.ZERO;
+        BigDecimal baseImponible = totalFinal;
+
         if (chkCreditoFiscal.isSelected() && cmbItbis.getValue() != null) {
             try {
                 itbisPct = new BigDecimal(
                         cmbItbis.getValue().replace("%", "").trim());
-                montoItbis = totalSinItbis.multiply(itbisPct)
-                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                BigDecimal tasa = itbisPct.divide(
+                        BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
+                BigDecimal divisor = BigDecimal.ONE.add(tasa);
+                montoItbis = totalFinal.multiply(tasa)
+                        .divide(divisor, 2, RoundingMode.HALF_UP);
+                baseImponible = totalFinal.subtract(montoItbis);
             } catch (Exception ignored) {}
         }
 
-        BigDecimal totalFinal = totalSinItbis.add(montoItbis);
-
-        lblSubtotal.setText("RD$" + subtotal.setScale(2).toPlainString());
+        lblSubtotal.setText("RD$" + subtotalBruto.setScale(2).toPlainString());
 
         if (descPct.compareTo(BigDecimal.ZERO) > 0) {
             lblDescuentoLabel.setText("Descuento ("
@@ -537,16 +542,16 @@ public class VentaFormController {
             lblDescuentoMonto.setText("—");
         }
 
-        // Mostrar/ocultar ITBIS
         boolean hayItbis = montoItbis.compareTo(BigDecimal.ZERO) > 0;
         lblItbisLabel.setVisible(hayItbis);
         lblItbisLabel.setManaged(hayItbis);
         lblItbisMonto.setVisible(hayItbis);
         lblItbisMonto.setManaged(hayItbis);
+
         if (hayItbis) {
-            lblItbisLabel.setText("ITBIS ("
-                    + itbisPct.toPlainString() + "%):");
-            lblItbisMonto.setText("+ RD$" + montoItbis.toPlainString());
+            lblItbisLabel.setText("ITBIS (" + itbisPct.toPlainString() + "%):");
+            lblItbisMonto.setText("RD$" + montoItbis.toPlainString()
+                    + " (base: RD$" + baseImponible.toPlainString() + ")");
         }
 
         lblTotal.setText("RD$" + totalFinal.toPlainString());

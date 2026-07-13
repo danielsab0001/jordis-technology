@@ -1,0 +1,88 @@
+/* ============================================================
+   Menú lateral — Jordis Technology
+   Estilo moderno y sobrio, inspirado en VS Code / JetBrains / Linear.
+   Los colores/estados viven aquí; las animaciones (hover, selección)
+   se disparan desde MainController.java usando estas mismas clases.
+   ============================================================ */
+
+/* Fondo general del menú: gris azulado oscuro, poco saturado */
+.sidebar {
+    -fx-background-color: #1C232E;
+}
+
+.sidebar-logo-title {
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.sidebar-logo-subtitle {
+    -fx-text-fill: #64748B;
+    -fx-font-size: 10px;
+}
+
+/* Encabezados de sección ("MÓDULOS", "ADMINISTRACIÓN") */
+.sidebar-section-label {
+    -fx-text-fill: #4B5567;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+/* Separadores muy sutiles, solo para dividir visualmente */
+.sidebar-separator .line {
+    -fx-border-color: rgba(255, 255, 255, 0.06);
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Ícono a la izquierda del texto: tamaño y alineación uniformes */
+.sidebar-icon {
+    -fx-font-size: 15px;
+    -fx-min-width: 22px;
+    -fx-alignment: CENTER;
+    -fx-text-fill: #94A3B8;
+}
+
+/* Botón de módulo — estado normal */
+.sidebar-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #94A3B8;
+    -fx-font-size: 13px;
+    -fx-font-weight: normal;
+    -fx-alignment: CENTER_LEFT;
+    -fx-graphic-text-gap: 10;
+    -fx-cursor: hand;
+    -fx-background-radius: 8;
+    -fx-padding: 0 0 0 14;
+}
+
+/* Hover: fondo apenas visible, sin colores brillantes */
+.sidebar-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-text-fill: #E2E8F0;
+}
+
+.sidebar-button:hover .sidebar-icon {
+    -fx-text-fill: #E2E8F0;
+}
+
+/* Módulo seleccionado: fondo claro (no azul intenso) + barra de acento
+   azul de 4px a la izquierda + texto/ícono en blanco + un poco más grueso */
+.sidebar-button-active {
+    -fx-background-color: #2A3341;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent transparent transparent #2563EB;
+    -fx-border-width: 0 0 0 4;
+    -fx-border-radius: 8;
+    -fx-padding: 0 0 0 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 0, 1);
+}
+
+.sidebar-button-active .sidebar-icon {
+    -fx-text-fill: white;
+}
+
+.sidebar-button-active:hover {
+    -fx-background-color: #2A3341;
+}

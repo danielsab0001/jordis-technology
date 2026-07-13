@@ -3,6 +3,7 @@ package com.jordis.jordis.controller;
 import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Cliente;
 import com.jordis.jordis.service.ClienteService;
+import com.jordis.jordis.util.Paginador;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -36,11 +37,41 @@ public class ClienteController {
 
     private final ClienteService clienteService;
     private final SpringFXMLLoader fxmlLoader;
+    private Paginador<Cliente> paginador;
 
     @FXML
     public void initialize() {
         configurarColumnas();
+
+        paginador = new Paginador<>(tablaClientes);
+
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.layout.VBox padre =
+                    (javafx.scene.layout.VBox) tablaClientes.getParent();
+            if (padre != null && !padre.getChildren()
+                    .contains(paginador.getBarraNavegacion())) {
+                padre.getChildren().add(paginador.getBarraNavegacion());
+            }
+        });
+
+        txtBuscar.textProperty().addListener((obs, old, val) -> filtrarClientes(val));
+
         cargarClientes();
+    }
+
+    private void filtrarClientes(String texto) {
+        List<Cliente> base = clienteService.obtenerTodos();
+        if (texto == null || texto.isBlank()) {
+            paginador.setDatos(base);
+            return;
+        }
+        String t = texto.toLowerCase();
+        paginador.setDatos(base.stream()
+                .filter(c -> c.getNombreCompleto().toLowerCase().contains(t)
+                        || c.getIdentificador().toLowerCase().contains(t)
+                        || (c.getTelefono() != null &&
+                        c.getTelefono().toLowerCase().contains(t)))
+                .toList());
     }
 
     private void configurarColumnas() {
@@ -99,8 +130,7 @@ public class ClienteController {
     }
 
     private void cargarClientes() {
-        tablaClientes.setItems(
-                FXCollections.observableArrayList(clienteService.obtenerTodos()));
+        paginador.setDatos(clienteService.obtenerTodos());
     }
 
     @FXML public void onNuevoCliente() { abrirFormulario(null); }
@@ -120,9 +150,7 @@ public class ClienteController {
 
     @FXML
     public void onVerTodos() {
-        cargarClientes();
         txtBuscar.clear();
-        lblMensaje.setText("");
     }
 
     private void eliminar(Cliente cliente) {

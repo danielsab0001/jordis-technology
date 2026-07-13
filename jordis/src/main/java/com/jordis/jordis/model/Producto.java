@@ -57,6 +57,10 @@ public class Producto {
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private Integer version;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

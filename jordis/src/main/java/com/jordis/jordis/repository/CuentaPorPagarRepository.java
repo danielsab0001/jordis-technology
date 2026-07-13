@@ -15,7 +15,7 @@ public interface CuentaPorPagarRepository extends JpaRepository<CuentaPorPagar, 
     List<CuentaPorPagar> findTodas();
 
     @Query("SELECT c FROM CuentaPorPagar c WHERE c.estado = 'PENDIENTE' " +
-            "ORDER BY c.fechaLimite ASC")
+            "ORDER BY c.fechaLimite ASC NULLS LAST")
     List<CuentaPorPagar> findPendientes();
 
     @Query("SELECT c FROM CuentaPorPagar c WHERE c.compra.idCompra = :idCompra")

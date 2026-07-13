@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.HistorialPagosController"
+      spacing="14" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text text="Historial de Pagos"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <!-- Resumen -->
+    <VBox spacing="4"
+          style="-fx-background-color: #EFF6FF; -fx-padding: 12 14;
+                 -fx-border-radius: 6; -fx-background-radius: 6;">
+        <Label fx:id="lblTitulo"
+               style="-fx-font-size: 13; -fx-font-weight: bold;
+                      -fx-text-fill: #1E40AF;"/>
+        <HBox spacing="24">
+            <Label fx:id="lblTotal"
+                   style="-fx-font-size: 12; -fx-text-fill: #0F172A;"/>
+            <Label fx:id="lblTotalPagado"
+                   style="-fx-font-size: 12; -fx-text-fill: #15803D;
+                          -fx-font-weight: bold;"/>
+            <Label fx:id="lblSaldo"
+                   style="-fx-font-size: 12; -fx-text-fill: #DC2626;
+                          -fx-font-weight: bold;"/>
+        </HBox>
+    </VBox>
+
+    <Label text="Pagos registrados:"
+           style="-fx-font-size: 12; -fx-font-weight: bold;
+                  -fx-text-fill: #0F172A;"/>
+
+    <TableView fx:id="tablaPagos" prefHeight="280"
+               style="-fx-border-color: #DBEAFE; -fx-border-radius: 6;
+                      -fx-font-size: 12;">
+        <columns>
+            <TableColumn fx:id="colFecha"    text="Fecha del pago"  prefWidth="140"/>
+            <TableColumn fx:id="colMonto"    text="Monto (RD$)"     prefWidth="120"/>
+            <TableColumn fx:id="colMetodo"   text="Método de pago"  prefWidth="130"/>
+            <TableColumn fx:id="colRegistro" text="Registrado por"  prefWidth="150"/>
+            <TableColumn fx:id="colNotas"    text="Notas"           prefWidth="200"/>
+        </columns>
+    </TableView>
+
+    <HBox alignment="CENTER_RIGHT">
+        <Button text="Cerrar" onAction="#onCerrar"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

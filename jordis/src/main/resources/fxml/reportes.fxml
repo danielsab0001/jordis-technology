@@ -3,94 +3,128 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<VBox xmlns="http://javafx.com/javafx/21"
+<HBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.jordis.jordis.controller.ReportesController"
-      spacing="0" style="-fx-background-color: #F8FAFF;">
+      style="-fx-background-color: #F1F5F9;">
 
-    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
-                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
-          alignment="CENTER_LEFT" spacing="12">
-        <Text text="Reportes"
-              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
-    </HBox>
+    <!-- ── Panel izquierdo: selección y filtros ── -->
+    <VBox prefWidth="300" minWidth="280"
+          style="-fx-background-color: white;
+                 -fx-border-color: #E2E8F0;
+                 -fx-border-width: 0 1 0 0;">
 
-    <SplitPane dividerPositions="0.28" VBox.vgrow="ALWAYS">
+        <!-- Encabezado -->
+        <HBox style="-fx-padding: 16 20; -fx-background-color: #2563EB;"
+              alignment="CENTER_LEFT" spacing="10">
+            <Label text="📄  Reportes"
+                   style="-fx-font-size: 15; -fx-font-weight: bold;
+                          -fx-text-fill: white;"/>
+        </HBox>
 
-        <!-- Panel izquierdo: selección de reporte -->
-        <VBox spacing="8" style="-fx-padding: 16; -fx-background-color: white;">
-            <Label text="Tipo de reporte"
-                   style="-fx-font-size: 12; -fx-font-weight: bold;
-                          -fx-text-fill: #64748B;"/>
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                    style="-fx-background: white;
+                           -fx-background-color: white;">
+            <VBox spacing="0">
 
-            <Separator style="-fx-padding: 8 0;"/>
+                <!-- Sección de tipos de reporte -->
+                <Label text="TIPO DE REPORTE"
+                       style="-fx-font-size: 10; -fx-font-weight: bold;
+                              -fx-text-fill: #94A3B8; -fx-padding: 16 20 8 20;"/>
 
-            <VBox spacing="8">
+                <!-- Tarjetas de reporte -->
+                <VBox fx:id="panelTipos" spacing="2"
+                      style="-fx-padding: 0 12;"/>
 
-                <RadioButton fx:id="rbVentas"
-                             text="Ventas"/>
+                <!-- Separador -->
+                <Separator style="-fx-padding: 12 0;"/>
 
-                <RadioButton fx:id="rbInventario"
-                             text="Inventario"/>
+                <!-- Filtros dinámicos -->
+                <Label text="FILTROS"
+                       style="-fx-font-size: 10; -fx-font-weight: bold;
+                              -fx-text-fill: #94A3B8; -fx-padding: 12 20 8 20;"/>
 
-                <RadioButton fx:id="rbCobrar"
-                             text="Cuentas por cobrar"/>
-
-                <RadioButton fx:id="rbPagar"
-                             text="Cuentas por pagar"/>
+                <VBox fx:id="panelFiltros" spacing="10"
+                      style="-fx-padding: 0 16 16 16;"/>
 
             </VBox>
+        </ScrollPane>
 
-            <!-- Filtros de fecha (solo para ventas) -->
-            <VBox fx:id="panelFechas" spacing="8">
-                <Label text="Rango de fechas"
-                       style="-fx-font-size: 12; -fx-font-weight: bold;
-                              -fx-text-fill: #64748B;"/>
-                <VBox spacing="4">
-                    <Label text="Desde:"
-                           style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
-                    <DatePicker fx:id="dpDesde" prefWidth="220"/>
-                </VBox>
-                <VBox spacing="4">
-                    <Label text="Hasta:"
-                           style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
-                    <DatePicker fx:id="dpHasta" prefWidth="220"/>
-                </VBox>
-            </VBox>
-
-            <Region VBox.vgrow="ALWAYS"/>
-
-            <!-- Botones de acción -->
-            <Button text="🔍  Generar reporte" onAction="#onGenerar"
-                    prefWidth="220" prefHeight="38"
+        <!-- Botones de acción -->
+        <VBox spacing="8"
+              style="-fx-padding: 16; -fx-border-color: #E2E8F0;
+                     -fx-border-width: 1 0 0 0;">
+            <Button fx:id="btnGenerar" text="▶  Generar reporte"
+                    onAction="#onGenerar" prefWidth="268" prefHeight="40"
                     style="-fx-background-color: #2563EB; -fx-text-fill: white;
-                           -fx-font-size: 13; -fx-background-radius: 6;
+                           -fx-font-size: 13; -fx-font-weight: bold;
+                           -fx-background-radius: 8; -fx-cursor: hand;"/>
+            <Button fx:id="btnPDF" text="📄  Exportar PDF"
+                    onAction="#onExportarPDF" prefWidth="268" prefHeight="36"
+                    disable="true"
+                    style="-fx-background-color: #FEF2F2; -fx-text-fill: #DC2626;
+                           -fx-border-color: #FCA5A5; -fx-border-radius: 8;
+                           -fx-background-radius: 8; -fx-font-size: 12;
                            -fx-cursor: hand;"/>
-            <Button text="📄  Exportar PDF" onAction="#onExportarPDF"
-                    prefWidth="220" prefHeight="36"
-                    style="-fx-background-color: #FEE2E2; -fx-text-fill: #DC2626;
-                           -fx-border-color: #FCA5A5; -fx-border-radius: 6;
-                           -fx-background-radius: 6; -fx-font-size: 12;
-                           -fx-cursor: hand;"/>
-
             <Label fx:id="lblEstado" text="" wrapText="true"
-                   style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+                   style="-fx-font-size: 11; -fx-text-fill: #64748B;
+                          -fx-alignment: CENTER;"/>
+        </VBox>
+    </VBox>
+
+    <!-- ── Panel derecho: resumen + vista previa ── -->
+    <VBox HBox.hgrow="ALWAYS" spacing="0">
+
+        <!-- Estado vacío inicial -->
+        <VBox fx:id="panelVacio" VBox.vgrow="ALWAYS"
+              alignment="CENTER" spacing="16"
+              style="-fx-padding: 60;">
+            <Label text="📊"
+                   style="-fx-font-size: 48; -fx-opacity: 0.3;"/>
+            <Label text="Selecciona un tipo de reporte"
+                   style="-fx-font-size: 16; -fx-text-fill: #94A3B8;
+                          -fx-font-weight: bold;"/>
+            <Label text="Elige un reporte en el panel izquierdo,\nconfigura los filtros y genera el reporte."
+                   style="-fx-font-size: 13; -fx-text-fill: #CBD5E1;
+                          -fx-text-alignment: CENTER;"
+                   wrapText="true"/>
         </VBox>
 
-        <!-- Panel derecho: tabla de resultados -->
-        <VBox spacing="8" style="-fx-padding: 16; -fx-background-color: #F8FAFF;"
-              VBox.vgrow="ALWAYS">
-            <HBox alignment="CENTER_LEFT" spacing="12">
-                <Label fx:id="lblTituloReporte" text="Selecciona un reporte"
-                       style="-fx-font-size: 14; -fx-font-weight: bold;
-                              -fx-text-fill: #1E40AF;"/>
+        <!-- Contenido del reporte (oculto al inicio) -->
+        <VBox fx:id="panelContenido" VBox.vgrow="ALWAYS"
+              spacing="0" visible="false" managed="false">
+
+            <!-- Encabezado del reporte seleccionado -->
+            <HBox style="-fx-padding: 16 24; -fx-background-color: white;
+                         -fx-border-color: #E2E8F0; -fx-border-width: 0 0 1 0;"
+                  alignment="CENTER_LEFT" spacing="12">
+                <Label fx:id="lblTituloReporte" text=""
+                       style="-fx-font-size: 15; -fx-font-weight: bold;
+                              -fx-text-fill: #0F172A;"/>
+                <Region HBox.hgrow="ALWAYS"/>
                 <Label fx:id="lblConteo" text=""
-                       style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+                       style="-fx-font-size: 12; -fx-text-fill: #64748B;
+                              -fx-background-color: #F1F5F9;
+                              -fx-background-radius: 6; -fx-padding: 4 10;"/>
             </HBox>
 
-            <TableView fx:id="tablaReporte" VBox.vgrow="ALWAYS"
-                       style="-fx-border-color: #DBEAFE; -fx-border-radius: 8;
-                              -fx-font-size: 12;"/>
+            <!-- KPIs del reporte -->
+            <HBox fx:id="panelKpis" spacing="0"
+                  style="-fx-background-color: white;
+                         -fx-border-color: #E2E8F0;
+                         -fx-border-width: 0 0 1 0;"/>
+
+            <!-- Vista previa en tabla -->
+            <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 16 20;">
+                <Label text="Vista previa"
+                       style="-fx-font-size: 11; -fx-font-weight: bold;
+                              -fx-text-fill: #94A3B8; -fx-padding: 0 0 8 0;"/>
+                <TableView fx:id="tablaPrevia" VBox.vgrow="ALWAYS"
+                           style="-fx-border-color: #E2E8F0;
+                                  -fx-border-radius: 8;
+                                  -fx-background-radius: 8;
+                                  -fx-font-size: 12;"/>
+            </VBox>
         </VBox>
-    </SplitPane>
-</VBox>
+    </VBox>
+</HBox>

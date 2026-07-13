@@ -3,11 +3,13 @@ package com.jordis.jordis.controller;
 import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.CuentaPorPagar;
 import com.jordis.jordis.service.CuentaPorPagarService;
+import com.jordis.jordis.util.Paginador;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -34,9 +37,11 @@ public class CuentaPorPagarController {
     @FXML private TableColumn<CuentaPorPagar, String> colEstado;
     @FXML private TableColumn<CuentaPorPagar, Void>   colAcciones;
     @FXML private Label lblMensaje;
+    @FXML private TextField txtBuscar;
 
     private final CuentaPorPagarService cuentaService;
     private final SpringFXMLLoader      fxmlLoader;
+    private Paginador<CuentaPorPagar> paginador;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -44,7 +49,34 @@ public class CuentaPorPagarController {
     @FXML
     public void initialize() {
         configurarColumnas();
+
+        paginador = new Paginador<>(tablaCuentas);
+
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.layout.VBox padre =
+                    (javafx.scene.layout.VBox) tablaCuentas.getParent();
+            if (padre != null && !padre.getChildren()
+                    .contains(paginador.getBarraNavegacion())) {
+                padre.getChildren().add(paginador.getBarraNavegacion());
+            }
+        });
+
+        txtBuscar.textProperty().addListener((obs, old, val) ->
+                filtrarCuentas(val));
+
         cargarCuentas();
+    }
+
+    private void filtrarCuentas(String texto) {
+        List<CuentaPorPagar> base = cuentaService.obtenerTodas();
+        if (texto == null || texto.isBlank()) {
+            paginador.setDatos(base); return;
+        }
+        String t = texto.toLowerCase();
+        paginador.setDatos(base.stream()
+                .filter(c -> c.getProveedor().getNombre()
+                        .toLowerCase().contains(t))
+                .toList());
     }
 
     private void configurarColumnas() {
@@ -131,14 +163,23 @@ public class CuentaPorPagarController {
         });
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
-            private final Button btnPagar = new Button("Pagar");
+            private final Button btnPagar     = new Button("Pagar");
+            private final Button btnHistorial = new Button("Ver pagos");
+            private final HBox box = new HBox(5, btnPagar, btnHistorial);
+
             {
                 btnPagar.setStyle(
                         "-fx-background-color: #DCFCE7; -fx-text-fill: #15803D;"
                                 + " -fx-border-color: #BBF7D0; -fx-border-radius: 4;"
                                 + " -fx-background-radius: 4; -fx-font-size: 10;"
                                 + " -fx-padding: 3 8; -fx-cursor: hand;");
+                btnHistorial.setStyle(
+                        "-fx-background-color: #EDE9FE; -fx-text-fill: #6D28D9;"
+                                + " -fx-border-color: #C4B5FD; -fx-border-radius: 4;"
+                                + " -fx-background-radius: 4; -fx-font-size: 10;"
+                                + " -fx-padding: 3 8; -fx-cursor: hand;");
             }
+
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -147,22 +188,74 @@ public class CuentaPorPagarController {
                     setGraphic(null); return;
                 }
                 CuentaPorPagar c = (CuentaPorPagar) getTableRow().getItem();
-                if (c.estaCancelada()) { setGraphic(null); return; }
                 btnPagar.setOnAction(e -> abrirFormPago(c));
-                setGraphic(btnPagar);
+                btnHistorial.setOnAction(e -> verHistorialPagos(c));
+                btnPagar.setVisible(!c.estaCancelada());
+                btnPagar.setManaged(!c.estaCancelada());
+                setGraphic(box);
             }
         });
     }
 
-    private void cargarCuentas() {
-        tablaCuentas.setItems(
-                FXCollections.observableArrayList(cuentaService.obtenerTodas()));
+    private void verHistorialPagos(CuentaPorPagar cuenta) {
+        try {
+            SpringFXMLLoader.LoadResult<HistorialPagosController> result =
+                    fxmlLoader.loadWithController("/fxml/historial_pagos.fxml");
+            result.controller.setCuenta(cuenta);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Historial de pagos — "
+                    + cuenta.getProveedor().getNombre());
+            stage.setScene(new Scene(result.root, 700, 460));
+            stage.setResizable(true);
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo historial", e);
+            mostrarMensaje("Error: " + e.getMessage(), true);
+        }
     }
 
-    @FXML public void onVerPendientes() {
-        tablaCuentas.setItems(
-                FXCollections.observableArrayList(cuentaService.obtenerPendientes()));
-        mostrarMensaje("Mostrando solo cuentas pendientes.", false);
+    private void cargarCuentas() {
+        paginador.setDatos(cuentaService.obtenerTodas());
+    }
+
+    // Filtra la tabla para mostrar únicamente la cuenta indicada.
+    // Se usa al navegar aquí desde el Centro de Alertas.
+    public void filtrarPorId(Integer idCuenta) {
+        if (idCuenta == null) return;
+        CuentaPorPagar c;
+        try {
+            c = cuentaService.obtenerPorId(idCuenta);
+        } catch (Exception e) {
+            mostrarMensaje("La cuenta de la alerta ya no existe.", true);
+            return;
+        }
+        txtBuscar.setText(c.getProveedor().getNombre());
+        paginador.setDatos(List.of(c));
+        mostrarMensaje("Mostrando cuenta de: " + c.getProveedor().getNombre(), false);
+    }
+
+    @FXML
+    public void onVerPendientes() {
+        List<CuentaPorPagar> pendientes = cuentaService.obtenerTodas()
+                .stream().filter(c -> !c.estaCancelada()).toList();
+        paginador.setDatos(pendientes);
+        mostrarMensaje(pendientes.size()
+                + " cuenta(s) pendiente(s).", false);
+    }
+
+    @FXML
+    public void onVerPorVencer() {
+        LocalDateTime limite = LocalDateTime.now().plusDays(7);
+        List<CuentaPorPagar> porVencer = cuentaService.obtenerTodas()
+                .stream()
+                .filter(c -> !c.estaCancelada()
+                        && c.getFechaLimite() != null
+                        && c.getFechaLimite().isBefore(limite))
+                .toList();
+        paginador.setDatos(porVencer);
+        mostrarMensaje(porVencer.size()
+                + " cuenta(s) por vencer en 7 días.", false);
     }
 
     @FXML public void onVerTodas() {
@@ -182,7 +275,7 @@ public class CuentaPorPagarController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Pagar a " + cuenta.getProveedor().getNombre());
-            stage.setScene(new Scene(result.root, 580, 430));
+            stage.setScene(new Scene(result.root, 580, 480));
             stage.setResizable(true);
             stage.showAndWait();
         } catch (Exception e) {

@@ -39,6 +39,12 @@
     </VBox>
 
     <VBox spacing="4">
+        <Label text="Fecha del pago *"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <DatePicker fx:id="dpFechaPago" prefWidth="340" prefHeight="36"/>
+    </VBox>
+
+    <VBox spacing="4">
         <Label text="Referencia / Notas (opcional)"
                style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
         <TextField fx:id="txtNotas"

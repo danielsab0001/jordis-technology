@@ -24,7 +24,6 @@ public class CompraService {
     private final CompraRepository compraRepository;
     private final ProductoRepository productoRepository;
     private final ProveedorService proveedorService;
-    private final AlertaService alertaService;
     private final CompraEdicionRepository edicionRepository;
     private final CuentaPorPagarService cuentaPorPagarService;
     private final CuentaPorPagarRepository cuentaPorPagarRepository;
@@ -115,12 +114,6 @@ public class CompraService {
 
             // Calcular precio sugerido con margen del 30%
             producto.calcularPrecioSugerido(MARGEN_DEFAULT);
-
-            // Generar alerta si el precio cambió mucho
-            alertaService.alertaPrecioCompraInusual(
-                    producto,
-                    producto.getUltimoPrecioCompra(), // precio anterior
-                    detalle.getCostoUnitario());       // precio nuevo
 
             productoRepository.save(producto);
             log.info("Stock actualizado — Producto: {} | Nuevo stock: {} | Precio sugerido: {}",

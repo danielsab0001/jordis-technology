@@ -280,6 +280,22 @@ public class FacturaService {
     }
 
     private void agregarTotales(Document doc, Venta venta) throws DocumentException {
+
+        BigDecimal subtotalMostrar;
+
+        if (venta.getEsCreditoFiscal()
+                && venta.getMontoItbis() != null
+                && venta.getMontoItbis().compareTo(BigDecimal.ZERO) > 0) {
+
+            subtotalMostrar = venta.getTotal()
+                    .subtract(venta.getMontoItbis());
+
+        } else {
+
+            subtotalMostrar = venta.getSubtotal();
+
+        }
+
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(50);
         tabla.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -287,13 +303,13 @@ public class FacturaService {
 
         // Subtotal
         agregarFilaTotal(tabla,
-                "Subtotal:", "RD$" + venta.getSubtotal().toPlainString(),
+                "Subtotal:", "RD$" + subtotalMostrar.toPlainString(),
                 FONT_NORMAL, FONT_NORMAL);
 
         // Descuento
         BigDecimal desc = venta.getDescuentoPorcentual();
         if (desc != null && desc.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal montoDesc = venta.getSubtotal()
+            BigDecimal montoDesc = subtotalMostrar
                     .multiply(desc)
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
             agregarFilaTotal(tabla,

@@ -4,6 +4,7 @@ import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Compra;
 import com.jordis.jordis.service.CompraService;
 import com.jordis.jordis.service.CuentaPorPagarService;
+import com.jordis.jordis.util.Paginador;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -39,6 +40,7 @@ public class CompraController {
     private final CompraService compraService;
     private final SpringFXMLLoader fxmlLoader;
     private final CuentaPorPagarService cuentaPorPagarService;
+    private Paginador<Compra> paginador;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -46,6 +48,18 @@ public class CompraController {
     @FXML
     public void initialize() {
         configurarColumnas();
+
+        paginador = new Paginador<>(tablaCompras);
+
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.layout.VBox padre =
+                    (javafx.scene.layout.VBox) tablaCompras.getParent();
+            if (padre != null && !padre.getChildren()
+                    .contains(paginador.getBarraNavegacion())) {
+                padre.getChildren().add(paginador.getBarraNavegacion());
+            }
+        });
+
         cargarCompras();
     }
 
@@ -166,8 +180,7 @@ public class CompraController {
     }
 
     private void cargarCompras() {
-        tablaCompras.setItems(
-                FXCollections.observableArrayList(compraService.obtenerTodas()));
+        paginador.setDatos(compraService.obtenerTodas());
         lblMensaje.setText("");
     }
 

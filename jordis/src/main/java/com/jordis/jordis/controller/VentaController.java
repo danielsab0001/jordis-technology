@@ -2,7 +2,9 @@ package com.jordis.jordis.controller;
 
 import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Venta;
+import com.jordis.jordis.service.FacturaService;
 import com.jordis.jordis.service.VentaService;
+import com.jordis.jordis.util.Paginador;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -36,8 +39,13 @@ public class VentaController {
     @FXML private Label lblMensaje;
     @FXML private TableColumn<Venta, String> colNcf;
 
+    @FXML private TextField txtBuscarFactura;
+    @FXML private TableColumn<Venta, Void> colVerFactura;
+
     private final VentaService ventaService;
     private final SpringFXMLLoader fxmlLoader;
+    private final FacturaService facturaService;
+    private Paginador<Venta> paginador;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -45,12 +53,47 @@ public class VentaController {
     @FXML
     public void initialize() {
         configurarColumnas();
+        paginador = new Paginador<>(tablaVentas);
+
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.layout.VBox padre =
+                    (javafx.scene.layout.VBox) tablaVentas.getParent();
+            if (padre != null && !padre.getChildren()
+                    .contains(paginador.getBarraNavegacion())) {
+                padre.getChildren().add(paginador.getBarraNavegacion());
+            }
+        });
+
+        txtBuscarFactura.textProperty().addListener((obs, old, val) ->
+                filtrarVentas(val));
+
         cargarVentas();
     }
 
+    private void filtrarVentas(String texto) {
+        List<Venta> base = ventaService.obtenerTodas();
+        if (texto == null || texto.isBlank()) {
+            paginador.setDatos(base);
+            return;
+        }
+        String t = texto.toLowerCase();
+        paginador.setDatos(base.stream()
+                .filter(v -> (v.getNumeroFactura() != null
+                        && v.getNumeroFactura().toLowerCase().contains(t))
+                        || (v.getCliente() != null
+                        && v.getCliente().getNombreCompleto()
+                        .toLowerCase().contains(t)))
+                .toList());
+    }
+
     private void configurarColumnas() {
-        colId.setCellValueFactory(d ->
-                new SimpleStringProperty(String.valueOf(d.getValue().getIdVenta())));
+        colId.setCellValueFactory(d -> {
+            Venta v = d.getValue();
+            String factura = v.getNumeroFactura();
+            return new SimpleStringProperty(
+                    factura != null && !factura.isBlank()
+                            ? factura : "#" + v.getIdVenta());
+        });
         colFecha.setCellValueFactory(d ->
                 new SimpleStringProperty(d.getValue().getFechaHora().format(FMT)));
         colCliente.setCellValueFactory(d -> {
@@ -116,6 +159,27 @@ public class VentaController {
             }
         });
 
+        colVerFactura.setCellFactory(col -> new TableCell<>() {
+            private final Button btn = new Button("Ver factura");
+            {
+                btn.setStyle("-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;"
+                        + " -fx-border-color: #BFDBFE; -fx-border-radius: 4;"
+                        + " -fx-background-radius: 4; -fx-font-size: 10;"
+                        + " -fx-padding: 3 8; -fx-cursor: hand;");
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || getTableRow() == null
+                        || getTableRow().getItem() == null) {
+                    setGraphic(null); return;
+                }
+                Venta v = (Venta) getTableRow().getItem();
+                btn.setOnAction(e -> verFactura(v));
+                setGraphic(btn);
+            }
+        });
+
         colAnular.setCellFactory(col -> new TableCell<>() {
             private final Button btnAnular = new Button("Anular");
             {
@@ -140,8 +204,7 @@ public class VentaController {
     }
 
     private void cargarVentas() {
-        tablaVentas.setItems(
-                FXCollections.observableArrayList(ventaService.obtenerTodas()));
+        paginador.setDatos(ventaService.obtenerTodas());
     }
 
     @FXML
@@ -165,6 +228,36 @@ public class VentaController {
         } catch (Exception e) {
             log.error("Error abriendo formulario de venta", e);
             mostrarMensaje("Error al abrir: " + e.getMessage(), true);
+        }
+    }
+
+    @FXML
+    public void onBuscarFactura() {
+        String texto = txtBuscarFactura.getText().trim();
+        if (texto.isEmpty()) { cargarVentas(); return; }
+        List<Venta> resultado = ventaService.obtenerTodas().stream()
+                .filter(v -> v.getNumeroFactura() != null
+                        && v.getNumeroFactura().toLowerCase()
+                        .contains(texto.toLowerCase()))
+                .toList();
+        tablaVentas.setItems(FXCollections.observableArrayList(resultado));
+        mostrarMensaje(resultado.isEmpty()
+                ? "No se encontró ninguna factura con ese número." : "", resultado.isEmpty());
+    }
+
+    @FXML
+    public void onVerTodas() {
+        txtBuscarFactura.clear();
+        lblMensaje.setText("");
+    }
+
+    private void verFactura(Venta venta) {
+        try {
+            String ruta = facturaService.generarFactura(venta);
+            facturaService.abrirPDF(ruta);
+        } catch (Exception e) {
+            log.error("Error generando factura", e);
+            mostrarMensaje("Error al generar factura: " + e.getMessage(), true);
         }
     }
 

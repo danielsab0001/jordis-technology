@@ -1,9 +1,11 @@
 package com.jordis.jordis.controller;
 
 import com.jordis.jordis.config.SpringFXMLLoader;
+import com.jordis.jordis.model.CreditoPago;
 import com.jordis.jordis.model.Venta;
 import com.jordis.jordis.service.FacturaService;
 import com.jordis.jordis.service.VentaService;
+import com.jordis.jordis.util.Paginador;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -37,10 +39,12 @@ public class CreditoController {
     @FXML private TableColumn<Venta, String> colEstado;
     @FXML private TableColumn<Venta, Void>   colAcciones;
     @FXML private Label lblMensaje;
+    @FXML private TextField txtBuscarFactura;
 
     private final VentaService     ventaService;
     private final FacturaService   facturaService;
     private final SpringFXMLLoader fxmlLoader;
+    private Paginador<Venta> paginador;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -50,7 +54,50 @@ public class CreditoController {
     @FXML
     public void initialize() {
         configurarColumnas();
+
+        paginador = new Paginador<>(tablaCreditos);
+
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.layout.VBox padre =
+                    (javafx.scene.layout.VBox) tablaCreditos.getParent();
+            if (padre != null && !padre.getChildren()
+                    .contains(paginador.getBarraNavegacion())) {
+                padre.getChildren().add(paginador.getBarraNavegacion());
+            }
+        });
+
+        txtBuscarFactura.textProperty().addListener((obs, old, val) ->
+                filtrarCreditos(val));
+
         cargarCreditos();
+    }
+
+    private void filtrarCreditos(String texto) {
+        List<Venta> base = ventaService.obtenerCreditos();
+        if (texto == null || texto.isBlank()) {
+            paginador.setDatos(base); return;
+        }
+        String t = texto.toLowerCase();
+        paginador.setDatos(base.stream()
+                .filter(v -> (v.getNumeroFactura() != null
+                        && v.getNumeroFactura().toLowerCase().contains(t))
+                        || (v.getCliente() != null
+                        && v.getCliente().getNombreCompleto()
+                        .toLowerCase().contains(t)))
+                .toList());
+    }
+
+    @FXML
+    public void onVerPorVencer() {
+        LocalDateTime limite = LocalDateTime.now().plusDays(7);
+        List<Venta> porVencer = ventaService.obtenerCreditos().stream()
+                .filter(v -> !v.estaCancelado()
+                        && v.getFechaLimiteCredito() != null
+                        && v.getFechaLimiteCredito().isBefore(limite))
+                .toList();
+        paginador.setDatos(porVencer);
+        mostrarMensaje(porVencer.size()
+                + " crédito(s) por vencer en los próximos 7 días.", false);
     }
 
     private void configurarColumnas() {
@@ -152,11 +199,10 @@ public class CreditoController {
 
         // Acciones
         colAcciones.setCellFactory(col -> new TableCell<>() {
-            private final Button btnPagar   = crearBtn("Registrar pago",
-                    "#15803D", "#DCFCE7");
-            private final Button btnFactura = crearBtn("Ver factura",
-                    "#2563EB", "#EFF6FF");
-            private final HBox box = new HBox(5, btnPagar, btnFactura);
+            private final Button btnPagar     = crearBtn("Registrar pago", "#15803D", "#DCFCE7");
+            private final Button btnHistorial = crearBtn("Ver pagos",      "#6D28D9", "#EDE9FE");
+            private final Button btnFactura   = crearBtn("Factura",        "#2563EB", "#EFF6FF");
+            private final HBox box = new HBox(5, btnPagar, btnHistorial, btnFactura);
 
             @Override
             protected void updateItem(Void item, boolean empty) {
@@ -167,15 +213,33 @@ public class CreditoController {
                 }
                 Venta v = (Venta) getTableRow().getItem();
                 btnPagar.setOnAction(e -> abrirFormPago(v));
+                btnHistorial.setOnAction(e -> verHistorialPagos(v));
                 btnFactura.setOnAction(e -> verFactura(v));
-
-                // Ocultar botón de pago si ya está cancelado
                 btnPagar.setVisible(!v.estaCancelado());
                 btnPagar.setManaged(!v.estaCancelado());
-
                 setGraphic(box);
             }
         });
+    }
+
+    private void verHistorialPagos(Venta venta) {
+        try {
+            SpringFXMLLoader.LoadResult<HistorialPagosController> result =
+                    fxmlLoader.loadWithController("/fxml/historial_pagos.fxml");
+            result.controller.setVenta(venta);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Historial de pagos — "
+                    + (venta.getNumeroFactura() != null
+                    ? venta.getNumeroFactura()
+                    : "#" + venta.getIdVenta()));
+            stage.setScene(new Scene(result.root, 700, 460));
+            stage.setResizable(true);
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo historial de pagos", e);
+            mostrarMensaje("Error: " + e.getMessage(), true);
+        }
     }
 
     private Button crearBtn(String texto, String colorTexto, String colorFondo) {
@@ -190,21 +254,40 @@ public class CreditoController {
     }
 
     private void cargarCreditos() {
-        tablaCreditos.setItems(
-                FXCollections.observableArrayList(ventaService.obtenerCreditos()));
+        paginador.setDatos(ventaService.obtenerCreditos());
+    }
+
+    // Filtra la tabla para mostrar únicamente el crédito de la venta indicada.
+    // Se usa al navegar aquí desde el Centro de Alertas.
+    public void filtrarPorVenta(Integer idVenta) {
+        if (idVenta == null) return;
+        Venta v;
+        try {
+            v = ventaService.obtenerPorId(idVenta);
+        } catch (Exception e) {
+            mostrarMensaje("El crédito de la alerta ya no existe.", true);
+            return;
+        }
+        txtBuscarFactura.setText(v.getNumeroFactura() != null
+                ? v.getNumeroFactura() : "");
+        paginador.setDatos(List.of(v));
+        mostrarMensaje("Mostrando crédito de: "
+                        + (v.getCliente() != null ? v.getCliente().getNombreCompleto() : "—"),
+                false);
     }
 
     @FXML
     public void onVerPendientes() {
         List<Venta> pendientes = ventaService.obtenerCreditos().stream()
-                .filter(v -> !v.estaCancelado())
-                .toList();
-        tablaCreditos.setItems(FXCollections.observableArrayList(pendientes));
-        mostrarMensaje(pendientes.size() + " crédito(s) pendiente(s).", false);
+                .filter(v -> !v.estaCancelado()).toList();
+        paginador.setDatos(pendientes);
+        mostrarMensaje(pendientes.size()
+                + " crédito(s) pendiente(s).", false);
     }
 
     @FXML
     public void onVerTodos() {
+        txtBuscarFactura.clear();
         cargarCreditos();
         lblMensaje.setText("");
     }

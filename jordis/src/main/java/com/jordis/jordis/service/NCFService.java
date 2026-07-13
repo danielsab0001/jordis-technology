@@ -1,19 +1,16 @@
 package com.jordis.jordis.service;
 
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
 
 @Service
 public class NCFService {
 
-    private final DataSource dataSource;
+    private final JdbcTemplate jdbcTemplate;
 
-    public NCFService(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public NCFService(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     /**
@@ -27,22 +24,27 @@ public class NCFService {
         String secuencia = switch (tipoNcf) {
             case "B01" -> "ncf_b01_seq";
             case "B02" -> "ncf_b02_seq";
-            default    -> "ncf_b01_seq";
+            case "B14" -> "ncf_b14_seq";
+            case "B15" -> "ncf_b15_seq";
+            default -> throw new IllegalArgumentException(
+                    "Tipo de NCF no reconocido: " + tipoNcf);
         };
 
-        try (Connection conn = dataSource.getConnection();
-             Statement stmt  = conn.createStatement();
-             ResultSet rs    = stmt.executeQuery(
-                     "SELECT nextval('" + secuencia + "')")) {
-            if (rs.next()) {
-                long numero = rs.getLong(1);
-                // Formato RD: B0100000001 (11 caracteres)
-                return tipoNcf + String.format("%08d", numero);
+        try {
+            Long numero = jdbcTemplate.queryForObject(
+                    "SELECT nextval('" + secuencia + "')", Long.class);
+            if (numero == null) {
+                throw new IllegalStateException(
+                        "La secuencia '" + secuencia + "' no devolvió un valor.");
             }
-        } catch (Exception e) {
-            throw new RuntimeException("Error generando NCF: " + e.getMessage());
+            // Formato RD: B0100000001 (11 caracteres)
+            return tipoNcf + String.format("%08d", numero);
+        } catch (DataAccessException e) {
+            throw new IllegalStateException(
+                    "No se pudo generar el NCF de tipo " + tipoNcf
+                            + ". Verifica que la secuencia '" + secuencia
+                            + "' exista en la base de datos.", e);
         }
-        throw new RuntimeException("No se pudo generar el NCF.");
     }
 
     public String[] obtenerTiposDisponibles() {
@@ -55,7 +57,6 @@ public class NCFService {
     }
 
     public String extraerCodigo(String tipoConDescripcion) {
-        // "B01 — Crédito Fiscal" → "B01"
         return tipoConDescripcion.split(" ")[0];
     }
 }
