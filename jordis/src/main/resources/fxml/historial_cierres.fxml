@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.HistorialCierresController"
+      spacing="0" style="-fx-background-color: #F8FAFF;">
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 20;
+                 -fx-border-color: #E2E8F0; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="12">
+        <Text text="📜  Historial de Cierres de Caja"
+              style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #0F172A;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="↻  Actualizar" onAction="#onActualizar"
+                style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                       -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 7 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 12 20;">
+        <TextField fx:id="txtBuscarCajero" promptText="Buscar por cajero o caja..."
+                   prefWidth="260" prefHeight="32" style="-fx-font-size: 12;"/>
+        <DatePicker fx:id="dpFecha" promptText="Filtrar por fecha"
+                    prefWidth="160" prefHeight="32" style="-fx-font-size: 12;"/>
+    </HBox>
+
+    <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 0 20 12 20;">
+        <TableView fx:id="tabla" VBox.vgrow="ALWAYS"
+                   style="-fx-border-color: #DBEAFE; -fx-border-radius: 8; -fx-font-size: 12;">
+            <columns>
+                <TableColumn fx:id="colFecha" text="Fecha" prefWidth="90"/>
+                <TableColumn fx:id="colApertura" text="Apertura" prefWidth="75"/>
+                <TableColumn fx:id="colCierre" text="Cierre" prefWidth="75"/>
+                <TableColumn fx:id="colCajero" text="Cajero" prefWidth="140"/>
+                <TableColumn fx:id="colCaja" text="Caja" prefWidth="130"/>
+                <TableColumn fx:id="colTotal" text="Total vendido" prefWidth="120"/>
+                <TableColumn fx:id="colDiferencia" text="Diferencia" prefWidth="110"/>
+                <TableColumn fx:id="colEstado" text="Estado" prefWidth="90"/>
+                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <Label fx:id="lblMensaje" text="" style="-fx-padding: 0 20 12 20; -fx-font-size: 12; -fx-text-fill: #64748B;"/>
+</VBox>

@@ -10,6 +10,8 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
@@ -262,23 +264,83 @@ public class VentaController {
     }
 
     private void anularVenta(Venta venta) {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Anular venta");
-        dialog.setHeaderText("Venta #" + venta.getIdVenta());
-        dialog.setContentText("Motivo de anulación:");
-        dialog.showAndWait().ifPresent(motivo -> {
-            if (motivo.isBlank()) {
-                mostrarMensaje("Debes ingresar un motivo.", true);
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("Anular Venta");
+        stage.setResizable(false);
+
+        javafx.scene.text.Text titulo = new javafx.scene.text.Text("Anular Venta");
+        titulo.setStyle("-fx-font-size: 16; -fx-font-weight: bold;"
+                + " -fx-fill: #DC2626;");
+
+        Label lblFactura = new Label(
+                (venta.getNumeroFactura() != null
+                        ? "Factura " + venta.getNumeroFactura()
+                        : "Venta #" + venta.getIdVenta())
+                        + "  ·  " + (venta.getCliente() != null
+                        ? venta.getCliente().getNombreCompleto() : "Cliente ocasional")
+                        + "  ·  RD$" + String.format("%,.2f", venta.getTotal().doubleValue()));
+        lblFactura.setStyle("-fx-font-size: 13; -fx-text-fill: #374151;");
+        lblFactura.setWrapText(true);
+
+        TextArea txtMotivo = new TextArea();
+        txtMotivo.setPromptText("Explica por qué se anula esta venta...");
+        txtMotivo.setPrefHeight(110);
+        txtMotivo.setWrapText(true);
+        txtMotivo.setStyle("-fx-font-size: 13; -fx-border-color: #FCA5A5;"
+                + " -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 10;");
+
+        Label lblError = new Label("");
+        lblError.setStyle("-fx-text-fill: #DC2626; -fx-font-size: 12;");
+        lblError.setWrapText(true);
+
+        Button btnAnularConfirmar = new Button("Anular venta");
+        btnAnularConfirmar.setPrefHeight(38);
+        btnAnularConfirmar.setPrefWidth(160);
+        btnAnularConfirmar.setStyle("-fx-background-color: #DC2626;"
+                + " -fx-text-fill: white; -fx-font-size: 13;"
+                + " -fx-background-radius: 6; -fx-cursor: hand;");
+
+        Button btnCancelar = new Button("Cancelar");
+        btnCancelar.setPrefHeight(38);
+        btnCancelar.setPrefWidth(120);
+        btnCancelar.setStyle("-fx-background-color: transparent;"
+                + " -fx-text-fill: #64748B; -fx-border-color: #E2E8F0;"
+                + " -fx-border-radius: 6; -fx-background-radius: 6;"
+                + " -fx-font-size: 13; -fx-cursor: hand;");
+
+        btnCancelar.setOnAction(e -> stage.close());
+        btnAnularConfirmar.setOnAction(e -> {
+            String motivo = txtMotivo.getText().trim();
+            if (motivo.isEmpty()) {
+                lblError.setText("Debes ingresar un motivo de anulación.");
                 return;
             }
             try {
                 ventaService.anularVenta(venta.getIdVenta(), motivo);
                 cargarVentas();
                 mostrarMensaje("Venta anulada. Stock restaurado.", false);
-            } catch (Exception e) {
-                mostrarMensaje("Error: " + e.getMessage(), true);
+                stage.close();
+            } catch (Exception ex) {
+                lblError.setText("Error: " + ex.getMessage());
             }
         });
+
+        VBox vMotivo = new VBox(6,
+                new Label("Motivo de anulación *") {{
+                    setStyle("-fx-font-size: 12; -fx-text-fill: #64748B;");
+                }},
+                txtMotivo);
+
+        HBox botones = new HBox(10, btnAnularConfirmar, btnCancelar);
+        botones.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        VBox root = new VBox(16, titulo, lblFactura, vMotivo, lblError, botones);
+        root.setStyle("-fx-background-color: white; -fx-padding: 28;");
+        root.setPrefWidth(460);
+
+        stage.setScene(new Scene(root));
+        stage.showAndWait();
     }
 
     private void mostrarMensaje(String texto, boolean esError) {

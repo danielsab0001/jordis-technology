@@ -1,0 +1,15 @@
+package com.jordis.jordis.repository;
+
+import com.jordis.jordis.model.CierreCaja;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface CierreCajaRepository extends JpaRepository<CierreCaja, Integer> {
+
+    @Query("SELECT c FROM CierreCaja c ORDER BY c.fechaCierre DESC")
+    List<CierreCaja> findTodos();
+}

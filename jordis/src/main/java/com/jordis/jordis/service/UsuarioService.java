@@ -17,6 +17,8 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final AutenticacionService autenticacionService;
+    private final AuditoriaService auditoriaService;
 
     // Retorna TODOS: activos, inactivos y bloqueados
     // para que el admin pueda ver y gestionar todos
@@ -49,6 +51,9 @@ public class UsuarioService {
 
         Usuario guardado = usuarioRepository.save(usuario);
         log.info("Usuario creado: {}", guardado.getNombreCompleto());
+        auditoriaService.registrar(autenticacionService.getUsuarioActivo(),
+                "USUARIO_CREADO", "Usuario", guardado.getIdUsuario(),
+                guardado.getNombreCompleto() + " (" + rol + ")");
         return guardado;
     }
 

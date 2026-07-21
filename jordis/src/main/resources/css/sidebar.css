@@ -1,88 +1,87 @@
 /* ============================================================
-   Menú lateral — Jordis Technology
-   Estilo moderno y sobrio, inspirado en VS Code / JetBrains / Linear.
-   Los colores/estados viven aquí; las animaciones (hover, selección)
-   se disparan desde MainController.java usando estas mismas clases.
+   Menú lateral — Jordis Technology (Contraste Suavizado)
    ============================================================ */
 
-/* Fondo general del menú: gris azulado oscuro, poco saturado */
+/* Fondo general: Azul pizarra medio-oscuro (más claro que el anterior, reduce el contraste) */
 .sidebar {
-    -fx-background-color: #1C232E;
+    -fx-background-color: #1E293B; /* Slate 800 */
 }
 
+/* Marca y Logo */
 .sidebar-logo-title {
-    -fx-text-fill: white;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 15px;
     -fx-font-weight: bold;
 }
 
 .sidebar-logo-subtitle {
-    -fx-text-fill: #64748B;
+    -fx-text-fill: #38BDF8; /* Azul celeste brillante para destacar */
     -fx-font-size: 10px;
 }
 
 /* Encabezados de sección ("MÓDULOS", "ADMINISTRACIÓN") */
 .sidebar-section-label {
-    -fx-text-fill: #4B5567;
+    -fx-text-fill: #64748B; /* Slate 500: Ajustado para mantener legibilidad sobre el nuevo fondo */
     -fx-font-size: 10px;
     -fx-font-weight: bold;
 }
 
-/* Separadores muy sutiles, solo para dividir visualmente */
+/* Separadores muy sutiles */
 .sidebar-separator .line {
     -fx-border-color: rgba(255, 255, 255, 0.06);
-    -fx-border-width: 1 0 0 0;
+    -fx-border-width: 5 0 0 0;
 }
 
-/* Ícono a la izquierda del texto: tamaño y alineación uniformes */
+/* Ícono a la izquierda del texto */
 .sidebar-icon {
-    -fx-font-size: 15px;
+    -fx-font-size: 14px;
     -fx-min-width: 22px;
     -fx-alignment: CENTER;
-    -fx-text-fill: #94A3B8;
+    -fx-text-fill: #94A3B8; /* Slate 400 */
 }
 
 /* Botón de módulo — estado normal */
 .sidebar-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #94A3B8;
+    -fx-text-fill: #94A3B8; /* Slate 400 */
     -fx-font-size: 13px;
     -fx-font-weight: normal;
     -fx-alignment: CENTER_LEFT;
     -fx-graphic-text-gap: 10;
     -fx-cursor: hand;
-    -fx-background-radius: 8;
-    -fx-padding: 0 0 0 14;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 8 12 8 12;
 }
 
-/* Hover: fondo apenas visible, sin colores brillantes */
+/* Hover: Un tono ligeramente más claro que el fondo general */
 .sidebar-button:hover {
-    -fx-background-color: rgba(255, 255, 255, 0.05);
-    -fx-text-fill: #E2E8F0;
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-text-fill: #F8FAFC; /* Slate 50 */
 }
 
 .sidebar-button:hover .sidebar-icon {
-    -fx-text-fill: #E2E8F0;
+    -fx-text-fill: #38BDF8;
 }
 
-/* Módulo seleccionado: fondo claro (no azul intenso) + barra de acento
-   azul de 4px a la izquierda + texto/ícono en blanco + un poco más grueso */
+/* Módulo seleccionado: Resalta usando un tono Slate más claro y el borde azul */
 .sidebar-button-active {
-    -fx-background-color: #2A3341;
-    -fx-text-fill: white;
-    -fx-font-weight: 600;
-    -fx-background-radius: 8;
-    -fx-border-color: transparent transparent transparent #2563EB;
-    -fx-border-width: 0 0 0 4;
-    -fx-border-radius: 8;
-    -fx-padding: 0 0 0 10;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 4, 0, 0, 1);
+    -fx-background-color: #334155; /* Slate 700: Excelente contraste sutil con el fondo */
+    -fx-text-fill: #FFFFFF;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-border-color: transparent transparent transparent #3B82F6;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 8 12 8 12;
 }
 
 .sidebar-button-active .sidebar-icon {
-    -fx-text-fill: white;
+    -fx-text-fill: #3B82F6;
 }
 
 .sidebar-button-active:hover {
-    -fx-background-color: #2A3341;
+    -fx-background-color: #334155;
 }

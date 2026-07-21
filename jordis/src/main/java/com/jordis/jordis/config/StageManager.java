@@ -1,5 +1,6 @@
 package com.jordis.jordis.config;
 
+import com.jordis.jordis.service.AutenticacionService;
 import com.jordis.jordis.service.SesionService;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,15 +13,24 @@ public class StageManager {
     private Stage primaryStage;
     private final SpringFXMLLoader fxmlLoader;
     private final SesionService    sesionService;
+    private final AutenticacionService autenticacionService;
 
     public StageManager(SpringFXMLLoader fxmlLoader,
-                        SesionService sesionService) {
+                        SesionService sesionService,
+                        AutenticacionService autenticacionService) {
         this.fxmlLoader   = fxmlLoader;
         this.sesionService = sesionService;
+        this.autenticacionService = autenticacionService;
     }
 
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
+
+        this.primaryStage.setOnCloseRequest(e -> {
+            if (autenticacionService.hayUsuarioActivo()) {
+                autenticacionService.cerrarSesion();
+            }
+        });
     }
 
     public void switchScene(String fxmlPath, String title) {

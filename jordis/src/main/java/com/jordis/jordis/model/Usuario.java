@@ -43,6 +43,18 @@ public class Usuario {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "sesion_activa", nullable = false)
+    private Boolean sesionActiva = false;
+
+    @Column(name = "sesion_iniciada_en")
+    private LocalDateTime sesionIniciadaEn;
+
+    @Column(name = "sesion_actualizada_en")
+    private LocalDateTime sesionActualizadaEn;
+
+    @Column(name = "sesion_maquina", length = 150)
+    private String sesionMaquina;
+
     public enum Rol {
         ADMINISTRADOR, CAJERO
     }

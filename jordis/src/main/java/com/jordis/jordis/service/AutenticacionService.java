@@ -19,8 +19,11 @@ public class AutenticacionService {
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final AlertaService alertaService;
+    private final AuditoriaService auditoriaService;
 
     private static final int MAX_INTENTOS = 3;
+
+    private static final int SESION_ABANDONADA_MINUTOS = 20;
 
     private Usuario usuarioActivo;
 
@@ -88,11 +91,47 @@ public class AutenticacionService {
             );
         }
 
-        // 5. Login exitoso — resetear en transacción propia
+        // 5. Login exitoso — resetear intentos en transacción propia
         resetearIntentos(usuario.getIdUsuario());
+
+        // 6. Sesión única: rechazar si ya hay una sesión activa y
+        // reciente de este mismo usuario en OTRA máquina. Si es la misma
+        // máquina (típicamente: la app se cerró de golpe y se reabrió),
+        // se permite de inmediato sin esperar el umbral de abandono.
+        String maquinaActual = obtenerNombreMaquina();
+        boolean mismaMaquina = maquinaActual.equals(usuario.getSesionMaquina());
+
+        if (Boolean.TRUE.equals(usuario.getSesionActiva())
+                && !mismaMaquina
+                && !sesionEstaAbandonada(usuario)) {
+            log.warn("Login rechazado: '{}' ya tiene una sesión activa en otra máquina ({})",
+                    nombre, usuario.getSesionMaquina());
+            throw new SesionActivaException(
+                    "Este usuario ya tiene una sesión abierta en otra computadora. "
+                            + "Cierra esa sesión primero, o espera unos minutos si esa "
+                            + "sesión quedó abierta por un cierre inesperado.");
+        }
+
+        abrirSesion(usuario.getIdUsuario(), maquinaActual);
         usuarioActivo = usuario;
-        log.info("Login exitoso: {} ({})", usuario.getNombreCompleto(), usuario.getRol());
+        log.info("Login exitoso: {} ({}) desde '{}'",
+                usuario.getNombreCompleto(), usuario.getRol(), maquinaActual);
         return usuario;
+    }
+
+    private boolean sesionEstaAbandonada(Usuario usuario) {
+        if (usuario.getSesionActualizadaEn() == null) return true;
+        return usuario.getSesionActualizadaEn()
+                .isBefore(java.time.LocalDateTime.now()
+                        .minusMinutes(SESION_ABANDONADA_MINUTOS));
+    }
+
+    private String obtenerNombreMaquina() {
+        try {
+            return java.net.InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
+            return "desconocida";
+        }
     }
 
     // ---- Métodos con transacción propia ----
@@ -125,19 +164,53 @@ public class AutenticacionService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void desbloquearUsuario(Integer idUsuario) {
-        usuarioRepository.findById(idUsuario)
+        Usuario desbloqueado = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new UsuarioNoEncontradoException("Usuario no encontrado."));
+        desbloqueado.setBloqueado(false);
+        desbloqueado.setIntentosFallidos(0);
+        usuarioRepository.save(desbloqueado);
+        log.info("Usuario ID {} desbloqueado", idUsuario);
+
+        auditoriaService.registrar(
+                usuarioActivo, "USUARIO_DESBLOQUEADO", "Usuario", idUsuario,
+                "Usuario desbloqueado: " + desbloqueado.getNombreCompleto());
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void abrirSesion(Integer idUsuario, String maquina) {
         usuarioRepository.findById(idUsuario).ifPresent(u -> {
-            u.setBloqueado(false);
-            u.setIntentosFallidos(0);
+            u.setSesionActiva(true);
+            u.setSesionMaquina(maquina);
+            u.setSesionIniciadaEn(java.time.LocalDateTime.now());
+            u.setSesionActualizadaEn(java.time.LocalDateTime.now());
             usuarioRepository.save(u);
         });
-        log.info("Usuario ID {} desbloqueado", idUsuario);
+    }
+
+    // Se llama periódicamente (cada pocos minutos) mientras la app está
+    // abierta, para que otras instancias sepan que esta sesión sigue viva.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void actualizarHeartbeat(Integer idUsuario) {
+        usuarioRepository.findById(idUsuario).ifPresent(u -> {
+            u.setSesionActualizadaEn(java.time.LocalDateTime.now());
+            usuarioRepository.save(u);
+        });
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void liberarSesion(Integer idUsuario) {
+        usuarioRepository.findById(idUsuario).ifPresent(u -> {
+            u.setSesionActiva(false);
+            usuarioRepository.save(u);
+        });
     }
 
     public void cerrarSesion() {
         log.info("Cerrando sesión de: {}",
                 usuarioActivo != null ? usuarioActivo.getNombreCompleto() : "desconocido");
+        if (usuarioActivo != null) {
+            liberarSesion(usuarioActivo.getIdUsuario());
+        }
         usuarioActivo = null;
     }
 
@@ -156,5 +229,8 @@ public class AutenticacionService {
     }
     public static class CuentaDesactivadaException extends RuntimeException {
         public CuentaDesactivadaException(String msg) { super(msg); }
+    }
+    public static class SesionActivaException extends RuntimeException {
+        public SesionActivaException(String msg) { super(msg); }
     }
 }

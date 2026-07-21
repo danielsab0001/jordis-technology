@@ -4,9 +4,8 @@ import com.jordis.jordis.model.*;
 import com.jordis.jordis.repository.VentaRepository;
 import com.jordis.jordis.repository.ProductoRepository;
 import com.jordis.jordis.service.DashboardService;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.chart.*;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -67,9 +66,9 @@ public class DashboardController {
     @FXML private AreaChart<String, Number> graficaVentas;
     @FXML private NumberAxis ejeY;
     @FXML private Label lblTotalGrafica;
+    @FXML private ComboBox<String> cmbTopProductos;
     @FXML private VBox  panelTopProductos;
     @FXML private VBox  panelMetodosPago;
-    @FXML private VBox  panelComparativa;
 
     // ── Pestaña Inventario ──
     @FXML private Label    lblTotalProductos;
@@ -80,10 +79,6 @@ public class DashboardController {
     @FXML private Label    lblPctNormal;
     @FXML private VBox     cardStockBajo;
     @FXML private VBox     cardSinStock;
-    @FXML private StackPane barraInventario;
-    @FXML private Label    lblLeyendaNormal;
-    @FXML private Label    lblLeyendaBajo;
-    @FXML private Label    lblLeyendaSinStock;
     @FXML private Label    lblTituloProductosCrit;
     @FXML private VBox     panelProductosCriticos;
     @FXML private VBox     panelCategorias;
@@ -133,13 +128,15 @@ public class DashboardController {
 
     @FXML
     public void initialize() {
-        // Métricas disponibles en la gráfica
         cmbMetrica.getItems().addAll(
                 "Ventas (RD$)",
                 "Cantidad de ventas",
                 "Ticket promedio (RD$)",
                 "Productos vendidos (u.)");
         cmbMetrica.setValue("Ventas (RD$)");
+
+        cmbTopProductos.getItems().addAll("Top 3", "Top 5", "Top 10");
+        cmbTopProductos.setValue("Top 5");
 
         seleccionarPeriodo("HOY");
     }
@@ -195,6 +192,18 @@ public class DashboardController {
         actualizarGrafica(desde, hasta);
     }
 
+    @FXML
+    public void onCambiarTopProductos() {
+        LocalDateTime desde = dashboardService.getDesde(periodoActual);
+        LocalDateTime hasta = dashboardService.getHasta();
+        renderizarTopProductos(desde, hasta);
+    }
+
+    @FXML
+    public void onVerActividad() {
+        navegar(mainController::onAuditoria);
+    }
+
     // ── Carga principal ───────────────────────────────────────────────
 
     private void cargarDatos() {
@@ -212,21 +221,18 @@ public class DashboardController {
     // ── RESUMEN ───────────────────────────────────────────────────────
 
     private void cargarResumen(LocalDateTime desde, LocalDateTime hasta) {
-        // Ventas
         BigDecimal totalVentas = dashboardService.getTotalVentas(desde, hasta);
         lblVentas.setText("RD$" + fmt(totalVentas));
-        double varV = dashboardService.getVariacionVentas(desde, hasta);
-        aplicarVariacion(lblVarVentas, varV);
+        aplicarVariacion(lblVarVentas,
+                dashboardService.getVariacionVentas(desde, hasta));
 
-        // Transacciones
         long numVentas = dashboardService.getNumeroVentas(desde, hasta);
         lblTransacciones.setText(String.valueOf(numVentas));
-        double varT = dashboardService.getVariacionNumeroVentas(desde, hasta);
-        aplicarVariacion(lblVarTrans, varT);
+        aplicarVariacion(lblVarTrans,
+                dashboardService.getVariacionNumeroVentas(desde, hasta));
         BigDecimal ticket = dashboardService.getTicketPromedio(desde, hasta);
         lblTicketPromedio.setText("Ticket: RD$" + fmt(ticket));
 
-        // Créditos
         BigDecimal cred = dashboardService.getTotalCreditosPendientes();
         lblCreditosPendientes.setText("RD$" + fmt(cred));
         long venc  = dashboardService.getCreditosVencidos();
@@ -234,7 +240,6 @@ public class DashboardController {
         lblCreditosDetalle.setText(
                 venc + " vencido(s) · " + porVenc + " por vencer");
 
-        // Cuentas por pagar
         BigDecimal cpp = dashboardService.getTotalCuentasPorPagar();
         lblCuentasPorPagar.setText("RD$" + fmt(cpp));
         long cuentasVenc = dashboardService.getCuentasVencidas();
@@ -243,13 +248,11 @@ public class DashboardController {
                         ? cuentasVenc + " cuenta(s) vencida(s)"
                         : "Sin cuentas vencidas");
 
-        // Clicks en cards
         cardVentas.setOnMouseClicked(e -> navegar(mainController::onVentas));
         cardTransacciones.setOnMouseClicked(e -> navegar(mainController::onVentas));
         cardCreditos.setOnMouseClicked(e -> navegar(mainController::onCreditos));
         cardCuentasPagar.setOnMouseClicked(e -> navegar(mainController::onCuentasPorPagar));
 
-        // Alertas
         var alertas = dashboardService.getAlertasCriticas();
         long numAl  = dashboardService.getAlertasNoLeidas();
         lblNumAlertas.setText(numAl > 0 ? String.valueOf(numAl) : "");
@@ -259,30 +262,25 @@ public class DashboardController {
         if (alertas.isEmpty()) {
             panelAlertas.getChildren().add(filaOk("Sin alertas pendientes"));
         } else {
-            // Solo mostrar las necesarias, sin espacio vacío
             alertas.forEach(a ->
                     panelAlertas.getChildren().add(crearFilaAlerta(a)));
         }
 
-        // Actividad reciente (ventas + eventos)
         panelActividad.getChildren().clear();
-        var ventas = dashboardService.getVentasRecientes();
-        if (ventas.isEmpty()) {
+        var actividad = dashboardService.getActividadReciente(5);
+        if (actividad.isEmpty()) {
             panelActividad.getChildren().add(filaOk("Sin actividad reciente"));
         } else {
-            for (Venta v : ventas) {
-                panelActividad.getChildren().add(crearFilaActividad(v));
-            }
+            actividad.forEach(a ->
+                    panelActividad.getChildren().add(crearFilaActividad(a)));
         }
     }
 
     // ── VENTAS ────────────────────────────────────────────────────────
 
-    @SuppressWarnings("unchecked")
     private void cargarVentas(LocalDateTime desde, LocalDateTime hasta) {
-        // Mini KPIs
         BigDecimal tv = dashboardService.getTotalVentas(desde, hasta);
-        long nv       = dashboardService.getNumeroVentas(desde, hasta);
+        long nv = dashboardService.getNumeroVentas(desde, hasta);
         BigDecimal tk = dashboardService.getTicketPromedio(desde, hasta);
 
         mkLblVentas.setText("RD$" + fmt(tv));
@@ -298,39 +296,15 @@ public class DashboardController {
         long unidVendidas = ventaRepository.findEntreFechas(desde, hasta)
                 .stream().filter(v -> !v.getAnulada())
                 .flatMap(v -> v.getDetalles().stream())
-                .mapToLong(vp -> vp.getCantidad()).sum();
+                .mapToLong(VentaProducto::getCantidad).sum();
         mkLblProductos.setText(String.valueOf(unidVendidas));
 
         mkVentas.setOnMouseClicked(e -> navegar(mainController::onVentas));
         mkCantidad.setOnMouseClicked(e -> navegar(mainController::onVentas));
 
-        // Gráfica
         actualizarGrafica(desde, hasta);
+        renderizarTopProductos(desde, hasta);
 
-        // Top productos enriquecido
-        panelTopProductos.getChildren().clear();
-        var top = dashboardService.getTopProductos(desde, hasta, 6);
-        if (top.isEmpty()) {
-            panelTopProductos.getChildren().add(
-                    filaOk("Sin ventas en el período"));
-        } else {
-            BigDecimal totalVentasPeriodo = tv;
-            long maxU = (long) top.get(0).get("unidades");
-            for (int i = 0; i < top.size(); i++) {
-                var m = top.get(i);
-                BigDecimal ing  = (BigDecimal) m.get("ingresos");
-                long unids      = (long) m.get("unidades");
-                double pctTotal = totalVentasPeriodo.compareTo(BigDecimal.ZERO) > 0
-                        ? ing.divide(totalVentasPeriodo, 4, RoundingMode.HALF_UP)
-                        .multiply(BigDecimal.valueOf(100)).doubleValue() : 0;
-                panelTopProductos.getChildren().add(
-                        crearFilaTopProducto(i + 1,
-                                (String) m.get("nombre"),
-                                unids, ing, pctTotal, maxU));
-            }
-        }
-
-        // Métodos de pago
         panelMetodosPago.getChildren().clear();
         Map<String, List<Venta>> porMetodo = ventaRepository
                 .findEntreFechas(desde, hasta).stream()
@@ -338,114 +312,121 @@ public class DashboardController {
                 .collect(Collectors.groupingBy(Venta::getMetodoPago));
 
         String[] colMetodo = {"#2563EB", "#15803D", "#B45309", "#6D28D9"};
-        int ci = 0;
         long totalM = porMetodo.values().stream()
                 .mapToLong(List::size).sum();
-        for (var e : porMetodo.entrySet()) {
-            BigDecimal montoM = e.getValue().stream()
-                    .map(Venta::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
-            double pct = totalM > 0
-                    ? (double) e.getValue().size() / totalM * 100 : 0;
-            panelMetodosPago.getChildren().add(
-                    crearFilaMetodo(e.getKey(), e.getValue().size(),
-                            montoM, pct, colMetodo[ci % colMetodo.length]));
-            ci++;
-        }
+
         if (porMetodo.isEmpty()) {
             panelMetodosPago.getChildren().add(
                     filaOk("Sin ventas en el período"));
+        } else {
+            List<PieChart.Data> datosDonut = new ArrayList<>();
+            int ci = 0;
+            for (var e : porMetodo.entrySet()) {
+                BigDecimal montoM = e.getValue().stream()
+                        .map(Venta::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+                double pct = totalM > 0
+                        ? (double) e.getValue().size() / totalM * 100 : 0;
+                panelMetodosPago.getChildren().add(
+                        crearFilaMetodo(e.getKey(), e.getValue().size(),
+                                montoM, pct, colMetodo[ci % colMetodo.length]));
+                datosDonut.add(new PieChart.Data(e.getKey(), montoM.doubleValue()));
+                ci++;
+            }
+
+            PieChart donut = new PieChart();
+            donut.getData().addAll(datosDonut);
+            donut.setLegendVisible(false);
+            donut.setLabelsVisible(true);
+            donut.setPrefSize(260, 220);
+            donut.setMaxSize(260, 220);
+            donut.setStyle("-fx-padding: 10 0 0 0;");
+            javafx.application.Platform.runLater(() -> {
+                int idx = 0;
+                for (var d : donut.getData()) {
+                    if (d.getNode() != null) {
+                        d.getNode().setStyle(
+                                "-fx-pie-color: " + colMetodo[idx % colMetodo.length] + ";");
+                    }
+                    idx++;
+                }
+            });
+            panelMetodosPago.getChildren().add(donut);
         }
+    }
 
-        // Comparativa período anterior
-        panelComparativa.getChildren().clear();
-        Duration dur = Duration.between(desde, hasta);
-        LocalDateTime desdeAnt = desde.minus(dur);
-        BigDecimal tvAnt = dashboardService.getTotalVentas(desdeAnt, desde);
-        long nvAnt       = dashboardService.getNumeroVentas(desdeAnt, desde);
-        BigDecimal tkAnt = dashboardService.getTicketPromedio(desdeAnt, desde);
-
-        panelComparativa.getChildren().addAll(
-                crearFilaComparativa("Ventas totales",
-                        "RD$" + fmt(tv), "RD$" + fmt(tvAnt), varVentas(tv, tvAnt)),
-                crearFilaComparativa("Transacciones",
-                        String.valueOf(nv), String.valueOf(nvAnt),
-                        nv == 0 ? 0 : (double)(nv - nvAnt) / Math.max(nvAnt, 1) * 100),
-                crearFilaComparativa("Ticket promedio",
-                        "RD$" + fmt(tk), "RD$" + fmt(tkAnt), varVentas(tk, tkAnt)));
+    private int limiteTopProductos() {
+        String v = cmbTopProductos.getValue();
+        if (v == null) return 5;
+        return switch (v) {
+            case "Top 3"  -> 3;
+            case "Top 10" -> 10;
+            default       -> 5;
+        };
     }
 
     @SuppressWarnings("unchecked")
+    private void renderizarTopProductos(LocalDateTime desde, LocalDateTime hasta) {
+        panelTopProductos.getChildren().clear();
+        int limite = limiteTopProductos();
+        var top = dashboardService.getTopProductos(desde, hasta, limite);
+
+        if (top.isEmpty()) {
+            panelTopProductos.getChildren().add(
+                    filaOk("Sin ventas en el período"));
+            return;
+        }
+
+        long totalUnidPeriodo = ventaRepository.findEntreFechas(desde, hasta)
+                .stream().filter(v -> !v.getAnulada())
+                .flatMap(v -> v.getDetalles().stream())
+                .mapToLong(VentaProducto::getCantidad).sum();
+
+        long maxU = (long) top.get(0).get("unidades");
+        for (int i = 0; i < top.size(); i++) {
+            var m = top.get(i);
+            long unids     = (long) m.get("unidades");
+            BigDecimal ing = (BigDecimal) m.get("ingresos");
+            double pctUnid = totalUnidPeriodo > 0
+                    ? (double) unids / totalUnidPeriodo * 100 : 0;
+            panelTopProductos.getChildren().add(
+                    crearFilaTopProducto(i + 1,
+                            (String) m.get("nombre"),
+                            unids, ing, pctUnid, maxU));
+        }
+    }
+
     private void actualizarGrafica(LocalDateTime desde, LocalDateTime hasta) {
         graficaVentas.getData().clear();
 
-        Map<String, BigDecimal> datosVentas =
-                dashboardService.getVentasPorPeriodo(periodoActual);
+        Map<String, Double> serieDatos =
+                dashboardService.getSeriePorPeriodo(periodoActual, metricaActual);
 
         XYChart.Series<String, Number> serie = new XYChart.Series<>();
         serie.setName(cmbMetrica.getValue());
-        BigDecimal totalGraf = BigDecimal.ZERO;
 
-        // Datos según métrica seleccionada
-        List<Venta> ventasPeriodo = ventaRepository
-                .findEntreFechas(desde, hasta).stream()
-                .filter(v -> !v.getAnulada()).toList();
+        String leyendaEje = switch (metricaActual) {
+            case "CANTIDAD"  -> "Ventas";
+            case "TICKET"    -> "RD$ promedio";
+            case "PRODUCTOS" -> "Unidades";
+            default          -> "RD$";
+        };
 
-        String leyendaEje;
-        switch (metricaActual) {
-            case "VENTAS" -> {
-                leyendaEje = "RD$";
-                for (var e : datosVentas.entrySet()) {
-                    serie.getData().add(new XYChart.Data<>(
-                            e.getKey(), e.getValue().doubleValue()));
-                    totalGraf = totalGraf.add(e.getValue());
-                }
-            }
-            case "CANTIDAD" -> {
-                leyendaEje = "Ventas";
-                for (var e : datosVentas.entrySet()) {
-                    serie.getData().add(new XYChart.Data<>(e.getKey(), 0));
-                }
-                // Recalcular por cantidad
-                serie.getData().clear();
-                Map<String, Long> porDia = new LinkedHashMap<>();
-                datosVentas.keySet().forEach(k -> porDia.put(k, 0L));
-                // Re-usar la misma llave del mapa de ventas
-                serie.getData().addAll(
-                        datosVentas.keySet().stream()
-                                .map(k -> new XYChart.Data<String, Number>(k,
-                                        porDia.getOrDefault(k, 0L)))
-                                .collect(Collectors.toList()));
-                totalGraf = BigDecimal.valueOf(
-                        dashboardService.getNumeroVentas(desde, hasta));
-            }
-            case "TICKET" -> {
-                leyendaEje = "RD$ promedio";
-                for (var e : datosVentas.entrySet()) {
-                    serie.getData().add(new XYChart.Data<>(
-                            e.getKey(), e.getValue().doubleValue()));
-                }
-                totalGraf = dashboardService.getTicketPromedio(desde, hasta);
-            }
-            default -> { // PRODUCTOS
-                leyendaEje = "Unidades";
-                long totalUnid = ventasPeriodo.stream()
-                        .flatMap(v -> v.getDetalles().stream())
-                        .mapToLong(vp -> vp.getCantidad()).sum();
-                for (var e : datosVentas.entrySet()) {
-                    serie.getData().add(new XYChart.Data<>(
-                            e.getKey(), e.getValue().doubleValue()));
-                }
-                totalGraf = BigDecimal.valueOf(totalUnid);
-            }
+        double totalGraf = 0;
+        for (var e : serieDatos.entrySet()) {
+            serie.getData().add(new XYChart.Data<>(e.getKey(), e.getValue()));
+            totalGraf += e.getValue();
+        }
+        if ("TICKET".equals(metricaActual)) {
+            totalGraf = dashboardService.getTicketPromedio(desde, hasta).doubleValue();
         }
 
         ejeY.setLabel(leyendaEje);
         graficaVentas.getData().add(serie);
-        lblTotalGrafica.setText("Total: " + (metricaActual.equals("VENTAS")
-                || metricaActual.equals("TICKET")
-                ? "RD$" + fmt(totalGraf) : fmt(totalGraf)));
+        boolean esMoneda = metricaActual.equals("VENTAS") || metricaActual.equals("TICKET");
+        lblTotalGrafica.setText("Total: " + (esMoneda
+                ? "RD$" + fmt(BigDecimal.valueOf(totalGraf))
+                : fmt(BigDecimal.valueOf(totalGraf))));
 
-        // Estilo del área
         javafx.application.Platform.runLater(() -> {
             try {
                 var nodeSerie = serie.getNode();
@@ -476,8 +457,6 @@ public class DashboardController {
                 .filter(p -> p.getStock() > 0 && p.isStockBajo()).count();
         long normal   = total - sinStk - bajo;
         double pctN   = total > 0 ? (double) normal / total * 100 : 0;
-        double pctB   = total > 0 ? (double) bajo   / total * 100 : 0;
-        double pctS   = total > 0 ? (double) sinStk / total * 100 : 0;
 
         BigDecimal valor = todos.stream()
                 .map(p -> p.getPrecioUnitario()
@@ -491,52 +470,26 @@ public class DashboardController {
         lblStockNormal.setText(String.valueOf(normal));
         lblPctNormal.setText(String.format("%.1f%% del inventario", pctN));
 
-        // Leyendas de barra
-        lblLeyendaNormal.setText(
-                String.format("● Normal (%d)", normal));
-        lblLeyendaBajo.setText(
-                String.format("● Stock bajo (%d)", bajo));
-        lblLeyendaSinStock.setText(
-                String.format("● Sin stock (%d)", sinStk));
-
-        // Barra de salud del inventario
-        barraInventario.getChildren().clear();
-        if (total > 0) {
-            Region rNormal  = segmentoBarra(pctN / 100, "#15803D", true,  false);
-            Region rBajo    = segmentoBarra(pctB / 100, "#B45309", false, false);
-            Region rSinStk  = segmentoBarra(pctS / 100, "#DC2626", false, true);
-            barraInventario.getChildren().addAll(rNormal, rBajo, rSinStk);
-            barraInventario.setStyle("-fx-background-color: #F1F5F9;"
-                    + " -fx-background-radius: 8;");
-        }
-
-        // Navegación
         cardStockBajo.setOnMouseClicked(e -> navegar(mainController::onInventario));
         cardSinStock.setOnMouseClicked(e -> navegar(mainController::onInventario));
 
-        // Productos críticos (stock bajo o sin stock)
         panelProductosCriticos.getChildren().clear();
         var criticos = todos.stream()
                 .filter(p -> p.isStockBajo() || p.getStock() == 0)
-                .limit(6).toList();
+                .sorted(Comparator.comparingInt(Producto::getStock))
+                .limit(8).toList();
 
         if (criticos.isEmpty()) {
-            // Si no hay críticos, mostrar productos con mayor stock
-            lblTituloProductosCrit.setText("📦  Productos con mayor stock");
-            var mayores = todos.stream()
-                    .sorted((a, b) -> b.getStock() - a.getStock())
-                    .limit(5).toList();
-            mayores.forEach(p ->
-                    panelProductosCriticos.getChildren().add(
-                            crearFilaProductoStock(p, false)));
+            lblTituloProductosCrit.setText("✅  Sin productos críticos");
+            panelProductosCriticos.getChildren().add(
+                    filaOk("Todo el inventario está en niveles saludables"));
         } else {
             lblTituloProductosCrit.setText("⚠  Productos críticos");
             criticos.forEach(p ->
                     panelProductosCriticos.getChildren().add(
-                            crearFilaProductoStock(p, true)));
+                            crearFilaProductoCritico(p)));
         }
 
-        // Distribución por categoría
         panelCategorias.getChildren().clear();
         Map<String, Long> porCat = todos.stream()
                 .collect(Collectors.groupingBy(
@@ -544,11 +497,6 @@ public class DashboardController {
                                 ? p.getCategoria().getNombre() : "Sin categoría",
                         Collectors.counting()));
 
-        String[] colCat = {
-                "#2563EB", "#15803D", "#B45309",
-                "#6D28D9", "#DC2626", "#0891B2"
-        };
-        int ci2 = 0;
         long maxCat = porCat.values().stream()
                 .mapToLong(Long::longValue).max().orElse(1);
 
@@ -558,9 +506,7 @@ public class DashboardController {
             double pct = (double) e.getValue() / total * 100;
             panelCategorias.getChildren().add(
                     crearFilaCategoria(e.getKey(), e.getValue(),
-                            pct, e.getValue(), maxCat,
-                            colCat[ci2 % colCat.length]));
-            ci2++;
+                            pct, e.getValue(), maxCat, "#2563EB"));
         }
     }
 
@@ -581,11 +527,10 @@ public class DashboardController {
         lblTotalPorCobrar.setText("RD$" + fmt(totalCobrar));
 
         cardCreditosVencidos.setOnMouseClicked(e ->
-                navegar(mainController::onCreditos));
+                navegar(mainController::onCreditosVencidosFiltrado));
         cardCreditosPorVencer.setOnMouseClicked(e ->
                 navegar(mainController::onCreditos));
 
-        // Top clientes enriquecido
         panelTopClientes.getChildren().clear();
         var topCl = dashboardService.getTopClientes(desde, hasta);
         BigDecimal totalVentasPer = dashboardService.getTotalVentas(desde, hasta);
@@ -607,7 +552,6 @@ public class DashboardController {
             }
         }
 
-        // Panel dinámico: créditos vencidos si existen, estadísticas si no
         panelDinamico.getChildren().clear();
         var creditosVenc = ventaRepository.findCreditos().stream()
                 .filter(v -> !v.estaCancelado()
@@ -621,10 +565,8 @@ public class DashboardController {
             creditosVenc.forEach(v ->
                     panelDinamico.getChildren().add(crearFilaCredito(v)));
         } else {
-            // Sin créditos vencidos — mostrar estadísticas alternativas
             lblTituloPanelDin.setText("📊  Resumen de clientes");
 
-            // Clientes con mayor saldo pendiente
             var conSaldo = ventaRepository.findCreditos().stream()
                     .filter(v -> !v.estaCancelado()
                             && v.getCliente() != null)
@@ -656,7 +598,7 @@ public class DashboardController {
     private HBox crearFilaAlerta(AlertaSistema a) {
         String[] col = estiloAlerta(a.getTipo());
         HBox fila = new HBox(10);
-        fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        fila.setAlignment(Pos.CENTER_LEFT);
         fila.setStyle("-fx-padding: 9 16; -fx-background-color: "
                 + col[1] + "; -fx-border-color: #F1F5F9;"
                 + " -fx-border-width: 0 0 1 0; -fx-cursor: hand;");
@@ -665,21 +607,23 @@ public class DashboardController {
         dot.setFill(javafx.scene.paint.Color.web(col[0]));
         dot.setArcWidth(7); dot.setArcHeight(7);
 
+        Label hora = new Label(a.getFechaHora()
+                .format(DateTimeFormatter.ofPattern("HH:mm")));
+        hora.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
+
         VBox txt = new VBox(2);
         Label t = new Label(a.getTitulo());
         t.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
                 + " -fx-text-fill: " + col[0] + ";");
         txt.getChildren().add(t);
         if (a.getDescripcion() != null && !a.getDescripcion().isBlank()) {
-            Label d = new Label(truncar(a.getDescripcion(), 60));
+            Label d = new Label(a.getDescripcion());
             d.setStyle("-fx-font-size: 10; -fx-text-fill: #64748B;");
+            d.setWrapText(true);
+            d.setMaxWidth(Double.MAX_VALUE);
             txt.getChildren().add(d);
         }
         HBox.setHgrow(txt, Priority.ALWAYS);
-
-        Label hora = new Label(a.getFechaHora()
-                .format(DateTimeFormatter.ofPattern("HH:mm")));
-        hora.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
 
         fila.getChildren().addAll(dot, txt, hora);
         fila.setOnMouseClicked(e -> navegar(mainController::onAlertas));
@@ -687,51 +631,76 @@ public class DashboardController {
         return fila;
     }
 
-    private HBox crearFilaActividad(Venta v) {
+    private HBox crearFilaActividad(AuditoriaLog log) {
+        String[] est = estiloActividad(log.getAccion());
         HBox fila = new HBox(10);
-        fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        fila.setAlignment(Pos.CENTER_LEFT);
         fila.setStyle("-fx-padding: 8 16; -fx-border-color: #F1F5F9;"
                 + " -fx-border-width: 0 0 1 0;");
 
-        String icono  = v.getAnulada() ? "❌" : "✅";
-        Label lIcono  = new Label(icono);
+        Label lIcono = new Label(est[0]);
         lIcono.setStyle("-fx-font-size: 14;");
 
         VBox info = new VBox(1);
-        String prod = v.getDetalles().stream()
-                .map(vp -> vp.getProducto().getNombre())
-                .limit(2).collect(Collectors.joining(", "))
-                + (v.getDetalles().size() > 2
-                ? " +" + (v.getDetalles().size() - 2) + " más" : "");
-        Label lProd = new Label(
-                (v.getNumeroFactura() != null
-                        ? v.getNumeroFactura() : "#" + v.getIdVenta())
-                        + "  —  " + prod);
-        lProd.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
+        Label lTitulo = new Label(etiquetaActividad(log.getAccion()));
+        lTitulo.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
                 + " -fx-text-fill: #0F172A;");
-        Label lCli = new Label(
-                (v.getCliente() != null
-                        ? v.getCliente().getNombreCompleto() : "Ocasional")
-                        + "  ·  " + v.getFechaHora().format(FMT));
-        lCli.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
-        info.getChildren().addAll(lProd, lCli);
+        String detalle = log.getDetalle() != null ? log.getDetalle() : "";
+        Label lDet = new Label(detalle
+                + (detalle.isEmpty() ? "" : "  ·  ")
+                + (log.getUsuario() != null ? log.getUsuario().getNombre() : "Sistema")
+                + "  ·  " + log.getFechaHora().format(FMT));
+        lDet.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
+        lDet.setWrapText(true);
+        lDet.setMaxWidth(Double.MAX_VALUE);
+        info.getChildren().addAll(lTitulo, lDet);
         HBox.setHgrow(info, Priority.ALWAYS);
 
-        Label lTotal = new Label("RD$" + fmt(v.getTotal()));
-        lTotal.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
-                + " -fx-text-fill: #2563EB;");
+        Label lPunto = new Label("●");
+        lPunto.setStyle("-fx-font-size: 8; -fx-text-fill: " + est[1] + ";");
 
-        fila.getChildren().addAll(lIcono, info, lTotal);
-        fila.setOnMouseClicked(e -> navegar(mainController::onVentas));
+        fila.getChildren().addAll(lIcono, info, lPunto);
         hover(fila, "white", "#F8FAFC");
         return fila;
     }
 
+    private String[] estiloActividad(String accion) {
+        return switch (accion) {
+            case "VENTA_REGISTRADA"     -> new String[]{"🛒", "#2563EB"};
+            case "VENTA_ANULADA"        -> new String[]{"❌", "#DC2626"};
+            case "COMPRA_REGISTRADA"    -> new String[]{"🏭", "#6D28D9"};
+            case "CLIENTE_CREADO"       -> new String[]{"👤", "#15803D"};
+            case "PRODUCTO_CREADO"      -> new String[]{"📦", "#0891B2"};
+            case "PROVEEDOR_CREADO"     -> new String[]{"🏢", "#0891B2"};
+            case "USUARIO_CREADO"       -> new String[]{"🆕", "#15803D"};
+            case "USUARIO_DESBLOQUEADO" -> new String[]{"🔓", "#2563EB"};
+            case "PRECIO_MODIFICADO"    -> new String[]{"💲", "#B45309"};
+            case "INVENTARIO_AJUSTADO"  -> new String[]{"🔧", "#B45309"};
+            default -> new String[]{"•", "#64748B"};
+        };
+    }
+
+    private String etiquetaActividad(String accion) {
+        return switch (accion) {
+            case "VENTA_REGISTRADA"     -> "Venta registrada";
+            case "VENTA_ANULADA"        -> "Venta anulada";
+            case "COMPRA_REGISTRADA"    -> "Compra registrada";
+            case "CLIENTE_CREADO"       -> "Cliente nuevo";
+            case "PRODUCTO_CREADO"      -> "Producto nuevo";
+            case "PROVEEDOR_CREADO"     -> "Proveedor nuevo";
+            case "USUARIO_CREADO"       -> "Usuario nuevo";
+            case "USUARIO_DESBLOQUEADO" -> "Usuario desbloqueado";
+            case "PRECIO_MODIFICADO"    -> "Precio modificado";
+            case "INVENTARIO_AJUSTADO"  -> "Ajuste de inventario";
+            default -> accion;
+        };
+    }
+
     private HBox crearFilaTopProducto(int pos, String nombre, long unidades,
-                                      BigDecimal ingresos, double pctTotal,
+                                      BigDecimal ingresos, double pctUnidades,
                                       long maxU) {
         HBox fila = new HBox(10);
-        fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        fila.setAlignment(Pos.CENTER_LEFT);
         fila.setStyle("-fx-padding: 9 16; -fx-border-color: #F1F5F9;"
                 + " -fx-border-width: 0 0 1 0;");
 
@@ -745,23 +714,22 @@ public class DashboardController {
         Label lNom = new Label(nombre);
         lNom.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
                 + " -fx-text-fill: #0F172A;");
-        // Barra proporcional
-        StackPane barra = barraProgreso(
-                (double) unidades / Math.max(maxU, 1), 120, "#2563EB");
-        HBox meta = new HBox(8);
-        Label lU   = new Label(unidades + " u.");
-        lU.setStyle("-fx-font-size: 10; -fx-text-fill: #64748B;");
-        Label lPct = new Label(String.format("%.1f%% del total", pctTotal));
-        lPct.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
-        meta.getChildren().addAll(lU, lPct);
-        info.getChildren().addAll(lNom, barra, meta);
+        Pane barra = barraProgreso((double) unidades / Math.max(maxU, 1), "#2563EB");
+        Label lIng = new Label("RD$" + fmt(ingresos) + " generados");
+        lIng.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
+        info.getChildren().addAll(lNom, barra, lIng);
         HBox.setHgrow(info, Priority.ALWAYS);
 
-        Label lIng = new Label("RD$" + fmt(ingresos));
-        lIng.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
+        VBox der = new VBox(1);
+        der.setAlignment(Pos.CENTER_RIGHT);
+        Label lUnid = new Label(unidades + " u.");
+        lUnid.setStyle("-fx-font-size: 15; -fx-font-weight: bold;"
                 + " -fx-text-fill: #2563EB;");
+        Label lPct = new Label(String.format("%.1f%% del total", pctUnidades));
+        lPct.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
+        der.getChildren().addAll(lUnid, lPct);
 
-        fila.getChildren().addAll(lPos, info, lIng);
+        fila.getChildren().addAll(lPos, info, der);
         return fila;
     }
 
@@ -770,85 +738,84 @@ public class DashboardController {
         VBox box = new VBox(5);
         box.setStyle("-fx-padding: 6 0;");
         HBox top = new HBox();
-        top.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        top.setAlignment(Pos.CENTER_LEFT);
         Label lM = new Label(metodo);
         lM.setStyle("-fx-font-size: 12; -fx-text-fill: #374151;");
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
         Label lV = new Label("RD$" + fmt(monto)
-                + "  (" + String.format("%.0f", pct) + "%)");
+                + "  (" + String.format("%.0f", pct) + "% de las ventas)");
         lV.setStyle("-fx-font-size: 11; -fx-text-fill: #64748B;");
         top.getChildren().addAll(lM, esp, lV);
-        StackPane barra = barraProgreso(pct / 100, Double.MAX_VALUE, color);
-        barra.setPrefWidth(Double.MAX_VALUE);
+        Pane barra = barraProgreso(pct / 100, color);
         box.getChildren().addAll(top, barra);
         return box;
     }
 
-    private HBox crearFilaComparativa(String etiqueta,
-                                      String actual, String anterior,
-                                      double variacion) {
-        HBox fila = new HBox(8);
-        fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        fila.setStyle("-fx-padding: 7 0; -fx-border-color: #F1F5F9;"
+    private VBox crearFilaComparativa(String etiqueta,
+                                      String actual, double variacion) {
+        VBox fila = new VBox(3);
+        fila.setStyle("-fx-padding: 8 0; -fx-border-color: #F1F5F9;"
                 + " -fx-border-width: 0 0 1 0;");
+
+        HBox linea1 = new HBox(8);
+        linea1.setAlignment(Pos.CENTER_LEFT);
         Label lEt = new Label(etiqueta);
         lEt.setStyle("-fx-font-size: 11; -fx-text-fill: #64748B;");
-        lEt.setMinWidth(100);
-        Label lAct = new Label(actual);
-        lAct.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
-                + " -fx-text-fill: #0F172A;");
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
+        Label lAct = new Label(actual);
+        lAct.setStyle("-fx-font-size: 13; -fx-font-weight: bold;"
+                + " -fx-text-fill: #0F172A;");
+        linea1.getChildren().addAll(lEt, esp, lAct);
+
+        HBox linea2 = new HBox();
+        linea2.setAlignment(Pos.CENTER_RIGHT);
         Label lVar = new Label();
         aplicarVariacion(lVar, variacion);
-        fila.getChildren().addAll(lEt, lAct, esp, lVar);
+        linea2.getChildren().add(lVar);
+
+        fila.getChildren().addAll(linea1, linea2);
         return fila;
     }
 
-    private HBox crearFilaProductoStock(Producto p, boolean esCritico) {
+    private HBox crearFilaProductoCritico(Producto p) {
         HBox fila = new HBox(10);
-        fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        fila.setStyle("-fx-padding: 9 16; -fx-border-color: #F1F5F9;"
-                + " -fx-border-width: 0 0 1 0;");
+        fila.setAlignment(Pos.CENTER_LEFT);
+        String fondo = p.getStock() == 0 ? "#FEF2F2" : "#FFFBEB";
+        fila.setStyle("-fx-padding: 9 16; -fx-background-color: " + fondo
+                + "; -fx-border-color: #F1F5F9; -fx-border-width: 0 0 1 0;"
+                + " -fx-cursor: hand;");
 
-        VBox info = new VBox(3);
-        Label lNom = new Label(p.getNombre()
-                + (p.getMarca() != null ? " — " + p.getMarca() : ""));
+        VBox info = new VBox(2);
+        Label lNom = new Label(p.getNombre());
         lNom.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
                 + " -fx-text-fill: #0F172A;");
-        if (esCritico) {
-            double pct = p.getStockMinimo() > 0
-                    ? Math.min((double) p.getStock() / (p.getStockMinimo() * 2.5), 1) : 0;
-            info.getChildren().add(lNom);
-            info.getChildren().add(barraProgreso(pct, 180,
-                    p.getStock() == 0 ? "#DC2626" : "#B45309"));
-        } else {
-            info.getChildren().add(lNom);
-        }
+        Label lMin = new Label("Mínimo: " + p.getStockMinimo() + " u.");
+        lMin.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
+        info.getChildren().addAll(lNom, lMin);
         HBox.setHgrow(info, Priority.ALWAYS);
 
-        String colorBadge = p.getStock() == 0 ? "#DC2626"
-                : p.isStockBajo() ? "#B45309" : "#15803D";
-        String fondoBadge = p.getStock() == 0 ? "#FEF2F2"
-                : p.isStockBajo() ? "#FEF3C7" : "#F0FDF4";
-        Label badge = new Label(p.getStock() + " u.");
-        badge.setStyle("-fx-background-color: " + fondoBadge
-                + "; -fx-text-fill: " + colorBadge
-                + "; -fx-padding: 2 8; -fx-background-radius: 4;"
-                + " -fx-font-size: 11; -fx-font-weight: bold;");
+        String color = p.getStock() == 0 ? "#DC2626" : "#B45309";
+        Label lEstado = new Label(p.getStock() == 0
+                ? "Sin stock" : "Quedan " + p.getStock() + " u.");
+        lEstado.setStyle("-fx-font-size: 12; -fx-font-weight: bold;"
+                + " -fx-text-fill: " + color + ";");
 
-        fila.getChildren().addAll(info, badge);
+        fila.getChildren().addAll(info, lEstado);
+        fila.setOnMouseClicked(e ->
+                navegar(() -> mainController.onInventarioFiltrado(p.getIdProducto())));
+        hover(fila, fondo, p.getStock() == 0 ? "#FEE2E2" : "#FEF3C7");
         return fila;
     }
 
-    private HBox crearFilaCategoria(String nombre, long count,
+    private VBox crearFilaCategoria(String nombre, long count,
                                     double pct, long val, long maxVal,
                                     String color) {
         VBox box = new VBox(4);
         box.setStyle("-fx-padding: 6 0;");
         HBox info = new HBox();
-        info.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        info.setAlignment(Pos.CENTER_LEFT);
         Label lNom = new Label(nombre);
         lNom.setStyle("-fx-font-size: 12; -fx-text-fill: #374151;");
         Region esp = new Region();
@@ -857,20 +824,16 @@ public class DashboardController {
                 + String.format("%.0f%%", pct));
         lCnt.setStyle("-fx-font-size: 11; -fx-text-fill: #94A3B8;");
         info.getChildren().addAll(lNom, esp, lCnt);
-        StackPane barra = barraProgreso(
-                (double) val / maxVal, Double.MAX_VALUE, color);
-        barra.setPrefWidth(Double.MAX_VALUE);
+        Pane barra = barraProgreso((double) val / Math.max(maxVal, 1), color);
         box.getChildren().addAll(info, barra);
-        HBox outer = new HBox(box);
-        HBox.setHgrow(box, Priority.ALWAYS);
-        return outer;
+        return box;
     }
 
     private HBox crearFilaTopCliente(int pos, String nombre,
                                      BigDecimal total, double pct,
                                      BigDecimal maxTotal) {
         HBox fila = new HBox(10);
-        fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        fila.setAlignment(Pos.CENTER_LEFT);
         fila.setStyle("-fx-padding: 9 16; -fx-border-color: #F1F5F9;"
                 + " -fx-border-width: 0 0 1 0;");
 
@@ -886,7 +849,7 @@ public class DashboardController {
                 + " -fx-text-fill: #0F172A;");
         double ratio = maxTotal.compareTo(BigDecimal.ZERO) > 0
                 ? total.divide(maxTotal, 4, RoundingMode.HALF_UP).doubleValue() : 0;
-        StackPane barra = barraProgreso(ratio, 140, "#2563EB");
+        Pane barra = barraProgreso(ratio, "#2563EB");
         Label lPct = new Label(String.format("%.1f%% del total", pct));
         lPct.setStyle("-fx-font-size: 10; -fx-text-fill: #94A3B8;");
         info.getChildren().addAll(lNom, barra, lPct);
@@ -902,7 +865,7 @@ public class DashboardController {
 
     private HBox crearFilaCredito(Venta v) {
         HBox fila = new HBox(10);
-        fila.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        fila.setAlignment(Pos.CENTER_LEFT);
         fila.setStyle("-fx-padding: 9 16; -fx-background-color: #FEF2F2;"
                 + " -fx-border-color: #F1F5F9; -fx-border-width: 0 0 1 0;"
                 + " -fx-cursor: hand;");
@@ -927,44 +890,37 @@ public class DashboardController {
                 + " -fx-text-fill: #DC2626;");
 
         fila.getChildren().addAll(info, lSaldo);
-        fila.setOnMouseClicked(e -> navegar(mainController::onCreditos));
+        fila.setOnMouseClicked(e ->
+                navegar(() -> mainController.onCreditosFiltrado(v.getIdVenta())));
         hover(fila, "#FEF2F2", "#FEE2E2");
         return fila;
     }
 
     // ── Utilidades de UI ──────────────────────────────────────────────
 
-    private StackPane barraProgreso(double ratio, double maxAncho,
-                                    String color) {
-        StackPane sp = new StackPane();
-        sp.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-        sp.setPrefHeight(7);
-        Region fondo = new Region();
-        fondo.setPrefHeight(7);
-        fondo.setStyle("-fx-background-color: #F1F5F9;"
-                + " -fx-background-radius: 4;");
-        Region prog = new Region();
-        prog.setPrefHeight(7);
-        double ancho = Math.max(ratio * Math.min(maxAncho, 200), 0);
-        prog.setPrefWidth(ancho);
-        prog.setStyle("-fx-background-color: " + color
-                + "; -fx-background-radius: 4;");
-        StackPane.setAlignment(prog, javafx.geometry.Pos.CENTER_LEFT);
-        sp.getChildren().addAll(fondo, prog);
-        return sp;
-    }
+    private Pane barraProgreso(double ratio, String color) {
+        double r = Math.max(0, Math.min(ratio, 1));
 
-    private Region segmentoBarra(double ratio, String color,
-                                 boolean esIzquierda, boolean esDerecha) {
-        Region r = new Region();
-        r.setPrefHeight(16);
-        r.setPrefWidth(ratio * 400);
-        String radIzq = esIzquierda ? "8" : "0";
-        String radDer = esDerecha   ? "8" : "0";
-        r.setStyle("-fx-background-color: " + color
-                + "; -fx-background-radius: "
-                + radIzq + " " + radDer + " " + radDer + " " + radIzq + ";");
-        return r;
+        Region fondo = new Region();
+        fondo.setStyle("-fx-background-color: #F1F5F9; -fx-background-radius: 4;");
+
+        Region prog = new Region();
+        prog.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 4;");
+
+        Pane contenedor = new Pane(fondo, prog);
+        contenedor.setMinHeight(7);
+        contenedor.setPrefHeight(7);
+        contenedor.setMaxHeight(7);
+        contenedor.setMaxWidth(Double.MAX_VALUE);
+
+        contenedor.widthProperty().addListener((obs, old, nuevo) -> {
+            double w = nuevo.doubleValue();
+            fondo.resizeRelocate(0, 0, w, 7);
+            prog.resizeRelocate(0, 0, w * r, 7);
+        });
+
+        HBox.setHgrow(contenedor, Priority.ALWAYS);
+        return contenedor;
     }
 
     private Label filaOk(String texto) {
@@ -983,7 +939,7 @@ public class DashboardController {
 
     private HBox crearStatItem(String etiqueta, String valor) {
         HBox h = new HBox(10);
-        h.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        h.setAlignment(Pos.CENTER_LEFT);
         h.setStyle("-fx-padding: 8 16; -fx-border-color: #F1F5F9;"
                 + " -fx-border-width: 0 0 1 0;");
         Label lE = new Label(etiqueta);
@@ -998,18 +954,24 @@ public class DashboardController {
     }
 
     private void aplicarVariacion(Label label, double variacion) {
+        String frase = switch (periodoActual) {
+            case "HOY"    -> "que ayer";
+            case "SEMANA" -> "que la semana pasada";
+            case "MES"    -> "que el mes pasado";
+            default       -> "que el año pasado";
+        };
         if (variacion > 0) {
-            label.setText("▲ +" + String.format("%.1f", variacion) + "%");
+            label.setText("▲ +" + String.format("%.1f", variacion) + "% " + frase);
             label.setStyle("-fx-font-size: 11; -fx-font-weight: bold;"
                     + " -fx-text-fill: #15803D; -fx-background-color: #F0FDF4;"
                     + " -fx-background-radius: 5; -fx-padding: 2 6;");
         } else if (variacion < 0) {
-            label.setText("▼ " + String.format("%.1f", variacion) + "%");
+            label.setText("▼ " + String.format("%.1f", variacion) + "% " + frase);
             label.setStyle("-fx-font-size: 11; -fx-font-weight: bold;"
                     + " -fx-text-fill: #DC2626; -fx-background-color: #FEF2F2;"
                     + " -fx-background-radius: 5; -fx-padding: 2 6;");
         } else {
-            label.setText("= 0%");
+            label.setText("= igual " + frase);
             label.setStyle("-fx-font-size: 11; -fx-text-fill: #94A3B8;"
                     + " -fx-padding: 2 6;");
         }

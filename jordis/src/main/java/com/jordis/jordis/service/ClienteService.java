@@ -16,6 +16,8 @@ import java.util.Optional;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final AutenticacionService autenticacionService;
+    private final AuditoriaService auditoriaService;
 
     public List<Cliente> obtenerTodos() {
         return clienteRepository.findActivos();
@@ -47,8 +49,13 @@ public class ClienteService {
         c.setTelefono(telefono);
         c.setDireccion(direccion);
         c.setActivo(true);
+        c.setActivo(true);
+        Cliente guardado = clienteRepository.save(c);
         log.info("Cliente persona creado: {} {}", nombre, apellido);
-        return clienteRepository.save(c);
+        auditoriaService.registrar(autenticacionService.getUsuarioActivo(),
+                "CLIENTE_CREADO", "Cliente", guardado.getIdCliente(),
+                nombre + " " + apellido);
+        return guardado;
     }
 
     @Transactional
@@ -68,8 +75,11 @@ public class ClienteService {
         c.setTelefono(telefono);
         c.setDireccion(direccion);
         c.setActivo(true);
+        Cliente guardado = clienteRepository.save(c);
         log.info("Cliente empresa creado: {}", razonSocial);
-        return clienteRepository.save(c);
+        auditoriaService.registrar(autenticacionService.getUsuarioActivo(),
+                "CLIENTE_CREADO", "Cliente", guardado.getIdCliente(), razonSocial);
+        return guardado;
     }
 
     @Transactional

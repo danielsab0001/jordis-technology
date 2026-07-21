@@ -92,7 +92,7 @@
                 <graphic><Label text="🏭" styleClass="sidebar-icon"/></graphic>
                 <VBox.margin><Insets left="8" right="8"/></VBox.margin>
             </Button>
-            <Button fx:id="btnCreditos" text="Créditos" styleClass="sidebar-button"
+            <Button fx:id="btnCreditos" text="Cuentas x Cobrar" styleClass="sidebar-button"
                     contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onCreditos">
                 <graphic><Label text="📋" styleClass="sidebar-icon"/></graphic>
                 <VBox.margin><Insets left="8" right="8"/></VBox.margin>
@@ -100,6 +100,11 @@
             <Button fx:id="btnCuentasPorPagar" text="Cuentas x Pagar" styleClass="sidebar-button"
                     contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onCuentasPorPagar">
                 <graphic><Label text="💳" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnCierreCaja" text="Cierre de Caja" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onCierreCaja">
+                <graphic><Label text="🧾" styleClass="sidebar-icon"/></graphic>
                 <VBox.margin><Insets left="8" right="8"/></VBox.margin>
             </Button>
 
@@ -120,6 +125,11 @@
             <Button fx:id="btnUsuarios" text="Usuarios" styleClass="sidebar-button"
                     contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onUsuarios">
                 <graphic><Label text="👤" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnAuditoria" text="Auditoría" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onAuditoria">
+                <graphic><Label text="🕵" styleClass="sidebar-icon"/></graphic>
                 <VBox.margin><Insets left="8" right="8"/></VBox.margin>
             </Button>
             <Button fx:id="btnCategorias" text="Categorías" styleClass="sidebar-button"

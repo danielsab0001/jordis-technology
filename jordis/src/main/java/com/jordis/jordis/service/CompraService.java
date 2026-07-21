@@ -27,6 +27,8 @@ public class CompraService {
     private final CompraEdicionRepository edicionRepository;
     private final CuentaPorPagarService cuentaPorPagarService;
     private final CuentaPorPagarRepository cuentaPorPagarRepository;
+    private final AutenticacionService autenticacionService;
+    private final AuditoriaService auditoriaService;
 
     // Margen de ganancia por defecto: 30%
     private static final BigDecimal MARGEN_DEFAULT = new BigDecimal("1.30");
@@ -85,6 +87,10 @@ public class CompraService {
         Compra guardada = compraRepository.save(compra);
         log.info("Compra #{} registrada — PENDIENTE — Total: {}",
                 guardada.getIdCompra(), total);
+
+        auditoriaService.registrar(autenticacionService.getUsuarioActivo(),
+                "COMPRA_REGISTRADA", "Compra", guardada.getIdCompra(),
+                "Proveedor: " + proveedor.getNombre() + " — RD$" + total.toPlainString());
         return guardada;
     }
 

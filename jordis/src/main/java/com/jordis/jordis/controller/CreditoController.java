@@ -88,6 +88,25 @@ public class CreditoController {
     }
 
     @FXML
+    public void onVerVencidos() {
+        filtrarVencidos();
+    }
+
+    public void filtrarVencidos() {
+        List<Venta> vencidos = obtenerVencidos();
+        paginador.setDatos(vencidos);
+        mostrarMensaje(vencidos.size() + " crédito(s) vencido(s).", false);
+    }
+
+    private List<Venta> obtenerVencidos() {
+        return ventaService.obtenerCreditos().stream()
+                .filter(v -> !v.estaCancelado()
+                        && v.getFechaLimiteCredito() != null
+                        && v.getFechaLimiteCredito().isBefore(LocalDateTime.now()))
+                .toList();
+    }
+
+    @FXML
     public void onVerPorVencer() {
         LocalDateTime limite = LocalDateTime.now().plusDays(7);
         List<Venta> porVencer = ventaService.obtenerCreditos().stream()

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.CierreCajaController"
+      spacing="0" style="-fx-background-color: #F1F5F9;">
+
+    <HBox style="-fx-background-color: white; -fx-padding: 16 24;
+                 -fx-border-color: #E2E8F0; -fx-border-width: 0 0 1 0;"
+          alignment="CENTER_LEFT" spacing="12">
+        <Text text="🧾  Cierre de Caja"
+              style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #0F172A;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="lblEstadoCaja" text="" visible="false" managed="false"
+               style="-fx-background-color: #0F172A; -fx-text-fill: white;
+                      -fx-padding: 5 12; -fx-background-radius: 6;
+                      -fx-font-size: 12; -fx-font-weight: bold;"/>
+        <Button text="📜  Historial de cierres" onAction="#onVerHistorial"
+                style="-fx-background-color: #F8FAFC; -fx-text-fill: #374151;
+                       -fx-border-color: #E2E8F0; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 8 14; -fx-cursor: hand;"/>
+    </HBox>
+
+    <ScrollPane fitToWidth="true"
+                style="-fx-background: #F1F5F9; -fx-background-color: #F1F5F9;">
+        <VBox spacing="14" style="-fx-padding: 18 24;">
+
+            <!-- Panel: no hay caja abierta -->
+            <VBox fx:id="panelAbrirCaja" alignment="CENTER" spacing="14"
+                  style="-fx-background-color: white; -fx-padding: 40;
+                         -fx-border-radius: 10; -fx-background-radius: 10;
+                         -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                <Label text="🔓" style="-fx-font-size: 36;"/>
+                <Label text="No hay una caja abierta actualmente"
+                       style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                <Label text="Abre la caja para empezar a registrar el turno."
+                       style="-fx-font-size: 12; -fx-text-fill: #94A3B8;"/>
+                <HBox spacing="16" alignment="CENTER" style="-fx-padding: 10 0 0 0;">
+                    <VBox spacing="4">
+                        <Label text="Caja / sucursal" style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtNombreCajaApertura" text="Caja Principal"
+                                   prefWidth="220" prefHeight="34" style="-fx-font-size: 12;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="Fondo inicial (efectivo)" style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+                        <TextField fx:id="txtFondoInicialApertura" text="0.00"
+                                   prefWidth="160" prefHeight="34" style="-fx-font-size: 12;"/>
+                    </VBox>
+                </HBox>
+                <Button text="🔓  Abrir Caja" onAction="#onAbrirCaja"
+                        prefWidth="200" prefHeight="42"
+                        style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                               -fx-font-size: 13; -fx-font-weight: bold;
+                               -fx-background-radius: 8; -fx-cursor: hand;"/>
+                <Label fx:id="lblMensajeApertura" text=""
+                       style="-fx-font-size: 12; -fx-text-fill: #DC2626;"/>
+            </VBox>
+
+            <!-- Panel: caja abierta / cierre en curso -->
+            <VBox fx:id="panelCierre" spacing="14" visible="false" managed="false">
+
+                <HBox spacing="24" alignment="CENTER_LEFT"
+                      style="-fx-background-color: white; -fx-padding: 16 20;
+                             -fx-border-radius: 10; -fx-background-radius: 10;
+                             -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                    <VBox spacing="4">
+                        <Label text="CAJA / SUCURSAL" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                        <Label fx:id="lblNombreCaja" style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="CAJERO" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                        <Label fx:id="lblCajero" style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="APERTURA (real)" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                        <Label fx:id="lblApertura" style="-fx-font-size: 13; -fx-text-fill: #374151;"/>
+                    </VBox>
+                    <VBox spacing="4">
+                        <Label text="FONDO INICIAL" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                        <Label fx:id="lblFondoInicial" style="-fx-font-size: 13; -fx-text-fill: #374151;"/>
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="↻  Recalcular" onAction="#onRecalcular"
+                            style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;
+                                   -fx-border-color: #BFDBFE; -fx-border-radius: 6;
+                                   -fx-background-radius: 6; -fx-font-size: 12;
+                                   -fx-padding: 8 14; -fx-cursor: hand;"/>
+                </HBox>
+
+                <HBox spacing="10">
+                    <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 14 16;
+                          -fx-border-radius: 10; -fx-background-radius: 10;
+                          -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                        <Label text="TOTAL VENDIDO" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                        <Label fx:id="lblTotalVentas" text="RD$0.00" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #2563EB;"/>
+                    </VBox>
+                    <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 14 16;
+                          -fx-border-radius: 10; -fx-background-radius: 10;
+                          -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                        <Label text="NÚMERO DE VENTAS" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                        <Label fx:id="lblNumeroVentas" text="0" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                    </VBox>
+                    <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 14 16;
+                          -fx-border-radius: 10; -fx-background-radius: 10;
+                          -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                        <Label text="TICKET PROMEDIO" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                        <Label fx:id="lblTicketPromedio" text="RD$0.00" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                    </VBox>
+                    <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 14 16;
+                          -fx-border-radius: 10; -fx-background-radius: 10;
+                          -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                        <Label text="PRODUCTOS VENDIDOS" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                        <Label fx:id="lblProductosVendidos" text="0" style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="10">
+                    <VBox prefWidth="330" style="-fx-background-color: white; -fx-border-radius: 10;
+                          -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                        <Label text="💳  Desglose por método de pago"
+                               style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;
+                                      -fx-padding: 12 16 8 16;"/>
+                        <Separator/>
+                        <VBox spacing="0" style="-fx-padding: 4 0;">
+                            <HBox style="-fx-padding: 9 16; -fx-border-color: #F1F5F9; -fx-border-width: 0 0 1 0;" alignment="CENTER_LEFT">
+                                <Label text="Efectivo" style="-fx-font-size: 12; -fx-text-fill: #374151;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblEfectivo" text="RD$0.00" style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #15803D;"/>
+                            </HBox>
+                            <HBox style="-fx-padding: 9 16; -fx-border-color: #F1F5F9; -fx-border-width: 0 0 1 0;" alignment="CENTER_LEFT">
+                                <Label text="Tarjeta" style="-fx-font-size: 12; -fx-text-fill: #374151;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblTarjeta" text="RD$0.00" style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                            </HBox>
+                            <HBox style="-fx-padding: 9 16; -fx-border-color: #F1F5F9; -fx-border-width: 0 0 1 0;" alignment="CENTER_LEFT">
+                                <Label text="Transferencia" style="-fx-font-size: 12; -fx-text-fill: #374151;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblTransferencia" text="RD$0.00" style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                            </HBox>
+                            <HBox style="-fx-padding: 9 16;" alignment="CENTER_LEFT">
+                                <Label text="Crédito" style="-fx-font-size: 12; -fx-text-fill: #374151;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblCredito" text="RD$0.00" style="-fx-font-size: 13; -fx-font-weight: bold; -fx-text-fill: #B45309;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+
+                    <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-border-radius: 10;
+                          -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                        <Label text="💰  Movimientos de efectivo"
+                               style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;
+                                      -fx-padding: 12 16 8 16;"/>
+                        <Separator/>
+                        <VBox spacing="10" style="-fx-padding: 14 16;">
+                            <HBox spacing="10">
+                                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                    <Label text="Gastos" style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+                                    <TextField fx:id="txtGastos" text="0.00" prefHeight="30" style="-fx-font-size: 12;"/>
+                                </VBox>
+                                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                                    <Label text="Retiros parciales" style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+                                    <TextField fx:id="txtRetiros" text="0.00" prefHeight="30" style="-fx-font-size: 12;"/>
+                                </VBox>
+                            </HBox>
+                            <Separator/>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Fondo inicial" style="-fx-font-size: 12; -fx-text-fill: #374151;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblFondoInicialMov" text="RD$0.00" style="-fx-font-size: 12; -fx-text-fill: #374151;"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Pagos de créditos recibidos" style="-fx-font-size: 12; -fx-text-fill: #374151;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblPagosCreditos" text="RD$0.00" style="-fx-font-size: 12; -fx-text-fill: #15803D;"/>
+                            </HBox>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Pagos a proveedores" style="-fx-font-size: 12; -fx-text-fill: #374151;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblPagosProveedores" text="- RD$0.00" style="-fx-font-size: 12; -fx-text-fill: #DC2626;"/>
+                            </HBox>
+                            <Separator/>
+                            <HBox alignment="CENTER_LEFT" style="-fx-padding: 4 0 0 0;">
+                                <Label text="EFECTIVO ESPERADO" style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label fx:id="lblEfectivoEsperado" text="RD$0.00" style="-fx-font-size: 16; -fx-font-weight: bold; -fx-text-fill: #2563EB;"/>
+                            </HBox>
+                        </VBox>
+                    </VBox>
+                </HBox>
+
+                <VBox style="-fx-background-color: white; -fx-padding: 16 20; -fx-border-radius: 10;
+                      -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                    <Label text="🧮  Conteo físico"
+                           style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A; -fx-padding: 0 0 10 0;"/>
+                    <HBox spacing="20" alignment="CENTER_LEFT">
+                        <VBox spacing="4" prefWidth="240">
+                            <Label text="Efectivo contado" style="-fx-font-size: 11; -fx-text-fill: #64748B;"/>
+                            <TextField fx:id="txtEfectivoContado" promptText="0.00"
+                                       prefHeight="38" style="-fx-font-size: 14;"/>
+                        </VBox>
+                        <VBox fx:id="cajaResultado" HBox.hgrow="ALWAYS" alignment="CENTER"
+                              style="-fx-background-color: #F0FDF4; -fx-background-radius: 10;
+                                     -fx-padding: 16; -fx-border-color: #15803D; -fx-border-radius: 10;
+                                     -fx-border-width: 1.5;">
+                            <Label fx:id="lblDiferenciaTexto" text="✔ EXACTO   RD$0.00"
+                                   style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #15803D;"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <HBox spacing="10">
+                    <VBox prefWidth="380" style="-fx-background-color: white; -fx-padding: 16 20; -fx-border-radius: 10;
+                          -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                        <HBox alignment="CENTER_LEFT" spacing="8">
+                            <Label text="📝  Observaciones"
+                                   style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+                            <Label fx:id="lblObsRequerida" text="obligatorio — hay una diferencia"
+                                   visible="false" managed="false"
+                                   style="-fx-font-size: 11; -fx-text-fill: #DC2626; -fx-font-weight: bold;"/>
+                        </HBox>
+                        <TextArea fx:id="txtObservacion" promptText="Explica cualquier diferencia, gasto o novedad del turno..."
+                                  prefHeight="150" wrapText="true"
+                                  style="-fx-font-size: 12; -fx-padding: 8 0 0 0;"/>
+                    </VBox>
+
+                    <VBox HBox.hgrow="ALWAYS" spacing="10">
+                        <HBox spacing="10">
+                            <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 12 16;
+                                  -fx-border-radius: 10; -fx-background-radius: 10;
+                                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                                <Label text="CRÉDITOS COBRADOS HOY" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                                <Label fx:id="lblCreditosCobradosHoy" text="RD$0.00" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #15803D;"/>
+                            </VBox>
+                            <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 12 16;
+                                  -fx-border-radius: 10; -fx-background-radius: 10;
+                                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                                <Label text="PAGOS A PROVEEDORES HOY" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                                <Label fx:id="lblPagosProveedoresHoy" text="RD$0.00" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #DC2626;"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="10">
+                            <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 12 16;
+                                  -fx-border-radius: 10; -fx-background-radius: 10;
+                                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                                <Label text="TOTAL POR COBRAR (info.)" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                                <Label fx:id="lblTotalPorCobrar" text="RD$0.00" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #B45309;"/>
+                            </VBox>
+                            <VBox HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 12 16;
+                                  -fx-border-radius: 10; -fx-background-radius: 10;
+                                  -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05),6,0,0,2);">
+                                <Label text="TOTAL POR PAGAR (info.)" style="-fx-font-size: 9; -fx-font-weight: bold; -fx-text-fill: #94A3B8;"/>
+                                <Label fx:id="lblTotalPorPagar" text="RD$0.00" style="-fx-font-size: 15; -fx-font-weight: bold; -fx-text-fill: #B45309;"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </HBox>
+
+                <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 6 0 20 0;">
+                    <Button fx:id="btnCerrarCaja" text="🔒  Cerrar Caja" onAction="#onCerrarCaja"
+                            prefHeight="42" prefWidth="180"
+                            style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                                   -fx-font-size: 13; -fx-font-weight: bold;
+                                   -fx-background-radius: 8; -fx-cursor: hand;"/>
+                    <Button fx:id="btnExportarPdf" text="📄  Exportar PDF" onAction="#onExportarPdf"
+                            prefHeight="42" prefWidth="170"
+                            style="-fx-background-color: #F8FAFC; -fx-text-fill: #374151;
+                                   -fx-border-color: #E2E8F0; -fx-border-radius: 8;
+                                   -fx-background-radius: 8; -fx-font-size: 13; -fx-cursor: hand;"/>
+                    <Label fx:id="lblMensaje" text=""/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </ScrollPane>
+</VBox>

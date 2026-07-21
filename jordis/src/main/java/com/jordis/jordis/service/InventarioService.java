@@ -23,6 +23,8 @@ public class InventarioService {
     private final ProductoRepository productoRepository;
     private final AjusteInventarioRepository ajusteRepository;
     private final VentaRepository ventaRepository;
+    private final AutenticacionService autenticacionService;
+    private final AuditoriaService auditoriaService;
 
     // Días a analizar para la recomendación
     private static final int DIAS_ANALISIS = 30;
@@ -93,6 +95,11 @@ public class InventarioService {
 
         log.info("Ajuste inventario — Producto: {} | Cantidad: {} | Nuevo stock: {} | Motivo: {}",
                 producto.getNombre(), cantidad, nuevoStock, motivo);
+
+        auditoriaService.registrar(autenticacionService.getUsuarioActivo(),
+                "INVENTARIO_AJUSTADO", "Producto", idProducto,
+                producto.getNombre() + ": " + (cantidad >= 0 ? "+" : "") + cantidad
+                        + " u. (" + motivo + ") — Nuevo stock: " + nuevoStock);
     }
 
     @Transactional

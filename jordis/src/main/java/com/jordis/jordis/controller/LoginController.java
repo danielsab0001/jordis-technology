@@ -65,6 +65,11 @@ public class LoginController {
             txtContrasena.clear();
             btnIngresar.setDisable(false);
 
+        } catch (AutenticacionService.SesionActivaException e) {
+            mostrarError(e.getMessage());
+            txtContrasena.clear();
+            btnIngresar.setDisable(false);
+
         } catch (AutenticacionService.CuentaDesactivadaException e) {
             // Mostrar mensaje pero NO bloquear el formulario
             mostrarError(e.getMessage());

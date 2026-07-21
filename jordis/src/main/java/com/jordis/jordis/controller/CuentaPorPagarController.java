@@ -245,6 +245,18 @@ public class CuentaPorPagarController {
     }
 
     @FXML
+    public void onVerVencidas() {
+        List<CuentaPorPagar> vencidas = cuentaService.obtenerTodas()
+                .stream()
+                .filter(c -> !c.estaCancelada()
+                        && c.getFechaLimite() != null
+                        && c.getFechaLimite().isBefore(LocalDateTime.now()))
+                .toList();
+        paginador.setDatos(vencidas);
+        mostrarMensaje(vencidas.size() + " cuenta(s) vencida(s).", false);
+    }
+
+    @FXML
     public void onVerPorVencer() {
         LocalDateTime limite = LocalDateTime.now().plusDays(7);
         List<CuentaPorPagar> porVencer = cuentaService.obtenerTodas()

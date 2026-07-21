@@ -20,6 +20,7 @@ public class DashboardService {
     private final ClienteRepository        clienteRepository;
     private final CuentaPorPagarRepository cuentaPorPagarRepository;
     private final AlertaSistemaRepository  alertaRepository;
+    private final AuditoriaLogRepository   auditoriaLogRepository;
 
     // ── Período dinámico ──────────────────────────────────────────────
 
@@ -62,7 +63,6 @@ public class DashboardService {
                 2, RoundingMode.HALF_UP);
     }
 
-    // Variación vs período anterior equivalente
     public double getVariacionVentas(LocalDateTime desde,
                                      LocalDateTime hasta) {
         Duration duracion = Duration.between(desde, hasta);
@@ -87,20 +87,40 @@ public class DashboardService {
         return ((double)(actual - anterior) / anterior) * 100;
     }
 
-    // ── Ventas por período (gráfica) ──────────────────────────────────
+    // ── Serie de la gráfica, correcta para cada métrica ───────────────
 
-    public Map<String, BigDecimal> getVentasPorPeriodo(String periodo) {
-        Map<String, BigDecimal> resultado = new LinkedHashMap<>();
+    public Map<String, Double> getSeriePorPeriodo(String periodo, String metrica) {
+        Map<String, List<Venta>> porBucket = agruparVentasPorBucket(periodo);
+        Map<String, Double> resultado = new LinkedHashMap<>();
+        for (var e : porBucket.entrySet()) {
+            List<Venta> ventas = e.getValue();
+            double valor = switch (metrica) {
+                case "CANTIDAD" -> ventas.size();
+                case "TICKET" -> ventas.isEmpty() ? 0 :
+                        ventas.stream().mapToDouble(v -> v.getTotal().doubleValue()).sum()
+                                / ventas.size();
+                case "PRODUCTOS" -> ventas.stream()
+                        .flatMap(v -> v.getDetalles().stream())
+                        .mapToLong(VentaProducto::getCantidad).sum();
+                default -> ventas.stream()
+                        .mapToDouble(v -> v.getTotal().doubleValue()).sum();
+            };
+            resultado.put(e.getKey(), valor);
+        }
+        return resultado;
+    }
+
+    private Map<String, List<Venta>> agruparVentasPorBucket(String periodo) {
+        Map<String, List<Venta>> resultado = new LinkedHashMap<>();
         DateTimeFormatter fmt;
 
         switch (periodo) {
             case "HOY" -> {
                 fmt = DateTimeFormatter.ofPattern("HH:00");
-                // Últimas 12 horas
                 for (int i = 11; i >= 0; i--) {
                     LocalDateTime hora = LocalDateTime.now()
                             .minusHours(i).withMinute(0).withSecond(0);
-                    resultado.put(hora.format(fmt), BigDecimal.ZERO);
+                    resultado.put(hora.format(fmt), new ArrayList<>());
                 }
                 ventaRepository.findActivas().stream()
                         .filter(v -> v.getFechaHora().toLocalDate()
@@ -108,23 +128,20 @@ public class DashboardService {
                         .forEach(v -> {
                             String key = v.getFechaHora()
                                     .withMinute(0).withSecond(0).format(fmt);
-                            resultado.merge(key, v.getTotal(), BigDecimal::add);
+                            resultado.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
                         });
             }
             case "SEMANA" -> {
-                fmt = DateTimeFormatter.ofPattern("EEE dd",
-                        new Locale("es"));
+                fmt = DateTimeFormatter.ofPattern("EEE dd", new Locale("es"));
                 for (int i = 6; i >= 0; i--) {
                     LocalDate dia = LocalDate.now().minusDays(i);
-                    resultado.put(dia.format(fmt), BigDecimal.ZERO);
+                    resultado.put(dia.format(fmt), new ArrayList<>());
                 }
-                LocalDateTime desde = LocalDate.now().minusDays(6)
-                        .atStartOfDay();
+                LocalDateTime desde = LocalDate.now().minusDays(6).atStartOfDay();
                 ventaRepository.findEntreFechas(desde, LocalDateTime.now())
                         .stream().filter(v -> !v.getAnulada()).forEach(v -> {
-                            String key = v.getFechaHora().toLocalDate()
-                                    .format(fmt);
-                            resultado.merge(key, v.getTotal(), BigDecimal::add);
+                            String key = v.getFechaHora().toLocalDate().format(fmt);
+                            resultado.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
                         });
             }
             case "MES" -> {
@@ -133,29 +150,25 @@ public class DashboardService {
                 LocalDate hoy    = LocalDate.now();
                 LocalDate cursor = inicio;
                 while (!cursor.isAfter(hoy)) {
-                    resultado.put(cursor.format(fmt), BigDecimal.ZERO);
+                    resultado.put(cursor.format(fmt), new ArrayList<>());
                     cursor = cursor.plusDays(1);
                 }
                 ventaRepository.findEntreFechas(
                                 inicio.atStartOfDay(), LocalDateTime.now())
                         .stream().filter(v -> !v.getAnulada()).forEach(v -> {
-                            String key = v.getFechaHora().toLocalDate()
-                                    .format(fmt);
-                            resultado.merge(key, v.getTotal(), BigDecimal::add);
+                            String key = v.getFechaHora().toLocalDate().format(fmt);
+                            resultado.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
                         });
             }
             default -> {
-                fmt = DateTimeFormatter.ofPattern("MMM",
-                        new Locale("es"));
+                fmt = DateTimeFormatter.ofPattern("MMM", new Locale("es"));
                 for (int i = 11; i >= 0; i--) {
-                    String mes = LocalDate.now().minusMonths(i)
-                            .format(fmt);
-                    resultado.put(mes, BigDecimal.ZERO);
+                    String mes = LocalDate.now().minusMonths(i).format(fmt);
+                    resultado.put(mes, new ArrayList<>());
                 }
                 ventaRepository.findActivas().forEach(v -> {
-                    String key = v.getFechaHora().toLocalDate()
-                            .format(fmt);
-                    resultado.merge(key, v.getTotal(), BigDecimal::add);
+                    String key = v.getFechaHora().toLocalDate().format(fmt);
+                    resultado.computeIfAbsent(key, k -> new ArrayList<>()).add(v);
                 });
             }
         }
@@ -179,8 +192,12 @@ public class DashboardService {
                 });
 
         return agrupado.entrySet().stream()
-                .sorted((a, b) -> Long.compare(
-                        b.getValue()[0], a.getValue()[0]))
+                .sorted((a, b) -> {
+                    int porUnidades = Long.compare(b.getValue()[0], a.getValue()[0]);
+                    return porUnidades != 0
+                            ? porUnidades
+                            : Long.compare(b.getValue()[1], a.getValue()[1]);
+                })
                 .limit(limite)
                 .map(e -> {
                     Map<String, Object> m = new LinkedHashMap<>();
@@ -303,11 +320,11 @@ public class DashboardService {
                 .limit(4).toList();
     }
 
-    // ── Actividad reciente ────────────────────────────────────────────
+    // ── Actividad reciente (toda la actividad, no solo ventas) ────────
 
-    public List<Venta> getVentasRecientes() {
-        return ventaRepository.findActivas().stream()
-                .limit(8).toList();
+    public List<AuditoriaLog> getActividadReciente(int limite) {
+        return auditoriaLogRepository.findTodas().stream()
+                .limit(limite).toList();
     }
 
     // ── Metas de ventas ───────────────────────────────────────────────

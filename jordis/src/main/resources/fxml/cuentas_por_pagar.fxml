@@ -32,6 +32,11 @@
                    style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
                       -fx-border-radius: 6; -fx-background-radius: 6;
                       -fx-padding: 4 10;"/>
+        <Button text="Vencidas" onAction="#onVerVencidas"
+                style="-fx-background-color: #FEE2E2; -fx-text-fill: #DC2626;
+                   -fx-border-color: #FCA5A5; -fx-border-radius: 6;
+                   -fx-background-radius: 6; -fx-font-size: 12;
+                   -fx-padding: 6 12; -fx-cursor: hand;"/>
         <Button text="Por vencer (7 días)" onAction="#onVerPorVencer"
                 style="-fx-background-color: #FEF3C7; -fx-text-fill: #B45309;
                    -fx-border-color: #FDE68A; -fx-border-radius: 6;

@@ -2,6 +2,7 @@ package com.jordis.jordis.controller;
 
 import com.jordis.jordis.model.Cliente;
 import com.jordis.jordis.service.ClienteService;
+import com.jordis.jordis.util.DominicanoValidador;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
@@ -83,6 +84,7 @@ public class ClienteFormController {
         boolean esEmpresa = rbEmpresa.isSelected();
 
         try {
+            validarDatosComunes(esEmpresa);
             if (clienteEditar == null) {
                 if (esEmpresa) {
                     validarNoVacio(txtRazonSocial, "La razón social es obligatoria.");
@@ -124,6 +126,32 @@ public class ClienteFormController {
             lblError.setText(e.getMessage());
         } catch (Exception e) {
             lblError.setText("Error inesperado: " + e.getMessage());
+        }
+    }
+
+    private void validarDatosComunes(boolean esEmpresa) {
+        if (esEmpresa) {
+            String rnc = txtRnc.getText() != null ? txtRnc.getText().trim() : "";
+            if (!rnc.isEmpty() && !DominicanoValidador.esRncValido(rnc)) {
+                throw new ValidacionException(
+                        "El RNC debe tener 9 dígitos (o 11 si es la cédula de una "
+                                + "persona física usada como RNC). Verifica el número.");
+            }
+        } else {
+            String cedula = txtCedula.getText() != null ? txtCedula.getText().trim() : "";
+            if (!cedula.isEmpty() && !DominicanoValidador.esCedulaValida(cedula)) {
+                throw new ValidacionException(
+                        "La cédula ingresada no es válida — revisa que los 11 "
+                                + "dígitos estén correctos (incluyendo el último, "
+                                + "que es un dígito verificador).");
+            }
+        }
+
+        String telefono = txtTelefono.getText() != null ? txtTelefono.getText().trim() : "";
+        if (!telefono.isEmpty() && !DominicanoValidador.esTelefonoValido(telefono)) {
+            throw new ValidacionException(
+                    "El teléfono debe tener 10 dígitos con código de área "
+                            + "809, 829 u 849 (ej: 809-555-1234).");
         }
     }
 

@@ -24,6 +24,8 @@ public class VentaService {
     private final ProductoRepository     productoRepository;
     private final CreditoPagoRepository  creditoPagoRepository;
     private final ClienteRepository      clienteRepository;
+    private final AuditoriaService auditoriaService;
+    private final AutenticacionService autenticacionService;
     private final AlertaService alertaService;
     private final NCFService ncfService;
     private final JdbcTemplate jdbcTemplate;
@@ -233,6 +235,11 @@ public class VentaService {
         log.info("Venta #{} registrada — Factura: {} — Total: {} — Cajero: {}",
                 guardada.getIdVenta(), numeroFactura,
                 guardada.getTotal(), cajero.getNombreCompleto());
+
+        auditoriaService.registrar(cajero, "VENTA_REGISTRADA", "Venta",
+                guardada.getIdVenta(),
+                "Factura " + numeroFactura + " — RD$" + guardada.getTotal().toPlainString());
+
         return guardada;
     }
 
@@ -301,6 +308,13 @@ public class VentaService {
         venta.setMotivoAnulacion(motivo);
         ventaRepository.save(venta);
         log.info("Venta #{} anulada. Motivo: {}", idVenta, motivo);
+
+        auditoriaService.registrar(
+                autenticacionService.getUsuarioActivo(),
+                "VENTA_ANULADA", "Venta", idVenta,
+                "Factura " + venta.getNumeroFactura()
+                        + " — Total: RD$" + venta.getTotal().toPlainString()
+                        + " — Motivo: " + motivo);
     }
 
     private String generarNumeroFactura() {

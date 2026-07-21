@@ -15,6 +15,8 @@ import java.util.List;
 public class ProveedorService {
 
     private final ProveedorRepository proveedorRepository;
+    private final AutenticacionService autenticacionService;
+    private final AuditoriaService auditoriaService;
 
     public List<Proveedor> obtenerTodos() {
         return proveedorRepository.findActivos();
@@ -40,8 +42,11 @@ public class ProveedorService {
         p.setDireccion(direccion);
         p.setDescripcion(descripcion);
         p.setActivo(true);
+        Proveedor guardado = proveedorRepository.save(p);
         log.info("Proveedor creado: {}", nombre);
-        return proveedorRepository.save(p);
+        auditoriaService.registrar(autenticacionService.getUsuarioActivo(),
+                "PROVEEDOR_CREADO", "Proveedor", guardado.getIdProveedor(), nombre);
+        return guardado;
     }
 
     @Transactional

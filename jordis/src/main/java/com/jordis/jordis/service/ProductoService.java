@@ -19,6 +19,8 @@ public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final AuditoriaService auditoriaService;
+    private final AutenticacionService autenticacionService;
 
     public List<Producto> obtenerTodos() {
         return productoRepository.findByActivoTrue();
@@ -58,7 +60,10 @@ public class ProductoService {
         producto.setActivo(true);
 
         log.info("Producto creado: {}", nombre);
-        return productoRepository.save(producto);
+        Producto guardado = productoRepository.save(producto);
+        auditoriaService.registrar(autenticacionService.getUsuarioActivo(),
+                "PRODUCTO_CREADO", "Producto", guardado.getIdProducto(), nombre);
+        return guardado;
     }
 
     @Transactional
@@ -67,6 +72,8 @@ public class ProductoService {
                                Categoria categoria, String marca, String modelo) {
 
         Producto producto = obtenerPorId(id);
+        BigDecimal precioAnterior = producto.getPrecioUnitario();
+
         producto.setNombre(nombre);
         producto.setDescripcion(descripcion);
         producto.setPrecioUnitario(precio);
@@ -76,8 +83,19 @@ public class ProductoService {
         producto.setMarca(marca);
         producto.setModelo(modelo);
 
+        Producto guardado = productoRepository.save(producto);
         log.info("Producto actualizado: {}", nombre);
-        return productoRepository.save(producto);
+
+        if (precioAnterior != null && precio != null
+                && precioAnterior.compareTo(precio) != 0) {
+            auditoriaService.registrar(
+                    autenticacionService.getUsuarioActivo(),
+                    "PRECIO_MODIFICADO", "Producto", id,
+                    "'" + nombre + "': RD$" + precioAnterior.toPlainString()
+                            + " → RD$" + precio.toPlainString());
+        }
+
+        return guardado;
     }
 
     @Transactional

@@ -222,22 +222,28 @@
                                          -fx-padding: 12 14;
                                          -fx-effect: dropshadow(gaussian,
                                              rgba(0,0,0,0.05),6,0,0,2);">
-                                <Label text="⚡  Acceso rápido"
+                                <Label text=" Acceso rápido"
                                        style="-fx-font-size: 12;
                                               -fx-font-weight: bold;
                                               -fx-text-fill: #0F172A;
                                               -fx-padding: 0 0 8 0;"/>
-                                <Button text="＋  Nueva venta"
+                                <Button text="Nueva venta"
                                         onAction="#onAccesoVenta"
+                                        contentDisplay="LEFT" graphicTextGap="10"
                                         prefWidth="232" prefHeight="36"
                                         style="-fx-background-color: #2563EB;
                                                -fx-text-fill: white;
                                                -fx-font-size: 12;
+                                               -fx-alignment: CENTER_LEFT;
+                                               -fx-padding: 0 0 0 14;
                                                -fx-background-radius: 7;
-                                               -fx-cursor: hand;"/>
+                                               -fx-cursor: hand;">
+                                    <graphic><Label text="＋" style="-fx-text-fill: white; -fx-font-size: 14; -fx-min-width: 16;"/></graphic>
+                                </Button>
                                 <Region prefHeight="5"/>
-                                <Button text="＋  Nueva compra"
+                                <Button text="Nueva compra"
                                         onAction="#onAccesoCompra"
+                                        contentDisplay="LEFT" graphicTextGap="10"
                                         prefWidth="232" prefHeight="32"
                                         style="-fx-background-color: #F8FAFC;
                                                -fx-text-fill: #374151;
@@ -245,10 +251,15 @@
                                                -fx-border-radius: 7;
                                                -fx-background-radius: 7;
                                                -fx-font-size: 11;
-                                               -fx-cursor: hand;"/>
+                                               -fx-alignment: CENTER_LEFT;
+                                               -fx-padding: 0 0 0 14;
+                                               -fx-cursor: hand;">
+                                    <graphic><Label text="＋" style="-fx-text-fill: #374151; -fx-font-size: 13; -fx-min-width: 16;"/></graphic>
+                                </Button>
                                 <Region prefHeight="3"/>
-                                <Button text="＋  Nuevo cliente"
+                                <Button text="Nuevo cliente"
                                         onAction="#onAccesoCliente"
+                                        contentDisplay="LEFT" graphicTextGap="10"
                                         prefWidth="232" prefHeight="32"
                                         style="-fx-background-color: #F8FAFC;
                                                -fx-text-fill: #374151;
@@ -256,10 +267,15 @@
                                                -fx-border-radius: 7;
                                                -fx-background-radius: 7;
                                                -fx-font-size: 11;
-                                               -fx-cursor: hand;"/>
+                                               -fx-alignment: CENTER_LEFT;
+                                               -fx-padding: 0 0 0 14;
+                                               -fx-cursor: hand;">
+                                    <graphic><Label text="＋" style="-fx-text-fill: #374151; -fx-font-size: 13; -fx-min-width: 16;"/></graphic>
+                                </Button>
                                 <Region prefHeight="3"/>
-                                <Button text="📦  Inventario"
+                                <Button text="Inventario"
                                         onAction="#onAccesoInventario"
+                                        contentDisplay="LEFT" graphicTextGap="10"
                                         prefWidth="232" prefHeight="32"
                                         style="-fx-background-color: #F8FAFC;
                                                -fx-text-fill: #374151;
@@ -267,10 +283,15 @@
                                                -fx-border-radius: 7;
                                                -fx-background-radius: 7;
                                                -fx-font-size: 11;
-                                               -fx-cursor: hand;"/>
+                                               -fx-alignment: CENTER_LEFT;
+                                               -fx-padding: 0 0 0 14;
+                                               -fx-cursor: hand;">
+                                    <graphic><Label text="📦" style="-fx-font-size: 13; -fx-min-width: 16;"/></graphic>
+                                </Button>
                                 <Region prefHeight="3"/>
-                                <Button text="🔔  Centro de alertas"
+                                <Button text="Centro de alertas"
                                         onAction="#onAccesoAlertas"
+                                        contentDisplay="LEFT" graphicTextGap="10"
                                         prefWidth="232" prefHeight="32"
                                         style="-fx-background-color: #F8FAFC;
                                                -fx-text-fill: #374151;
@@ -278,7 +299,11 @@
                                                -fx-border-radius: 7;
                                                -fx-background-radius: 7;
                                                -fx-font-size: 11;
-                                               -fx-cursor: hand;"/>
+                                               -fx-alignment: CENTER_LEFT;
+                                               -fx-padding: 0 0 0 14;
+                                               -fx-cursor: hand;">
+                                    <graphic><Label text="🔔" style="-fx-font-size: 13; -fx-min-width: 16;"/></graphic>
+                                </Button>
                             </VBox>
                         </VBox>
                     </HBox>
@@ -296,8 +321,8 @@
                                           -fx-font-weight: bold;
                                           -fx-text-fill: #0F172A;"/>
                             <Region HBox.hgrow="ALWAYS"/>
-                            <Button text="Ver ventas →"
-                                    onAction="#onAccesoVentas"
+                            <Button text="Ver todo →"
+                                    onAction="#onVerActividad"
                                     style="-fx-background-color: transparent;
                                            -fx-text-fill: #2563EB;
                                            -fx-font-size: 11;
@@ -428,20 +453,26 @@
                         </AreaChart>
                     </VBox>
 
-                    <!-- Top productos + Métodos + Comparativa -->
+                    <!-- Top productos + Métodos de pago -->
                     <HBox spacing="10">
                         <!-- Top productos enriquecido -->
-                        <VBox HBox.hgrow="ALWAYS"
+                        <VBox HBox.hgrow="ALWAYS" maxWidth="460"
                               style="-fx-background-color: white;
                                      -fx-border-radius: 10;
                                      -fx-background-radius: 10;
                                      -fx-effect: dropshadow(gaussian,
                                          rgba(0,0,0,0.05),6,0,0,2);">
-                            <HBox style="-fx-padding: 12 16 8 16;">
-                                <Label text="🏆  Top productos"
+                            <HBox style="-fx-padding: 12 16 8 16;"
+                                  alignment="CENTER_LEFT">
+                                <Label text="🏆  Productos más vendidos"
                                        style="-fx-font-size: 12;
                                               -fx-font-weight: bold;
                                               -fx-text-fill: #0F172A;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <ComboBox fx:id="cmbTopProductos"
+                                          onAction="#onCambiarTopProductos"
+                                          prefWidth="100" prefHeight="26"
+                                          style="-fx-font-size: 11;"/>
                             </HBox>
                             <Separator/>
                             <VBox fx:id="panelTopProductos"
@@ -449,42 +480,23 @@
                                   style="-fx-padding: 4 0;"/>
                         </VBox>
 
-                        <!-- Métodos + Comparativa período anterior -->
-                        <VBox spacing="10" prefWidth="290">
-                            <!-- Métodos de pago -->
-                            <VBox style="-fx-background-color: white;
-                                          -fx-border-radius: 10;
-                                          -fx-background-radius: 10;
-                                          -fx-effect: dropshadow(gaussian,
-                                              rgba(0,0,0,0.05),6,0,0,2);">
-                                <HBox style="-fx-padding: 12 16 8 16;">
-                                    <Label text="💳  Métodos de pago"
-                                           style="-fx-font-size: 12;
-                                                  -fx-font-weight: bold;
-                                                  -fx-text-fill: #0F172A;"/>
-                                </HBox>
-                                <Separator/>
-                                <VBox fx:id="panelMetodosPago"
-                                      spacing="0"
-                                      style="-fx-padding: 10 16;"/>
-                            </VBox>
-                            <!-- Comparativa período anterior -->
-                            <VBox style="-fx-background-color: white;
-                                          -fx-border-radius: 10;
-                                          -fx-background-radius: 10;
-                                          -fx-effect: dropshadow(gaussian,
-                                              rgba(0,0,0,0.05),6,0,0,2);">
-                                <HBox style="-fx-padding: 12 16 8 16;">
-                                    <Label text="📊  vs período anterior"
-                                           style="-fx-font-size: 12;
-                                                  -fx-font-weight: bold;
-                                                  -fx-text-fill: #0F172A;"/>
-                                </HBox>
-                                <Separator/>
-                                <VBox fx:id="panelComparativa"
-                                      spacing="0"
-                                      style="-fx-padding: 10 16;"/>
-                            </VBox>
+                        <!-- Métodos de pago -->
+                        <VBox prefWidth="330" maxHeight="Infinity"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <HBox style="-fx-padding: 12 16 8 16;">
+                                <Label text="💳  Métodos de pago"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;"/>
+                            </HBox>
+                            <Separator/>
+                            <VBox fx:id="panelMetodosPago"
+                                  spacing="0"
+                                  style="-fx-padding: 10 16;"/>
                         </VBox>
                     </HBox>
                 </VBox>
@@ -579,38 +591,6 @@
                                           -fx-text-fill: #94A3B8;"/>
                         </VBox>
                     </HBox>
-
-                    <!-- Barra de salud del inventario -->
-                    <VBox style="-fx-background-color: white;
-                                 -fx-border-radius: 10;
-                                 -fx-background-radius: 10;
-                                 -fx-padding: 14 18;
-                                 -fx-effect: dropshadow(gaussian,
-                                     rgba(0,0,0,0.05),6,0,0,2);">
-                        <Label text="Estado general del inventario"
-                               style="-fx-font-size: 12;
-                                      -fx-font-weight: bold;
-                                      -fx-text-fill: #0F172A;
-                                      -fx-padding: 0 0 10 0;"/>
-                        <StackPane fx:id="barraInventario"
-                                   prefHeight="16"
-                                   style="-fx-background-radius: 8;
-                                          -fx-background-color: #F1F5F9;"/>
-                        <HBox style="-fx-padding: 6 0 0 0;" spacing="16">
-                            <Label fx:id="lblLeyendaNormal"
-                                   text="● Normal"
-                                   style="-fx-text-fill: #15803D;
-                                          -fx-font-size: 11;"/>
-                            <Label fx:id="lblLeyendaBajo"
-                                   text="● Stock bajo"
-                                   style="-fx-text-fill: #B45309;
-                                          -fx-font-size: 11;"/>
-                            <Label fx:id="lblLeyendaSinStock"
-                                   text="● Sin stock"
-                                   style="-fx-text-fill: #DC2626;
-                                          -fx-font-size: 11;"/>
-                        </HBox>
-                    </VBox>
 
                     <!-- Productos críticos + Distribución por categoría -->
                     <HBox spacing="10">

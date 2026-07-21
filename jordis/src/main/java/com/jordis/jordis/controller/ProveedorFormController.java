@@ -2,6 +2,7 @@ package com.jordis.jordis.controller;
 
 import com.jordis.jordis.model.Proveedor;
 import com.jordis.jordis.service.ProveedorService;
+import com.jordis.jordis.util.DominicanoValidador;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
@@ -46,6 +47,20 @@ public class ProveedorFormController {
 
     @FXML
     public void onGuardar() {
+
+        String telefono = txtTelefono.getText() != null ? txtTelefono.getText().trim() : "";
+        if (!telefono.isEmpty() && !DominicanoValidador.esTelefonoValido(telefono)) {
+            lblError.setText("El teléfono debe tener 10 dígitos con código de "
+                    + "área 809, 829 u 849 (ej: 809-555-1234).");
+            return;
+        }
+
+        String correo = txtCorreo.getText() != null ? txtCorreo.getText().trim() : "";
+        if (!correo.isEmpty() && !DominicanoValidador.esCorreoValido(correo)) {
+            lblError.setText("El correo electrónico no tiene un formato válido.");
+            return;
+        }
+
         String nombre = txtNombre.getText().trim();
         if (nombre.isEmpty()) {
             lblError.setText("El nombre del proveedor es obligatorio.");
