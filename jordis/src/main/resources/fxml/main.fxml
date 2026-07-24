@@ -164,16 +164,6 @@
 
             <!-- Pie de barra -->
             <Separator styleClass="sidebar-separator"/>
-            <HBox style="-fx-padding: 12 16;" alignment="CENTER_LEFT" spacing="10">
-                <Label fx:id="lblRolMenu"
-                       style="-fx-background-color: #2563EB;
-                          -fx-text-fill: white; -fx-font-size: 10;
-                          -fx-font-weight: bold; -fx-padding: 2 8;
-                          -fx-background-radius: 4;"/>
-                <Label fx:id="lblUsuarioMenu"
-                       style="-fx-font-size: 12; -fx-text-fill: #94A3B8;"/>
-            </HBox>
-
         </VBox>
     </left>
 

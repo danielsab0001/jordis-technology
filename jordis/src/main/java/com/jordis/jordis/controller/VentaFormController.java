@@ -12,6 +12,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.controlsfx.control.SearchableComboBox;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -27,9 +28,9 @@ import java.util.Map;
 @Slf4j
 public class VentaFormController {
 
-    @FXML private ComboBox<Cliente>    cmbCliente;
+    @FXML private SearchableComboBox<Cliente> cmbCliente;
     @FXML private ComboBox<String>     cmbMetodoPago;
-    @FXML private ComboBox<Producto>   cmbProducto;
+    @FXML private SearchableComboBox<Producto>   cmbProducto;
     @FXML private TextField            txtCantidad;
     @FXML private TextField            txtGarantiaDesc;
     @FXML private TextField            txtGarantiaMeses;
@@ -71,6 +72,7 @@ public class VentaFormController {
     private final ObservableList<FilaVenta> detalles =
             FXCollections.observableArrayList();
     private List<Producto> todosLosProductos;
+    private List<Cliente> todosLosClientes;
     private Runnable onGuardado;
 
     @FXML
@@ -94,7 +96,8 @@ public class VentaFormController {
         // Recargar clientes
         cmbCliente.getItems().clear();
         cmbCliente.getItems().add(null);
-        cmbCliente.getItems().addAll(clienteService.obtenerTodos());
+        todosLosClientes = clienteService.obtenerTodos();
+        cmbCliente.getItems().addAll(todosLosClientes);
         cmbCliente.setValue(null);
 
         // Recargar productos
@@ -131,13 +134,11 @@ public class VentaFormController {
         cmbCliente.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Cliente c) {
                 if (c == null) return "Sin cliente (ocasional)";
-                return c.getNombreCompleto()
-                        + (c.esEmpresa() ? " [Empresa]" : "");
+                return c.getNombreCompleto() + (c.esEmpresa() ? " [Empresa]" : "");
             }
-            @Override public Cliente fromString(String s) { return null; }
+            @Override public Cliente fromString(String s) { return cmbCliente.getValue(); }
         });
 
-        // Si selecciona empresa, ofrece crédito automáticamente
         cmbCliente.setOnAction(e -> {
             Cliente seleccionado = cmbCliente.getValue();
             if (seleccionado != null && seleccionado.esEmpresa()) {
@@ -159,43 +160,18 @@ public class VentaFormController {
     private void configurarProductoEditable() {
         cmbProducto.setEditable(true);
         cmbProducto.setConverter(new javafx.util.StringConverter<>() {
-            @Override public String toString(Producto p) {
+            @Override
+            public String toString(Producto p) {
                 if (p == null) return "";
                 return p.getNombre()
                         + (p.getMarca() != null ? " — " + p.getMarca() : "")
                         + " (Stock: " + p.getStock() + ")"
                         + " — RD$" + p.getPrecioUnitario().toPlainString();
             }
-            @Override public Producto fromString(String texto) {
-                if (texto == null || texto.isBlank() || todosLosProductos == null)
-                    return null;
-                return todosLosProductos.stream()
-                        .filter(p -> toString(p).equalsIgnoreCase(texto))
-                        .findFirst().orElse(null);
-            }
-        });
 
-        cmbProducto.getEditor().textProperty().addListener((obs, old, val) -> {
-            if (todosLosProductos == null) return;
-            // No filtrar si el cambio viene de seleccionar un item
-            Producto sel = cmbProducto.getValue();
-            if (sel != null) {
-                String textoSel = cmbProducto.getConverter().toString(sel);
-                if (textoSel.equals(val)) return;
-            }
-            if (val == null || val.isBlank()) {
-                cmbProducto.getItems().setAll(todosLosProductos);
-                return;
-            }
-            String filtro = val.toLowerCase();
-            List<Producto> filtrados = todosLosProductos.stream()
-                    .filter(p -> p.getNombre().toLowerCase().contains(filtro)
-                            || (p.getMarca() != null &&
-                            p.getMarca().toLowerCase().contains(filtro)))
-                    .toList();
-            cmbProducto.getItems().setAll(filtrados);
-            if (!cmbProducto.isShowing() && !filtrados.isEmpty()) {
-                cmbProducto.show();
+            @Override
+            public Producto fromString(String texto) {
+                return cmbProducto.getValue();
             }
         });
     }

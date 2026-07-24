@@ -5,12 +5,15 @@ import com.jordis.jordis.service.FacturaService;
 import com.jordis.jordis.service.ReporteService;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.controlsfx.control.SearchableComboBox;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -55,12 +58,12 @@ public class ReportesController {
     private DatePicker dpHasta;
 
     // Filtros específicos
-    private ComboBox<Cliente>   cmbCliente;
-    private ComboBox<Usuario>   cmbCajero;
-    private ComboBox<String>    cmbMetodoPago;
-    private ComboBox<Categoria> cmbCategoria;
-    private ComboBox<String>    cmbMarca;
-    private ComboBox<Proveedor> cmbProveedor;
+    private SearchableComboBox<Cliente> cmbCliente;
+    private SearchableComboBox<Usuario>   cmbCajero;
+    private SearchableComboBox<String>    cmbMetodoPago;
+    private SearchableComboBox<Categoria> cmbCategoria;
+    private SearchableComboBox<String>    cmbMarca;
+    private SearchableComboBox<Proveedor> cmbProveedor;
 
     // ── Tipos de reporte disponibles ─────────────────────────────────
 
@@ -181,32 +184,33 @@ public class ReportesController {
 
         switch (tipo) {
             case "VENTAS" -> {
-                agregarLabel("Cliente (opcional):");
-                cmbCliente = new ComboBox<>();
+                cmbCliente = new SearchableComboBox<>();
                 cmbCliente.setPromptText("Todos los clientes");
-                cmbCliente.getItems().add(null);
-                cmbCliente.getItems().addAll(
-                        reporteService.obtenerClientes());
                 cmbCliente.setConverter(strConverter(
                         c -> c == null ? "Todos los clientes"
                                 : c.getNombreCompleto()));
+                List<Cliente> todosCliente = new java.util.ArrayList<>();
+                todosCliente.add(null);
+                todosCliente.addAll(reporteService.obtenerClientes());
+                cmbCliente.getItems().addAll(todosCliente);
                 estiloCombo(cmbCliente);
                 panelFiltros.getChildren().add(cmbCliente);
 
                 agregarLabel("Cajero (opcional):");
-                cmbCajero = new ComboBox<>();
+                cmbCajero = new SearchableComboBox<>();
                 cmbCajero.setPromptText("Todos los cajeros");
-                cmbCajero.getItems().add(null);
-                cmbCajero.getItems().addAll(
-                        reporteService.obtenerCajeros());
                 cmbCajero.setConverter(strConverter(
                         u -> u == null ? "Todos"
                                 : u.getNombreCompleto()));
+                List<Usuario> todosCajero = new java.util.ArrayList<>();
+                todosCajero.add(null);
+                todosCajero.addAll(reporteService.obtenerCajeros());
+                cmbCajero.getItems().addAll(todosCajero);
                 estiloCombo(cmbCajero);
                 panelFiltros.getChildren().add(cmbCajero);
 
                 agregarLabel("Método de pago (opcional):");
-                cmbMetodoPago = new ComboBox<>();
+                cmbMetodoPago = new SearchableComboBox<>();
                 cmbMetodoPago.setPromptText("Todos");
                 cmbMetodoPago.getItems().addAll(
                         null, "EFECTIVO", "TARJETA",
@@ -216,36 +220,39 @@ public class ReportesController {
             }
             case "PRODUCTOS" -> {
                 agregarLabel("Categoría (opcional):");
-                cmbCategoria = new ComboBox<>();
+                cmbCategoria = new SearchableComboBox<>();
                 cmbCategoria.setPromptText("Todas las categorías");
-                cmbCategoria.getItems().add(null);
-                cmbCategoria.getItems().addAll(
-                        reporteService.obtenerCategorias());
                 cmbCategoria.setConverter(strConverter(
                         c -> c == null ? "Todas" : c.getNombre()));
+                List<Categoria> todasCategoria = new java.util.ArrayList<>();
+                todasCategoria.add(null);
+                todasCategoria.addAll(reporteService.obtenerCategorias());
+                cmbCategoria.getItems().addAll(todasCategoria);
                 estiloCombo(cmbCategoria);
                 panelFiltros.getChildren().add(cmbCategoria);
 
                 agregarLabel("Marca (opcional):");
-                cmbMarca = new ComboBox<>();
+                cmbMarca = new SearchableComboBox<>();
                 cmbMarca.setPromptText("Todas las marcas");
-                cmbMarca.getItems().add(null);
-                cmbMarca.getItems().addAll(
-                        reporteService.obtenerMarcas());
                 cmbMarca.setConverter(strConverter(
                         m -> m == null ? "Todas" : m));
+                List<String> todasMarca = new java.util.ArrayList<>();
+                todasMarca.add(null);
+                todasMarca.addAll(reporteService.obtenerMarcas());
+                cmbMarca.getItems().addAll(todasMarca);
                 estiloCombo(cmbMarca);
                 panelFiltros.getChildren().add(cmbMarca);
             }
             case "COMPRAS" -> {
                 agregarLabel("Proveedor (opcional):");
-                cmbProveedor = new ComboBox<>();
+                cmbProveedor = new SearchableComboBox<>();
                 cmbProveedor.setPromptText("Todos los proveedores");
-                cmbProveedor.getItems().add(null);
-                cmbProveedor.getItems().addAll(
-                        reporteService.obtenerProveedores());
                 cmbProveedor.setConverter(strConverter(
                         p -> p == null ? "Todos" : p.getNombre()));
+                List<Proveedor> todosProveedor = new java.util.ArrayList<>();
+                todosProveedor.add(null);
+                todosProveedor.addAll(reporteService.obtenerProveedores());
+                cmbProveedor.getItems().addAll(todosProveedor);
                 estiloCombo(cmbProveedor);
                 panelFiltros.getChildren().add(cmbProveedor);
             }

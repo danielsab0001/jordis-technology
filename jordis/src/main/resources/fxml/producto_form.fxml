@@ -3,6 +3,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
+<?import org.controlsfx.control.SearchableComboBox?>
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.jordis.jordis.controller.ProductoFormController"
@@ -29,8 +30,8 @@
     <HBox spacing="12">
         <VBox spacing="4" HBox.hgrow="ALWAYS">
             <Label text="Categoría" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
-            <ComboBox fx:id="cmbCategoria" prefWidth="220" prefHeight="34"
-                      style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+            <SearchableComboBox fx:id="cmbCategoria" prefWidth="220" prefHeight="34"
+                                style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
                              -fx-border-radius: 6; -fx-background-radius: 6;"/>
         </VBox>
         <VBox spacing="4" HBox.hgrow="ALWAYS">

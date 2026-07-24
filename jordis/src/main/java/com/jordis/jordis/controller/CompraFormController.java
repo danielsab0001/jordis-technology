@@ -14,6 +14,7 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.controlsfx.control.SearchableComboBox;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -27,8 +28,8 @@ import java.util.Map;
 @Slf4j
 public class CompraFormController {
 
-    @FXML private ComboBox<Proveedor>    cmbProveedor;
-    @FXML private ComboBox<Producto>     cmbProducto;
+    @FXML private SearchableComboBox<Proveedor> cmbProveedor;
+    @FXML private SearchableComboBox<Producto>     cmbProducto;
     @FXML private TextField              txtCantidad;
     @FXML private TextField              txtCosto;
     @FXML private TextArea               txtDescripcion;
@@ -51,6 +52,7 @@ public class CompraFormController {
             FXCollections.observableArrayList();
     private Runnable onGuardado;
     private List<Producto> todosLosProductos;
+    private List<Proveedor> todosLosProveedores;
 
     @FXML
     public void initialize() {
@@ -61,11 +63,9 @@ public class CompraFormController {
             @Override public String toString(Proveedor p) {
                 return p == null ? "" : p.getNombre();
             }
-            @Override public Proveedor fromString(String s) { return null; }
+            @Override public Proveedor fromString(String s) { return cmbProveedor.getValue(); }
         });
 
-        // ComboBox editable con búsqueda en tiempo real
-        cmbProducto.setEditable(true);
         cmbProducto.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(Producto p) {
                 if (p == null) return "";
@@ -73,36 +73,7 @@ public class CompraFormController {
                         + (p.getMarca() != null ? " — " + p.getMarca() : "");
             }
             @Override public Producto fromString(String texto) {
-                if (texto == null || texto.isBlank()) return null;
-                // Intentar encontrar el producto que coincida con el texto escrito
-                return todosLosProductos == null ? null :
-                        todosLosProductos.stream()
-                                .filter(p -> toString(p).equalsIgnoreCase(texto))
-                                .findFirst().orElse(null);
-            }
-        });
-
-        cmbProducto.getEditor().textProperty().addListener((obs, old, val) -> {
-            if (todosLosProductos == null) return;
-            if (val == null || val.isBlank()) {
-                cmbProducto.getItems().setAll(todosLosProductos);
-                return;
-            }
-            // Solo filtrar si el texto no viene de seleccionar un item
-            Producto seleccionado = cmbProducto.getValue();
-            if (seleccionado != null) {
-                String textoSeleccionado = cmbProducto.getConverter().toString(seleccionado);
-                if (textoSeleccionado.equals(val)) return;
-            }
-            String filtro = val.toLowerCase();
-            List<Producto> filtrados = todosLosProductos.stream()
-                    .filter(p -> p.getNombre().toLowerCase().contains(filtro)
-                            || (p.getMarca() != null &&
-                            p.getMarca().toLowerCase().contains(filtro)))
-                    .toList();
-            cmbProducto.getItems().setAll(filtrados);
-            if (!cmbProducto.isShowing() && !filtrados.isEmpty()) {
-                cmbProducto.show();
+                return cmbProducto.getValue();
             }
         });
     }
@@ -110,7 +81,8 @@ public class CompraFormController {
     public void prepararNuevaCompra() {
         detalles.clear();
 
-        cmbProveedor.getItems().setAll(proveedorService.obtenerTodos());
+        todosLosProveedores = proveedorService.obtenerTodos();
+        cmbProveedor.getItems().setAll(todosLosProveedores);
         cmbProveedor.setValue(null);
 
         todosLosProductos = productoService.obtenerTodos();

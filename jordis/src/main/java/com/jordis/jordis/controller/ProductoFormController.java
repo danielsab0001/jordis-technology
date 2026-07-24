@@ -8,9 +8,11 @@ import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
+import org.controlsfx.control.SearchableComboBox;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -23,20 +25,29 @@ public class ProductoFormController {
     @FXML private TextField txtPrecio;
     @FXML private TextField txtStockMinimo;
     @FXML private TextArea  txtDescripcion;
-    @FXML private ComboBox<Categoria> cmbCategoria;
+    @FXML private SearchableComboBox<Categoria> cmbCategoria;
     @FXML private Label lblPrecioSugerido;
     @FXML private Label lblError;
     @FXML private Button btnGuardar;
 
     private final ProductoService productoService;
+    private List<Categoria> todasLasCategorias;
 
     private Producto productoEditar;
     private Runnable onGuardado;
 
     @FXML
     public void initialize() {
-        cmbCategoria.getItems().addAll(productoService.obtenerCategorias());
+        todasLasCategorias = productoService.obtenerCategorias();
+        cmbCategoria.getItems().addAll(todasLasCategorias);
         txtStockMinimo.setText("3");
+
+        cmbCategoria.setConverter(new javafx.util.StringConverter<>() {
+            @Override public String toString(Categoria c) {
+                return c == null ? "" : c.getNombre();
+            }
+            @Override public Categoria fromString(String s) { return cmbCategoria.getValue(); }
+        });
     }
 
     public void setProducto(Producto producto) {

@@ -3,6 +3,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
+<?import org.controlsfx.control.SearchableComboBox?>
 <VBox xmlns="http://javafx.com/javafx/21"
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.jordis.jordis.controller.CompraFormController"
@@ -14,8 +15,8 @@
     <!-- Proveedor -->
     <VBox spacing="4">
         <Label text="Proveedor *" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
-        <ComboBox fx:id="cmbProveedor" prefWidth="340" prefHeight="34"
-                  style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+        <SearchableComboBox fx:id="cmbProveedor" prefWidth="340" prefHeight="34"
+                            style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
                          -fx-border-radius: 6; -fx-background-radius: 6;"/>
     </VBox>
 
@@ -35,7 +36,7 @@
     <HBox spacing="10" alignment="BOTTOM_LEFT">
         <VBox spacing="4">
             <Label text="Producto" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
-            <ComboBox fx:id="cmbProducto" prefWidth="230" prefHeight="34"
+            <SearchableComboBox fx:id="cmbProducto" prefWidth="230" prefHeight="34"
                       style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
                              -fx-border-radius: 6; -fx-background-radius: 6;"/>
         </VBox>

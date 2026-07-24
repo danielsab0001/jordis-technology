@@ -26,6 +26,11 @@
                    prefWidth="260" prefHeight="32" style="-fx-font-size: 12;"/>
         <DatePicker fx:id="dpFecha" promptText="Filtrar por fecha"
                     prefWidth="160" prefHeight="32" style="-fx-font-size: 12;"/>
+        <Button text="Ver todos" onAction="#onActualizar"
+                style="-fx-background-color: #F8FAFC; -fx-text-fill: #374151;
+                       -fx-border-color: #E2E8F0; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 12;
+                       -fx-padding: 7 14; -fx-cursor: hand;"/>
     </HBox>
 
     <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 0 20 12 20;">
@@ -40,7 +45,7 @@
                 <TableColumn fx:id="colTotal" text="Total vendido" prefWidth="120"/>
                 <TableColumn fx:id="colDiferencia" text="Diferencia" prefWidth="110"/>
                 <TableColumn fx:id="colEstado" text="Estado" prefWidth="90"/>
-                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="160"/>
+                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="80"/>
             </columns>
         </TableView>
     </VBox>
