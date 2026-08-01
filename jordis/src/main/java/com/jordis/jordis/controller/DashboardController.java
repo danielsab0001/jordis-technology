@@ -69,6 +69,7 @@ public class DashboardController {
     @FXML private ComboBox<String> cmbTopProductos;
     @FXML private VBox  panelTopProductos;
     @FXML private VBox  panelMetodosPago;
+    @FXML private VBox  panelDevolucionesResumen;
 
     // ── Pestaña Inventario ──
     @FXML private Label    lblTotalProductos;
@@ -98,6 +99,8 @@ public class DashboardController {
     private final DashboardService  dashboardService;
     private final VentaRepository   ventaRepository;
     private final ProductoRepository productoRepository;
+    private final com.jordis.jordis.repository.DevolucionRepository devolucionRepository;
+    private final com.jordis.jordis.repository.ClienteRepository clienteRepository;
 
     private MainController mainController;
     private String periodoActual = "HOY";
@@ -329,7 +332,9 @@ public class DashboardController {
                 panelMetodosPago.getChildren().add(
                         crearFilaMetodo(e.getKey(), e.getValue().size(),
                                 montoM, pct, colMetodo[ci % colMetodo.length]));
-                datosDonut.add(new PieChart.Data(e.getKey(), montoM.doubleValue()));
+                datosDonut.add(new PieChart.Data(
+                        com.jordis.jordis.util.TextoFormateador.humanizar(e.getKey()),
+                        montoM.doubleValue()));
                 ci++;
             }
 
@@ -337,9 +342,9 @@ public class DashboardController {
             donut.getData().addAll(datosDonut);
             donut.setLegendVisible(false);
             donut.setLabelsVisible(true);
-            donut.setPrefSize(260, 220);
-            donut.setMaxSize(260, 220);
-            donut.setStyle("-fx-padding: 10 0 0 0;");
+            donut.setPrefSize(210, 190);
+            donut.setMaxSize(210, 190);
+            donut.setStyle("-fx-padding: 6 0 0 0;");
             javafx.application.Platform.runLater(() -> {
                 int idx = 0;
                 for (var d : donut.getData()) {
@@ -351,6 +356,31 @@ public class DashboardController {
                 }
             });
             panelMetodosPago.getChildren().add(donut);
+        }
+
+        panelDevolucionesResumen.getChildren().clear();
+        var devolucionesPeriodo = devolucionRepository.findEntreFechas(desde, hasta).stream()
+                .filter(d -> d.getEstado() == EstadoDevolucion.REGISTRADA)
+                .toList();
+
+        if (devolucionesPeriodo.isEmpty()) {
+            panelDevolucionesResumen.getChildren().add(
+                    filaOk("Sin devoluciones en el período"));
+        } else {
+            BigDecimal montoDevuelto = devolucionesPeriodo.stream()
+                    .map(Devolucion::getMontoTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+            long notaCredito = devolucionesPeriodo.stream()
+                    .filter(d -> d.getTipoDevolucion() == TipoDevolucion.NOTA_CREDITO).count();
+            long saldoFavor = devolucionesPeriodo.size() - notaCredito;
+
+            long clientesConSaldo = clienteRepository.contarConSaldoAFavor();
+            BigDecimal saldoPendienteTotal = clienteRepository.sumaSaldoAFavorPendiente();
+
+            panelDevolucionesResumen.getChildren().addAll(
+                    crearFilaResumen("Devoluciones registradas", String.valueOf(devolucionesPeriodo.size())),
+                    crearFilaResumen("Clientes con saldo pendiente", String.valueOf(clientesConSaldo)),
+                    crearFilaResumen("Saldo a favor pendiente (total)", "RD$" + fmt(saldoPendienteTotal))
+            );
         }
     }
 
@@ -676,24 +706,15 @@ public class DashboardController {
             case "USUARIO_DESBLOQUEADO" -> new String[]{"🔓", "#2563EB"};
             case "PRECIO_MODIFICADO"    -> new String[]{"💲", "#B45309"};
             case "INVENTARIO_AJUSTADO"  -> new String[]{"🔧", "#B45309"};
+            case "DEVOLUCION_REGISTRADA" -> new String[]{"↩", "#B45309"};
+            case "CAJA_ABIERTA"         -> new String[]{"🔓", "#15803D"};
+            case "CIERRE_CAJA"          -> new String[]{"🔒", "#64748B"};
             default -> new String[]{"•", "#64748B"};
         };
     }
 
     private String etiquetaActividad(String accion) {
-        return switch (accion) {
-            case "VENTA_REGISTRADA"     -> "Venta registrada";
-            case "VENTA_ANULADA"        -> "Venta anulada";
-            case "COMPRA_REGISTRADA"    -> "Compra registrada";
-            case "CLIENTE_CREADO"       -> "Cliente nuevo";
-            case "PRODUCTO_CREADO"      -> "Producto nuevo";
-            case "PROVEEDOR_CREADO"     -> "Proveedor nuevo";
-            case "USUARIO_CREADO"       -> "Usuario nuevo";
-            case "USUARIO_DESBLOQUEADO" -> "Usuario desbloqueado";
-            case "PRECIO_MODIFICADO"    -> "Precio modificado";
-            case "INVENTARIO_AJUSTADO"  -> "Ajuste de inventario";
-            default -> accion;
-        };
+        return com.jordis.jordis.util.TextoFormateador.etiquetaAccion(accion);
     }
 
     private HBox crearFilaTopProducto(int pos, String nombre, long unidades,
@@ -737,16 +758,20 @@ public class DashboardController {
                                  BigDecimal monto, double pct, String color) {
         VBox box = new VBox(5);
         box.setStyle("-fx-padding: 6 0;");
-        HBox top = new HBox();
+        HBox top = new HBox(6);
         top.setAlignment(Pos.CENTER_LEFT);
-        Label lM = new Label(metodo);
+        Region swatch = new Region();
+        swatch.setPrefSize(10, 10);
+        swatch.setMinSize(10, 10);
+        swatch.setStyle("-fx-background-color: " + color + "; -fx-background-radius: 2;");
+        Label lM = new Label(com.jordis.jordis.util.TextoFormateador.humanizar(metodo));
         lM.setStyle("-fx-font-size: 12; -fx-text-fill: #374151;");
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);
         Label lV = new Label("RD$" + fmt(monto)
                 + "  (" + String.format("%.0f", pct) + "% de las ventas)");
         lV.setStyle("-fx-font-size: 11; -fx-text-fill: #64748B;");
-        top.getChildren().addAll(lM, esp, lV);
+        top.getChildren().addAll(swatch, lM, esp, lV);
         Pane barra = barraProgreso(pct / 100, color);
         box.getChildren().addAll(top, barra);
         return box;
@@ -921,6 +946,21 @@ public class DashboardController {
 
         HBox.setHgrow(contenedor, Priority.ALWAYS);
         return contenedor;
+    }
+
+    private HBox crearFilaResumen(String etiqueta, String valor) {
+        HBox fila = new HBox();
+        fila.setAlignment(Pos.CENTER_LEFT);
+        fila.setStyle("-fx-padding: 7 0; -fx-border-color: #F1F5F9;"
+                + " -fx-border-width: 0 0 1 0;");
+        Label lEt = new Label(etiqueta);
+        lEt.setStyle("-fx-font-size: 12; -fx-text-fill: #64748B;");
+        Region esp = new Region();
+        HBox.setHgrow(esp, Priority.ALWAYS);
+        Label lVal = new Label(valor);
+        lVal.setStyle("-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;");
+        fila.getChildren().addAll(lEt, esp, lVal);
+        return fila;
     }
 
     private Label filaOk(String texto) {

@@ -4,9 +4,8 @@ import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Venta;
 import com.jordis.jordis.service.FacturaService;
 import com.jordis.jordis.service.VentaService;
-import com.jordis.jordis.util.Paginador;
+import com.jordis.jordis.util.PaginadorRemoto;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -19,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -37,17 +35,21 @@ public class VentaController {
     @FXML private TableColumn<Venta, String> colTotal;
     @FXML private TableColumn<Venta, String> colPago;
     @FXML private TableColumn<Venta, String> colEstado;
-    @FXML private TableColumn<Venta, Void>   colAnular;
+    @FXML private TableColumn<Venta, Void>   colAcciones;
     @FXML private Label lblMensaje;
     @FXML private TableColumn<Venta, String> colNcf;
 
     @FXML private TextField txtBuscarFactura;
-    @FXML private TableColumn<Venta, Void> colVerFactura;
 
     private final VentaService ventaService;
     private final SpringFXMLLoader fxmlLoader;
     private final FacturaService facturaService;
-    private Paginador<Venta> paginador;
+    private PaginadorRemoto<Venta> paginador;
+
+    // Debounce: evita disparar una consulta a la base de datos por cada
+    // tecla presionada en el buscador — espera un instante de pausa.
+    private final javafx.animation.PauseTransition debounceBusqueda =
+            new javafx.animation.PauseTransition(javafx.util.Duration.millis(300));
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -55,7 +57,7 @@ public class VentaController {
     @FXML
     public void initialize() {
         configurarColumnas();
-        paginador = new Paginador<>(tablaVentas);
+        paginador = new PaginadorRemoto<>(tablaVentas);
 
         javafx.application.Platform.runLater(() -> {
             javafx.scene.layout.VBox padre =
@@ -66,26 +68,22 @@ public class VentaController {
             }
         });
 
+        debounceBusqueda.setOnFinished(e -> aplicarProveedorDePagina());
         txtBuscarFactura.textProperty().addListener((obs, old, val) ->
-                filtrarVentas(val));
+                debounceBusqueda.playFromStart());
 
-        cargarVentas();
+        aplicarProveedorDePagina();
     }
 
-    private void filtrarVentas(String texto) {
-        List<Venta> base = ventaService.obtenerTodas();
-        if (texto == null || texto.isBlank()) {
-            paginador.setDatos(base);
-            return;
-        }
-        String t = texto.toLowerCase();
-        paginador.setDatos(base.stream()
-                .filter(v -> (v.getNumeroFactura() != null
-                        && v.getNumeroFactura().toLowerCase().contains(t))
-                        || (v.getCliente() != null
-                        && v.getCliente().getNombreCompleto()
-                        .toLowerCase().contains(t)))
-                .toList());
+    /**
+     * Cada página se pide a la base de datos en el momento (LIMIT/OFFSET
+     * real), con el texto de búsqueda actual — nunca se carga la tabla
+     * de ventas completa en memoria, sin importar cuántas ventas haya.
+     */
+    private void aplicarProveedorDePagina() {
+        String texto = txtBuscarFactura.getText() != null
+                ? txtBuscarFactura.getText().trim() : "";
+        paginador.setProveedor(pagina -> ventaService.obtenerPaginaVentas(pagina, texto));
     }
 
     private void configurarColumnas() {
@@ -142,8 +140,11 @@ public class VentaController {
         colTotal.setCellValueFactory(d ->
                 new SimpleStringProperty("RD$" + d.getValue().getTotal().toPlainString()));
         colPago.setCellValueFactory(d ->
-                new SimpleStringProperty(d.getValue().getMetodoPago()));
+                new SimpleStringProperty(
+                        com.jordis.jordis.util.TextoFormateador.humanizar(d.getValue().getMetodoPago())));
 
+        // Estado: Válida / Anulada — la venta anulada ya NO desaparece del
+        // listado, se distingue con este badge en color.
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -151,7 +152,7 @@ public class VentaController {
                 if (empty || getTableRow() == null || getTableRow().getItem() == null) {
                     setGraphic(null); return;
                 }
-                boolean anulada = ((Venta) getTableRow().getItem()).getAnulada();
+                boolean anulada = ((Venta) getTableRow().getItem()).estaAnulada();
                 Label badge = new Label(anulada ? "Anulada" : "Válida");
                 badge.setStyle("-fx-background-color: " + (anulada ? "#FEE2E2" : "#DCFCE7")
                         + "; -fx-text-fill: " + (anulada ? "#DC2626" : "#15803D")
@@ -161,36 +162,9 @@ public class VentaController {
             }
         });
 
-        colVerFactura.setCellFactory(col -> new TableCell<>() {
-            private final Button btn = new Button("Ver factura");
-            {
-                btn.setStyle("-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;"
-                        + " -fx-border-color: #BFDBFE; -fx-border-radius: 4;"
-                        + " -fx-background-radius: 4; -fx-font-size: 10;"
-                        + " -fx-padding: 3 8; -fx-cursor: hand;");
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || getTableRow() == null
-                        || getTableRow().getItem() == null) {
-                    setGraphic(null); return;
-                }
-                Venta v = (Venta) getTableRow().getItem();
-                btn.setOnAction(e -> verFactura(v));
-                setGraphic(btn);
-            }
-        });
-
-        colAnular.setCellFactory(col -> new TableCell<>() {
-            private final Button btnAnular = new Button("Anular");
-            {
-                btnAnular.setStyle(
-                        "-fx-background-color: #FEE2E2; -fx-text-fill: #DC2626;"
-                                + " -fx-border-color: #FCA5A5; -fx-border-radius: 4;"
-                                + " -fx-background-radius: 4; -fx-font-size: 10; -fx-padding: 3 8;");
-            }
-
+        // Menú de acciones por fila (Ver factura / Registrar devolución /
+        // Anular venta / Reimprimir factura), en vez de un solo botón.
+        colAcciones.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -198,15 +172,36 @@ public class VentaController {
                     setGraphic(null); return;
                 }
                 Venta v = (Venta) getTableRow().getItem();
-                if (v.getAnulada()) { setGraphic(null); return; }
-                btnAnular.setOnAction(e -> anularVenta(v));
-                setGraphic(btnAnular);
+
+                MenuButton menu = new MenuButton("⋮ Acciones");
+                menu.setStyle("-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;"
+                        + " -fx-border-color: #BFDBFE; -fx-border-radius: 4;"
+                        + " -fx-background-radius: 4; -fx-font-size: 10;"
+                        + " -fx-padding: 3 8; -fx-cursor: hand;");
+
+                MenuItem miVerFactura = new MenuItem("Ver factura");
+                miVerFactura.setOnAction(e -> verFactura(v));
+
+                MenuItem miDevolucion = new MenuItem("Registrar devolución");
+                miDevolucion.setDisable(v.estaAnulada());
+                miDevolucion.setOnAction(e -> abrirDevolucion(v));
+
+                MenuItem miAnular = new MenuItem("Anular venta");
+                miAnular.setDisable(v.estaAnulada());
+                miAnular.setOnAction(e -> anularVenta(v));
+
+                MenuItem miReimprimir = new MenuItem("Reimprimir factura (80mm)");
+                miReimprimir.setOnAction(e -> reimprimirTicket(v));
+
+                menu.getItems().addAll(miVerFactura, miDevolucion, miAnular, miReimprimir);
+                setGraphic(menu);
             }
         });
     }
 
-    private void cargarVentas() {
-        paginador.setDatos(ventaService.obtenerTodas());
+    /** Recarga solo la página que se está viendo — no la tabla entera. */
+    private void refrescarPaginaActual() {
+        paginador.recargar();
     }
 
     @FXML
@@ -219,13 +214,16 @@ public class VentaController {
             result.controller.prepararNuevaVenta();
 
             result.controller.setOnGuardado(() -> {
-                cargarVentas();
+                refrescarPaginaActual();
                 mostrarMensaje("Venta registrada correctamente.", false);
             });
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Nueva Venta");
-            stage.setScene(new Scene(result.root, 750, 600));
+            Scene scene = new Scene(result.root, 950, 800);
+            stage.setScene(scene);
+            stage.setMinWidth(800);
+            stage.setMinHeight(550);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de venta", e);
@@ -235,22 +233,14 @@ public class VentaController {
 
     @FXML
     public void onBuscarFactura() {
-        String texto = txtBuscarFactura.getText().trim();
-        if (texto.isEmpty()) { cargarVentas(); return; }
-        List<Venta> resultado = ventaService.obtenerTodas().stream()
-                .filter(v -> v.getNumeroFactura() != null
-                        && v.getNumeroFactura().toLowerCase()
-                        .contains(texto.toLowerCase()))
-                .toList();
-        tablaVentas.setItems(FXCollections.observableArrayList(resultado));
-        mostrarMensaje(resultado.isEmpty()
-                ? "No se encontró ninguna factura con ese número." : "", resultado.isEmpty());
+        aplicarProveedorDePagina();
     }
 
     @FXML
     public void onVerTodas() {
         txtBuscarFactura.clear();
         lblMensaje.setText("");
+        aplicarProveedorDePagina();
     }
 
     private void verFactura(Venta venta) {
@@ -263,11 +253,49 @@ public class VentaController {
         }
     }
 
+    private void reimprimirTicket(Venta venta) {
+        try {
+            String ruta = facturaService.generarTicket80mm(venta);
+            facturaService.abrirPDF(ruta);
+        } catch (Exception e) {
+            log.error("Error generando ticket 80mm", e);
+            mostrarMensaje("Error al generar el ticket: " + e.getMessage(), true);
+        }
+    }
+
+    private void abrirDevolucion(Venta venta) {
+        try {
+            SpringFXMLLoader.LoadResult<DevolucionFormController> result =
+                    fxmlLoader.loadWithController("/fxml/devolucion_form.fxml");
+
+            result.controller.prepararParaVenta(venta);
+            result.controller.setOnGuardado(() -> {
+                refrescarPaginaActual();
+                mostrarMensaje("Devolución registrada. Stock actualizado.", false);
+            });
+
+            Stage stage = new Stage();
+            result.controller.setStage(stage);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Registrar devolución");
+            Scene scene = new Scene(result.root, 720, 620);
+            stage.setScene(scene);
+            stage.setMinWidth(650);
+            stage.setMinHeight(550);
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de devolución", e);
+            mostrarMensaje("Error al abrir: " + e.getMessage(), true);
+        }
+    }
+
     private void anularVenta(Venta venta) {
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setTitle("Anular Venta");
-        stage.setResizable(false);
+        stage.setResizable(true);
+        stage.setMinWidth(460);
+        stage.setMinHeight(400);
 
         javafx.scene.text.Text titulo = new javafx.scene.text.Text("Anular Venta");
         titulo.setStyle("-fx-font-size: 16; -fx-font-weight: bold;"
@@ -283,9 +311,27 @@ public class VentaController {
         lblFactura.setStyle("-fx-font-size: 13; -fx-text-fill: #374151;");
         lblFactura.setWrapText(true);
 
+        ToggleGroup grupoTipoAnulacion = new ToggleGroup();
+        RadioButton rbErrorCajero = new RadioButton("Error del cajero o administrativo");
+        rbErrorCajero.setToggleGroup(grupoTipoAnulacion);
+        rbErrorCajero.setSelected(true);
+        rbErrorCajero.setStyle("-fx-font-size: 12; -fx-text-fill: #374151;");
+
+        RadioButton rbProblemaProducto = new RadioButton(
+                "Problema con el producto (equivale a una devolución completa)");
+        rbProblemaProducto.setToggleGroup(grupoTipoAnulacion);
+        rbProblemaProducto.setWrapText(true);
+        rbProblemaProducto.setStyle("-fx-font-size: 12; -fx-text-fill: #374151;");
+
+        VBox vTipoAnulacion = new VBox(6,
+                new Label("Tipo de anulación *") {{
+                    setStyle("-fx-font-size: 12; -fx-text-fill: #64748B; -fx-font-weight: bold;");
+                }},
+                rbErrorCajero, rbProblemaProducto);
+
         TextArea txtMotivo = new TextArea();
-        txtMotivo.setPromptText("Explica por qué se anula esta venta...");
-        txtMotivo.setPrefHeight(110);
+        txtMotivo.setPromptText("Explica qué pasó exactamente...");
+        txtMotivo.setPrefHeight(90);
         txtMotivo.setWrapText(true);
         txtMotivo.setStyle("-fx-font-size: 13; -fx-border-color: #FCA5A5;"
                 + " -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 10;");
@@ -313,13 +359,58 @@ public class VentaController {
         btnAnularConfirmar.setOnAction(e -> {
             String motivo = txtMotivo.getText().trim();
             if (motivo.isEmpty()) {
-                lblError.setText("Debes ingresar un motivo de anulación.");
+                lblError.setText("Debes ingresar el detalle de la anulación.");
                 return;
             }
+
+            boolean porProblemaProducto = rbProblemaProducto.isSelected();
+
+            java.math.BigDecimal montoCobrado = Boolean.TRUE.equals(venta.getEsCredito())
+                    ? venta.getTotalPagado() : venta.getTotal();
+            boolean creditoConAbonos = Boolean.TRUE.equals(venta.getEsCredito())
+                    && venta.getTotalPagado().compareTo(java.math.BigDecimal.ZERO) > 0;
+            boolean generaraNotaCredito = (porProblemaProducto || creditoConAbonos)
+                    && montoCobrado.compareTo(java.math.BigDecimal.ZERO) > 0;
+
+            if (generaraNotaCredito && venta.getCliente() == null) {
+                lblError.setText("Esta anulación generaría saldo a favor, pero la venta no "
+                        + "tiene un cliente identificado. Asigna un cliente a la venta primero.");
+                return;
+            }
+
+            if (generaraNotaCredito) {
+                String nombreCliente = venta.getCliente() != null
+                        ? venta.getCliente().getNombreCompleto() : "el cliente";
+                Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmacion.setTitle("Confirmar anulación");
+                confirmacion.setHeaderText("¿Seguro que quieres anular esta venta?");
+                confirmacion.setContentText("A " + nombreCliente + " le van a quedar RD$"
+                        + montoCobrado.toPlainString()
+                        + " de saldo a favor por lo ya cobrado en esta venta.");
+                confirmacion.initOwner(stage);
+                var resultado = confirmacion.showAndWait();
+                if (resultado.isEmpty() || resultado.get() != ButtonType.OK) {
+                    return;
+                }
+            }
+
             try {
-                ventaService.anularVenta(venta.getIdVenta(), motivo);
-                cargarVentas();
-                mostrarMensaje("Venta anulada. Stock restaurado.", false);
+                Venta anulada = ventaService.anularVenta(
+                        venta.getIdVenta(), motivo, porProblemaProducto);
+                refrescarPaginaActual();
+
+                if (anulada.getNcfNotaCreditoAnulacion() != null
+                        || (generaraNotaCredito)) {
+                    String detalleNcf = anulada.getNcfNotaCreditoAnulacion() != null
+                            ? " (Nota de Crédito " + anulada.getNcfNotaCreditoAnulacion() + ")"
+                            : "";
+                    mostrarMensaje("Venta anulada. Stock restaurado. RD$"
+                                    + montoCobrado.toPlainString()
+                                    + " quedaron como saldo a favor del cliente" + detalleNcf + ".",
+                            false);
+                } else {
+                    mostrarMensaje("Venta anulada. Stock restaurado.", false);
+                }
                 stage.close();
             } catch (Exception ex) {
                 lblError.setText("Error: " + ex.getMessage());
@@ -327,7 +418,7 @@ public class VentaController {
         });
 
         VBox vMotivo = new VBox(6,
-                new Label("Motivo de anulación *") {{
+                new Label("Detalle / explicación *") {{
                     setStyle("-fx-font-size: 12; -fx-text-fill: #64748B;");
                 }},
                 txtMotivo);
@@ -335,11 +426,15 @@ public class VentaController {
         HBox botones = new HBox(10, btnAnularConfirmar, btnCancelar);
         botones.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
-        VBox root = new VBox(16, titulo, lblFactura, vMotivo, lblError, botones);
+        VBox root = new VBox(16, titulo, lblFactura, vTipoAnulacion, vMotivo, lblError, botones);
         root.setStyle("-fx-background-color: white; -fx-padding: 28;");
         root.setPrefWidth(460);
 
-        stage.setScene(new Scene(root));
+        ScrollPane scroll = new ScrollPane(root);
+        scroll.setFitToWidth(true);
+        scroll.setStyle("-fx-background-color: white; -fx-background: white;");
+
+        stage.setScene(new Scene(scroll, 460, 400));
         stage.showAndWait();
     }
 

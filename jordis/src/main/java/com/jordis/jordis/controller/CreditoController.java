@@ -177,7 +177,7 @@ public class CreditoController {
                 boolean vencido = v.getFechaLimiteCredito()
                         .isBefore(LocalDateTime.now()) && !v.estaCancelado();
                 setText(vencido
-                        ? "⚠ " + v.getFechaLimiteCredito().format(FMT)
+                        ? "" + v.getFechaLimiteCredito().format(FMT)
                         : v.getFechaLimiteCredito().format(FMT));
                 setStyle(vencido
                         ? "-fx-text-fill: #DC2626; -fx-font-weight: bold;" : "");

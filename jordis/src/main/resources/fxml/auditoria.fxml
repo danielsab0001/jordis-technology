@@ -11,7 +11,7 @@
     <HBox style="-fx-background-color: white; -fx-padding: 16 24;
                  -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;"
           alignment="CENTER_LEFT" spacing="12">
-        <Text text="🕵  Auditoría"
+        <Text text="Auditoría"
               style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
         <Label text="Historial de acciones sensibles: ventas anuladas, precios modificados, usuarios desbloqueados."
                style="-fx-font-size: 11; -fx-text-fill: #94A3B8;"/>
@@ -44,7 +44,7 @@
                 <TableColumn fx:id="colUsuario" text="Usuario"      prefWidth="160"/>
                 <TableColumn fx:id="colAccion"  text="Acción"       prefWidth="170"/>
                 <TableColumn fx:id="colEntidad" text="Sobre"        prefWidth="110"/>
-                <TableColumn fx:id="colDetalle" text="Detalle"      prefWidth="500"/>
+                <TableColumn fx:id="colDetalle" text="Detalle"      prefWidth="680"/>
             </columns>
         </TableView>
     </VBox>

@@ -481,7 +481,7 @@
                         </VBox>
 
                         <!-- Métodos de pago -->
-                        <VBox prefWidth="330" maxHeight="Infinity"
+                        <VBox prefWidth="330"
                               style="-fx-background-color: white;
                                      -fx-border-radius: 10;
                                      -fx-background-radius: 10;
@@ -495,7 +495,26 @@
                             </HBox>
                             <Separator/>
                             <VBox fx:id="panelMetodosPago"
-                                  spacing="0"
+                                  spacing="0" alignment="CENTER"
+                                  style="-fx-padding: 10 16;"/>
+                        </VBox>
+
+                        <!-- Devoluciones del período -->
+                        <VBox HBox.hgrow="ALWAYS" minWidth="220"
+                              style="-fx-background-color: white;
+                                     -fx-border-radius: 10;
+                                     -fx-background-radius: 10;
+                                     -fx-effect: dropshadow(gaussian,
+                                         rgba(0,0,0,0.05),6,0,0,2);">
+                            <HBox style="-fx-padding: 12 16 8 16;">
+                                <Label text="↩  Devoluciones"
+                                       style="-fx-font-size: 12;
+                                              -fx-font-weight: bold;
+                                              -fx-text-fill: #0F172A;"/>
+                            </HBox>
+                            <Separator/>
+                            <VBox fx:id="panelDevolucionesResumen"
+                                  spacing="0" alignment="CENTER"
                                   style="-fx-padding: 10 16;"/>
                         </VBox>
                     </HBox>

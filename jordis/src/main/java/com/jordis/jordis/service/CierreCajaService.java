@@ -27,6 +27,7 @@ public class CierreCajaService {
     private final VentaRepository        ventaRepository;
     private final CreditoPagoRepository  creditoPagoRepository;
     private final CuentaPagoRepository   cuentaPagoRepository;
+    private final MovimientoCajaRepository movimientoCajaRepository;
     private final DashboardService       dashboardService;
     private final AuditoriaService       auditoriaService;
     private final ConfiguracionService   configuracionService;
@@ -150,10 +151,14 @@ public class CierreCajaService {
         BigDecimal g = gastos != null ? gastos : BigDecimal.ZERO;
         BigDecimal r = retiros != null ? retiros : BigDecimal.ZERO;
 
+        BigDecimal egresosDevolucionEfectivo = movimientoCajaRepository
+                .sumaEgresosDevolucionEfectivo(desde, hasta).abs();
+
         BigDecimal efectivoEsperado = fondo
                 .add(montoEfectivo)
                 .add(pagosCreditosEfectivo)
                 .subtract(pagosProveedoresEfectivo)
+                .subtract(egresosDevolucionEfectivo)
                 .subtract(g)
                 .subtract(r);
 

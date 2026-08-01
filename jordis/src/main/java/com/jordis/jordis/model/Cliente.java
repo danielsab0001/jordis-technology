@@ -38,6 +38,9 @@ public class Cliente {
     @Column(name = "direccion", length = 255)
     private String direccion;
 
+    @Column(name = "saldo_a_favor", nullable = false, precision = 12, scale = 2)
+    private java.math.BigDecimal saldoAFavor = java.math.BigDecimal.ZERO;
+
     // Campos exclusivos de empresa
     @Column(name = "rnc", unique = true, length = 20)
     private String rnc;

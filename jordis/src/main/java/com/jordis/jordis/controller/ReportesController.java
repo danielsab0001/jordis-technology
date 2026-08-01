@@ -356,7 +356,7 @@ public class ReportesController {
                 col("Desc.",    o -> ((Venta)o).getDescuentoPorcentual()
                         .compareTo(BigDecimal.ZERO) > 0
                         ? ((Venta)o).getDescuentoPorcentual() + "%" : "—", 60),
-                col("Pago",     o -> ((Venta)o).getMetodoPago(), 90)
+                col("Pago",     o -> com.jordis.jordis.util.TextoFormateador.humanizar(((Venta)o).getMetodoPago()), 90)
         );
         tablaPrevia.setItems(
                 FXCollections.observableArrayList(ventas));

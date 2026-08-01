@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.jordis.jordis.controller.DevolucionFormController"
+      spacing="14" style="-fx-background-color: white; -fx-padding: 24;">
+
+    <Text text="Registrar Devolución"
+          style="-fx-font-size: 16; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+
+    <Label fx:id="lblVenta"
+           style="-fx-font-size: 13; -fx-text-fill: #374151;" wrapText="true"/>
+
+    <Label text="Selecciona los productos y la cantidad a devolver:"
+           style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+
+    <TableView fx:id="tablaItems" prefHeight="220"
+               style="-fx-border-color: #DBEAFE; -fx-border-radius: 8; -fx-font-size: 12;">
+        <columns>
+            <TableColumn fx:id="colProducto"   text="Producto"           prefWidth="220"/>
+            <TableColumn fx:id="colVendida"    text="Cant. vendida"      prefWidth="100"/>
+            <TableColumn fx:id="colDevuelta"   text="Ya devuelta"        prefWidth="100"/>
+            <TableColumn fx:id="colDisponible" text="Disponible"         prefWidth="100"/>
+            <TableColumn fx:id="colCantidad"   text="Cantidad a devolver" prefWidth="150"/>
+        </columns>
+    </TableView>
+
+    <Label fx:id="lblTipoResultante" text="" wrapText="true"
+           style="-fx-font-size: 12; -fx-text-fill: #1E40AF; -fx-font-weight: bold;
+                  -fx-background-color: #EFF6FF; -fx-padding: 8 12;
+                  -fx-background-radius: 6;"/>
+
+    <VBox spacing="6">
+        <Label text="Motivo de la devolución *"
+               style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
+        <ComboBox fx:id="cmbMotivo" prefWidth="400" prefHeight="34"
+                  promptText="Selecciona un motivo..."
+                  style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                         -fx-border-radius: 6; -fx-background-radius: 6;"/>
+        <TextArea fx:id="txtMotivoOtro" promptText="Describe el motivo de la devolución..."
+                  prefHeight="60" wrapText="true"
+                  style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                         -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 10;"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Observaciones (opcional)"
+               style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextArea fx:id="txtObservaciones" promptText="Detalles adicionales, estado del producto, etc."
+                  prefHeight="55" wrapText="true"
+                  style="-fx-font-size: 13; -fx-border-color: #E2E8F0;
+                         -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 10;"/>
+    </VBox>
+
+    <Label fx:id="lblError" text="" wrapText="true"
+           style="-fx-text-fill: #DC2626; -fx-font-size: 12;"/>
+
+    <HBox spacing="10">
+        <Button fx:id="btnConfirmar" text="Registrar devolución" onAction="#onConfirmar"
+                style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                       -fx-font-size: 13; -fx-background-radius: 6;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+        <Button text="Cancelar" onAction="#onCancelar"
+                style="-fx-background-color: transparent; -fx-text-fill: #64748B;
+                       -fx-border-color: #E2E8F0; -fx-border-radius: 6;
+                       -fx-background-radius: 6; -fx-font-size: 13;
+                       -fx-padding: 8 20; -fx-cursor: hand;"/>
+    </HBox>
+</VBox>

@@ -29,9 +29,26 @@ public class VentaService {
     private final AlertaService alertaService;
     private final NCFService ncfService;
     private final JdbcTemplate jdbcTemplate;
+    private final DevolucionRepository devolucionRepository;
+    private final MovimientoCajaRepository movimientoCajaRepository;
 
     public List<Venta> obtenerTodas() {
         return ventaRepository.findActivas();
+    }
+
+    public List<Venta> obtenerTodasIncluyendoAnuladas() {
+        return ventaRepository.findTodasOrdenadas();
+    }
+
+    private static final int TAMANO_PAGINA_VENTAS = 15;
+
+    public com.jordis.jordis.util.Pagina<Venta> obtenerPaginaVentas(int numeroPagina, String textoBusqueda) {
+        org.springframework.data.domain.Pageable pageable =
+                org.springframework.data.domain.PageRequest.of(numeroPagina, TAMANO_PAGINA_VENTAS);
+        org.springframework.data.domain.Page<Venta> pagina =
+                ventaRepository.buscarPaginado(textoBusqueda, pageable);
+        return new com.jordis.jordis.util.Pagina<>(
+                pagina.getContent(), numeroPagina, pagina.getTotalPages(), pagina.getTotalElements());
     }
 
     public List<Venta> obtenerCreditos() {
@@ -80,7 +97,8 @@ public class VentaService {
                                 LocalDateTime fechaLimiteCredito,
                                 boolean esCreditoFiscal,
                                 String tipoNcf,
-                                BigDecimal itbisPorcentual) {
+                                BigDecimal itbisPorcentual,
+                                BigDecimal montoSaldoAfavorAplicado) {
 
         if (items.isEmpty()) {
             throw new VentaInvalidaException("La venta debe tener al menos un producto.");
@@ -206,9 +224,8 @@ public class VentaService {
             venta.setTipoNcf(tipoNcf);
         }
 
-// ITBIS (solo se desglosa si hay comprobante fiscal)
-        if (esCreditoFiscal
-                && itbisPorcentual != null
+// ITBIS (se desglosa siempre que haya una tasa aplicable)
+        if (itbisPorcentual != null
                 && itbisPorcentual.compareTo(BigDecimal.ZERO) > 0) {
 
             venta.setItbisPorcentual(itbisPorcentual);
@@ -229,6 +246,32 @@ public class VentaService {
             venta.setItbisPorcentual(BigDecimal.ZERO);
             venta.setMontoItbis(BigDecimal.ZERO);
 
+        }
+
+        // Aplicar saldo a favor del cliente, si corresponde (proveniente de
+        // devoluciones anteriores — Nota de Crédito / Saldo a Favor).
+        BigDecimal aplicado = montoSaldoAfavorAplicado != null
+                ? montoSaldoAfavorAplicado : BigDecimal.ZERO;
+        if (aplicado.compareTo(BigDecimal.ZERO) > 0) {
+            if (cliente == null) {
+                throw new VentaInvalidaException(
+                        "Debes seleccionar un cliente para aplicar su saldo a favor.");
+            }
+            if (aplicado.compareTo(cliente.getSaldoAFavor()) > 0) {
+                throw new VentaInvalidaException(
+                        "El cliente no tiene suficiente saldo a favor. Disponible: RD$"
+                                + cliente.getSaldoAFavor().toPlainString());
+            }
+            if (aplicado.compareTo(total) > 0) {
+                throw new VentaInvalidaException(
+                        "El monto aplicado de saldo a favor no puede ser mayor al total de la venta.");
+            }
+            cliente.setSaldoAFavor(cliente.getSaldoAFavor().subtract(aplicado));
+            clienteRepository.save(cliente);
+            venta.setMontoSaldoAfavorAplicado(aplicado);
+            if (aplicado.compareTo(total) == 0) {
+                venta.setMetodoPago("SALDO_A_FAVOR");
+            }
         }
 
         Venta guardada = ventaRepository.save(venta);
@@ -287,15 +330,78 @@ public class VentaService {
     }
 
     @Transactional
-    public void anularVenta(Integer idVenta, String motivo) {
+    public Venta anularVenta(Integer idVenta, String motivo) {
+        return anularVenta(idVenta, motivo, false);
+    }
+
+    @Transactional
+    public Venta anularVenta(Integer idVenta, String motivo, boolean porProblemaProducto) {
         Venta venta = obtenerPorId(idVenta);
         if (venta.getAnulada()) {
             throw new VentaInvalidaException("Esta venta ya fue anulada.");
         }
+
+        BigDecimal montoCobrado = Boolean.TRUE.equals(venta.getEsCredito())
+                ? venta.getTotalPagado()
+                : venta.getTotal();
+
+        boolean creditoConAbonos = Boolean.TRUE.equals(venta.getEsCredito())
+                && venta.getTotalPagado().compareTo(BigDecimal.ZERO) > 0;
+
+        boolean requiereNotaCredito = (porProblemaProducto || creditoConAbonos)
+                && montoCobrado.compareTo(BigDecimal.ZERO) > 0;
+
+        if (requiereNotaCredito) {
+            Cliente cliente = venta.getCliente();
+            if (cliente == null) {
+                throw new VentaInvalidaException(
+                        "Esta anulación generaría saldo a favor, pero la venta no tiene "
+                                + "un cliente identificado (venta ocasional). Selecciona un "
+                                + "cliente en la venta antes de anular por esta razón.");
+            }
+            cliente.setSaldoAFavor(cliente.getSaldoAFavor().add(montoCobrado));
+            clienteRepository.save(cliente);
+
+            String ncfNotaCredito = null;
+            if (Boolean.TRUE.equals(venta.getEsCreditoFiscal())) {
+                ncfNotaCredito = ncfService.generarNCF("B04");
+                venta.setNcfNotaCreditoAnulacion(ncfNotaCredito);
+            }
+
+            MovimientoCaja movimiento = new MovimientoCaja();
+            movimiento.setTipo(TipoMovimientoCaja.NOTA_CREDITO);
+            movimiento.setMonto(BigDecimal.ZERO);
+            movimiento.setReferenciaTipo("VENTA_ANULADA");
+            movimiento.setReferenciaId(venta.getIdVenta());
+            movimiento.setDescripcion((ncfNotaCredito != null
+                    ? "Nota de crédito fiscal " + ncfNotaCredito
+                    : "Nota de crédito interna (venta sin NCF)")
+                    + " por anulación (" + (porProblemaProducto
+                    ? "problema con el producto" : "error de cajero, con abonos previos")
+                    + ") — RD$" + montoCobrado.toPlainString()
+                    + " — Factura " + venta.getNumeroFactura());
+            movimiento.setUsuario(autenticacionService.getUsuarioActivo());
+            movimientoCajaRepository.save(movimiento);
+
+            log.info("Venta #{} anulada — RD${} convertidos en saldo a favor del cliente {}"
+                            + " — Motivo: {} — NCF: {}",
+                    idVenta, montoCobrado, cliente.getNombreCompleto(),
+                    porProblemaProducto ? "problema con el producto" : "error de cajero",
+                    ncfNotaCredito);
+        }
+
         // Restaurar stock
+
         for (VentaProducto detalle : venta.getDetalles()) {
+            Integer yaDevuelto = devolucionRepository.cantidadYaDevuelta(
+                    venta.getIdVenta(), detalle.getProducto().getIdProducto());
+            int cantidadARestaurar = detalle.getCantidad()
+                    - (yaDevuelto != null ? yaDevuelto : 0);
+            if (cantidadARestaurar <= 0) {
+                continue;
+            }
             Producto producto = detalle.getProducto();
-            producto.setStock(producto.getStock() + detalle.getCantidad());
+            producto.setStock(producto.getStock() + cantidadARestaurar);
             try {
                 productoRepository.saveAndFlush(producto);
             } catch (ObjectOptimisticLockingFailureException ex) {
@@ -305,6 +411,7 @@ public class VentaService {
             }
         }
         venta.setAnulada(true);
+        venta.setEstado(EstadoVenta.ANULADA);
         venta.setMotivoAnulacion(motivo);
         ventaRepository.save(venta);
         log.info("Venta #{} anulada. Motivo: {}", idVenta, motivo);
@@ -314,7 +421,17 @@ public class VentaService {
                 "VENTA_ANULADA", "Venta", idVenta,
                 "Factura " + venta.getNumeroFactura()
                         + " — Total: RD$" + venta.getTotal().toPlainString()
-                        + " — Motivo: " + motivo);
+                        + (requiereNotaCredito
+                        ? " — RD$" + montoCobrado.toPlainString()
+                        + " convertidos a saldo a favor"
+                        + (venta.getNcfNotaCreditoAnulacion() != null
+                        ? " (NCF " + venta.getNcfNotaCreditoAnulacion() + ")"
+                        : "")
+                        : "")
+                        + " — Motivo: " + motivo
+                        + (porProblemaProducto ? " (problema con el producto)" : ""));
+
+        return venta;
     }
 
     private String generarNumeroFactura() {

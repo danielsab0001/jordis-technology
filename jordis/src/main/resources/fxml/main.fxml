@@ -37,17 +37,6 @@
         <VBox styleClass="sidebar" style="-fx-padding: 8 0;"
               spacing="2" prefWidth="220">
 
-            <!-- Logo / nombre -->
-            <HBox style="-fx-padding: 16 20 20 20;" alignment="CENTER_LEFT"
-                  spacing="10">
-                <Label text="⚡"
-                       style="-fx-font-size: 20; -fx-background-color: #2563EB;
-                          -fx-background-radius: 8; -fx-padding: 4 6;"/>
-                <VBox spacing="1">
-                    <Label text="Jordis" styleClass="sidebar-logo-title"/>
-                    <Label text="Technology" styleClass="sidebar-logo-subtitle"/>
-                </VBox>
-            </HBox>
 
             <!-- Separador -->
             <Separator styleClass="sidebar-separator"/>
@@ -65,6 +54,11 @@
             <Button fx:id="btnVentas" text="Ventas" styleClass="sidebar-button"
                     contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onVentas">
                 <graphic><Label text="💰" styleClass="sidebar-icon"/></graphic>
+                <VBox.margin><Insets left="8" right="8"/></VBox.margin>
+            </Button>
+            <Button fx:id="btnDevoluciones" text="Devoluciones" styleClass="sidebar-button"
+                    contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onDevoluciones">
+                <graphic><Label text="↩" styleClass="sidebar-icon"/></graphic>
                 <VBox.margin><Insets left="8" right="8"/></VBox.margin>
             </Button>
             <Button fx:id="btnClientes" text="Clientes" styleClass="sidebar-button"
@@ -181,7 +175,7 @@
             <Label fx:id="lblEstado" text="Sistema listo"
                    style="-fx-text-fill: #2563EB; -fx-font-size: 12;"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label text="v1.0.0"
+            <Label text=""
                    style="-fx-text-fill: #94A3B8; -fx-font-size: 11;"/>
         </HBox>
     </bottom>

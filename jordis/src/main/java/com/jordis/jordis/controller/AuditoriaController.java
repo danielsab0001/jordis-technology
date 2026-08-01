@@ -75,10 +75,12 @@ public class AuditoriaController {
         });
 
         cmbAccion.getItems().addAll(null,
-                "VENTA_REGISTRADA", "VENTA_ANULADA", "COMPRA_REGISTRADA",
+                "VENTA_REGISTRADA", "VENTA_ANULADA", "DEVOLUCION_REGISTRADA",
+                "COMPRA_REGISTRADA",
                 "CLIENTE_CREADO", "PRODUCTO_CREADO", "PROVEEDOR_CREADO",
                 "USUARIO_CREADO", "USUARIO_DESBLOQUEADO",
-                "PRECIO_MODIFICADO", "INVENTARIO_AJUSTADO");
+                "PRECIO_MODIFICADO", "INVENTARIO_AJUSTADO",
+                "CAJA_ABIERTA", "CIERRE_CAJA");
         cmbAccion.setConverter(new javafx.util.StringConverter<>() {
             @Override public String toString(String s) {
                 return s == null ? "Todas las acciones" : etiquetaAccion(s);
@@ -122,19 +124,6 @@ public class AuditoriaController {
     }
 
     private String etiquetaAccion(String accion) {
-        if (accion == null) return "";
-        return switch (accion) {
-            case "VENTA_REGISTRADA"     -> "Venta registrada";
-            case "VENTA_ANULADA"        -> "Venta anulada";
-            case "COMPRA_REGISTRADA"    -> "Compra registrada";
-            case "CLIENTE_CREADO"       -> "Cliente nuevo";
-            case "PRODUCTO_CREADO"      -> "Producto nuevo";
-            case "PROVEEDOR_CREADO"     -> "Proveedor nuevo";
-            case "USUARIO_CREADO"       -> "Usuario nuevo";
-            case "USUARIO_DESBLOQUEADO" -> "Usuario desbloqueado";
-            case "PRECIO_MODIFICADO"    -> "Precio modificado";
-            case "INVENTARIO_AJUSTADO"  -> "Ajuste de inventario";
-            default                     -> accion;
-        };
+        return com.jordis.jordis.util.TextoFormateador.etiquetaAccion(accion);
     }
 }

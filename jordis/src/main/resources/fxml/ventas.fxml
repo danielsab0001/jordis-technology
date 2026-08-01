@@ -55,8 +55,7 @@
                 <TableColumn fx:id="colTotal"     text="Total"      prefWidth="100"/>
                 <TableColumn fx:id="colPago"      text="Pago"       prefWidth="90"/>
                 <TableColumn fx:id="colEstado"    text="Estado"     prefWidth="80"/>
-                <TableColumn fx:id="colAnular"    text="Acciones"   prefWidth="90"/>
-                <TableColumn fx:id="colVerFactura" text="Factura"   prefWidth="100"/>
+                <TableColumn fx:id="colAcciones"  text="Acciones"   prefWidth="130"/>
             </columns>
         </TableView>
     </VBox>

@@ -33,4 +33,10 @@ public interface ClienteRepository extends JpaRepository<Cliente, Integer> {
 
     @Query("SELECT COUNT(c) > 0 FROM Cliente c WHERE c.rnc = :rnc AND c.idCliente <> :id")
     boolean existeRncEnOtro(String rnc, Integer id);
+
+    @Query("SELECT COUNT(c) FROM Cliente c WHERE c.saldoAFavor > 0")
+    long contarConSaldoAFavor();
+
+    @Query("SELECT COALESCE(SUM(c.saldoAFavor), 0) FROM Cliente c WHERE c.saldoAFavor > 0")
+    java.math.BigDecimal sumaSaldoAFavorPendiente();
 }

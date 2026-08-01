@@ -57,7 +57,8 @@ public class ClienteHistorialController {
                 new SimpleStringProperty(
                         "RD$" + d.getValue().getTotal().toPlainString()));
         colPago.setCellValueFactory(d ->
-                new SimpleStringProperty(d.getValue().getMetodoPago()));
+                new SimpleStringProperty(
+                        com.jordis.jordis.util.TextoFormateador.humanizar(d.getValue().getMetodoPago())));
 
         colEstado.setCellFactory(col -> new TableCell<>() {
             @Override

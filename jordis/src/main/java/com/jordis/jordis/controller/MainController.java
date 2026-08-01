@@ -38,6 +38,7 @@ public class MainController {
     // Botones del menú lateral — módulos
     @FXML private Button btnDashboard;
     @FXML private Button btnVentas;
+    @FXML private Button btnDevoluciones;
     @FXML private Button btnClientes;
     @FXML private Button btnProductos;
     @FXML private Button btnInventario;
@@ -104,7 +105,7 @@ public class MainController {
         lblAlertaContador.setVisible(false);
 
         List<Button> botonesMenu = List.of(
-                btnDashboard, btnVentas, btnClientes, btnProductos,
+                btnDashboard, btnVentas, btnDevoluciones, btnClientes, btnProductos,
                 btnInventario, btnCompras, btnProveedores, btnCreditos,
                 btnCuentasPorPagar, btnCierreCaja, btnReportes, btnUsuarios,
                 btnCategorias, btnConfiguracion, btnAlertas);
@@ -307,6 +308,7 @@ public class MainController {
     @FXML public void onVentas() {
         cargarModulo("/fxml/ventas.fxml", btnVentas, "Módulo: Ventas");
     }
+    @FXML public void onDevoluciones() {cargarModulo("/fxml/devoluciones.fxml", btnDevoluciones, "Módulo: Devoluciones"); }
     @FXML public void onClientes() {
         cargarModulo("/fxml/clientes.fxml", btnClientes, "Módulo: Clientes");
     }

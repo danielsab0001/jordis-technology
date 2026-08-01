@@ -33,6 +33,16 @@ public class FacturaService {
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    /** Texto legal fijo de garantía/devoluciones impreso al final del ticket 80mm. */
+    private static final java.util.List<String> TERMINOS_GARANTIA = java.util.List.of(
+            "Conserve esta factura y el empaque del producto para cambios, "
+                    + "devoluciones o garantía.",
+            "La garantía aplica según las condiciones y el período establecidos "
+                    + "para el producto.",
+            "No cubre daños por mal uso, golpes, humedad o modificaciones.",
+            "Para hacer efectiva la garantía deberá presentar el comprobante de compra."
+    );
+
     private static final Font FONT_TITULO =
             new Font(Font.HELVETICA, 16, Font.BOLD, new Color(37, 99, 235));
     private static final Font FONT_SUBTITULO =
@@ -196,7 +206,7 @@ public class FacturaService {
         agregarCeldaInfo(
                 infoTabla,
                 "Método de pago:",
-                venta.getMetodoPago());
+                com.jordis.jordis.util.TextoFormateador.humanizar(venta.getMetodoPago()));
 
         doc.add(infoTabla);
     }
@@ -231,7 +241,6 @@ public class FacturaService {
             agregarCeldaInfo(tabla, "Cliente:", "Consumidor final");
         }
 
-        agregarCeldaInfo(tabla, "Método de pago:", venta.getMetodoPago());
         doc.add(tabla);
     }
 
@@ -281,52 +290,44 @@ public class FacturaService {
 
     private void agregarTotales(Document doc, Venta venta) throws DocumentException {
 
-        BigDecimal subtotalMostrar;
-
-        if (venta.getEsCreditoFiscal()
-                && venta.getMontoItbis() != null
-                && venta.getMontoItbis().compareTo(BigDecimal.ZERO) > 0) {
-
-            subtotalMostrar = venta.getTotal()
-                    .subtract(venta.getMontoItbis());
-
-        } else {
-
-            subtotalMostrar = venta.getSubtotal();
-
-        }
-
         PdfPTable tabla = new PdfPTable(2);
         tabla.setWidthPercentage(50);
         tabla.setHorizontalAlignment(Element.ALIGN_RIGHT);
         tabla.setSpacingAfter(10);
 
-        // Subtotal
-        agregarFilaTotal(tabla,
-                "Subtotal:", "RD$" + subtotalMostrar.toPlainString(),
-                FONT_NORMAL, FONT_NORMAL);
-
-        // Descuento
         BigDecimal desc = venta.getDescuentoPorcentual();
-        if (desc != null && desc.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal montoDesc = subtotalMostrar
-                    .multiply(desc)
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        boolean hayDescuento = desc != null && desc.compareTo(BigDecimal.ZERO) > 0;
+
+        if (hayDescuento) {
+            BigDecimal montoDescuento = venta.getSubtotal().subtract(venta.getTotal());
+            agregarFilaTotal(tabla,
+                    "Precio antes de descuento:", "RD$" + venta.getSubtotal().toPlainString(),
+                    FONT_NORMAL, FONT_NORMAL);
             agregarFilaTotal(tabla,
                     "Descuento (" + desc.toPlainString() + "%):",
-                    "- RD$" + montoDesc.toPlainString(),
+                    "- RD$" + montoDescuento.toPlainString(),
                     new Font(Font.HELVETICA, 10, Font.NORMAL, new Color(220, 38, 38)),
                     new Font(Font.HELVETICA, 10, Font.NORMAL, new Color(220, 38, 38)));
         }
 
-        // ITBIS
-        if (venta.getMontoItbis() != null
-                && venta.getMontoItbis().compareTo(BigDecimal.ZERO) > 0) {
+        boolean hayItbis = venta.getMontoItbis() != null
+                && venta.getMontoItbis().compareTo(BigDecimal.ZERO) > 0;
+
+        if (hayItbis) {
+            BigDecimal baseImponible = venta.getTotal().subtract(venta.getMontoItbis());
+            agregarFilaTotal(tabla,
+                    "Subtotal:", "RD$" + baseImponible.toPlainString(),
+                    FONT_NORMAL, FONT_NORMAL);
             agregarFilaTotal(tabla,
                     "ITBIS (" + venta.getItbisPorcentual().toPlainString() + "%):",
                     "+ RD$" + venta.getMontoItbis().toPlainString(),
                     new Font(Font.HELVETICA, 10, Font.NORMAL, new Color(100, 116, 139)),
                     new Font(Font.HELVETICA, 10, Font.NORMAL, new Color(100, 116, 139)));
+        } else if (!hayDescuento) {
+            // Sin descuento y sin ITBIS: el subtotal simple ya es el total.
+            agregarFilaTotal(tabla,
+                    "Subtotal:", "RD$" + venta.getSubtotal().toPlainString(),
+                    FONT_NORMAL, FONT_NORMAL);
         }
 
         // Total
@@ -511,6 +512,212 @@ public class FacturaService {
         cValor.setPadding(3);
         cValor.setHorizontalAlignment(Element.ALIGN_RIGHT);
         tabla.addCell(cValor);
+    }
+
+    /**
+     * Genera la factura en formato ticket de 80mm, pensado para
+     * impresoras térmicas de punto de venta. Es un documento
+     * independiente del PDF A4 de generarFactura() (que se sigue usando
+     * para "Ver factura") — este es el que debe usar "Reimprimir factura"
+     * y, a futuro, la impresión directa en la impresora térmica.
+     * El ancho está fijo en 80mm (226.77pt); el alto se deja grande y el
+     * PDF se recorta al contenido real.
+     */
+    public String generarTicket80mm(Venta venta) {
+        final int ANCHO = 40; // caracteres por línea a 80mm con Courier 8pt
+
+        try {
+            String rutaArchivo = System.getProperty("java.io.tmpdir")
+                    + File.separator + "ticket_" + venta.getNumeroFactura() + ".pdf";
+
+            float anchoTicket = 226.77f; // 80mm
+            Rectangle tamano = new Rectangle(anchoTicket, 2000f);
+            Document doc = new Document(tamano, 10, 10, 8, 8);
+            PdfWriter.getInstance(doc, new FileOutputStream(rutaArchivo));
+            doc.open();
+
+            Font tituloEmpresa = new Font(Font.HELVETICA, 12, Font.BOLD, Color.BLACK);
+            Font infoEmpresa   = new Font(Font.HELVETICA, 8, Font.NORMAL, Color.BLACK);
+            Font tituloDoc     = new Font(Font.COURIER, 9, Font.BOLD, Color.BLACK);
+            Font mono          = new Font(Font.COURIER, 8, Font.NORMAL, Color.BLACK);
+            Font monoBold      = new Font(Font.COURIER, 8, Font.BOLD, Color.BLACK);
+
+            String nombreEmpresa = configuracionService.obtener("negocio.nombre", "Jordis Technology");
+            String razonSocial = configuracionService.obtener("negocio.razonSocial", "");
+            String rnc = configuracionService.obtener("negocio.rnc", "");
+            String telefono = configuracionService.obtener("negocio.telefono", "");
+            String direccion = configuracionService.obtener("negocio.direccion", "");
+            String ncfVigencia = configuracionService.obtener("negocio.ncfVigencia", "");
+
+            // ---- Encabezado del negocio ----
+            doc.add(centrado(nombreEmpresa, tituloEmpresa));
+            if (!razonSocial.isBlank()) doc.add(centrado(razonSocial, infoEmpresa));
+            if (!direccion.isBlank())   doc.add(centrado(direccion, infoEmpresa));
+            if (!telefono.isBlank())    doc.add(centrado(telefono, infoEmpresa));
+            if (!rnc.isBlank())         doc.add(centrado("RNC: " + rnc, infoEmpresa));
+
+            doc.add(separador(ANCHO, mono));
+
+            // ---- Tipo de comprobante ----
+            String tituloFactura = tituloParaTipoNcf(venta.getTipoNcf());
+            doc.add(centrado(tituloFactura, tituloDoc));
+            if (venta.getNcf() != null && !venta.getNcf().isBlank()) {
+                doc.add(centrado("NCF: " + venta.getNcf(), mono));
+                if (!ncfVigencia.isBlank()) {
+                    doc.add(centrado("Válido hasta: " + ncfVigencia, mono));
+                }
+            }
+            doc.add(centrado("Fecha: " + venta.getFechaHora().format(FMT), mono));
+
+            if (Boolean.TRUE.equals(venta.getEsCredito())) {
+                doc.add(centrado("VENTA A CREDITO", monoBold));
+            }
+            if (Boolean.TRUE.equals(venta.getAnulada())) {
+                doc.add(centrado("*** VENTA ANULADA ***", monoBold));
+            }
+
+            doc.add(separador(ANCHO, mono));
+
+            // ---- Cliente ----
+            doc.add(new Paragraph("CLIENTE", monoBold));
+            if (venta.getCliente() != null) {
+                var c = venta.getCliente();
+                doc.add(new Paragraph("Nombre/Razón Social: " + c.getNombreCompleto(), mono));
+                String idFiscal = c.esEmpresa()
+                        ? c.getRnc() : c.getCedulaIdentificacion();
+                doc.add(new Paragraph(
+                        "Cédula/RNC: " + (idFiscal != null && !idFiscal.isBlank() ? idFiscal : "—"),
+                        mono));
+            } else {
+                doc.add(new Paragraph("Nombre: Consumidor final", mono));
+            }
+
+            doc.add(separador(ANCHO, mono));
+
+            // ---- Productos ----
+            doc.add(new Paragraph("PRODUCTO", monoBold));
+            doc.add(new Paragraph(
+                    pad("CANT.", 8, false) + pad("PRECIO", 15, true) + pad("IMPORTE", 17, true),
+                    mono));
+            doc.add(separador(ANCHO, mono));
+
+            for (VentaProducto vp : venta.getDetalles()) {
+                doc.add(new Paragraph(vp.getProducto().getNombre(), mono));
+                doc.add(new Paragraph(
+                        pad(String.valueOf(vp.getCantidad()), 8, false)
+                                + pad(formatoMonto(vp.getPrecioUnitario()), 15, true)
+                                + pad(formatoMonto(vp.getSubtotal()), 17, true),
+                        mono));
+            }
+
+            doc.add(separador(ANCHO, mono));
+
+            // ---- Totales ----
+            BigDecimal desc = venta.getDescuentoPorcentual();
+            boolean hayDescuento = desc != null && desc.compareTo(BigDecimal.ZERO) > 0;
+            if (hayDescuento) {
+                BigDecimal montoDescuento = venta.getSubtotal().subtract(venta.getTotal());
+                doc.add(new Paragraph(filaMonto("Precio original:",
+                        formatoMonto(venta.getSubtotal()), ANCHO), mono));
+                doc.add(new Paragraph(filaMonto("Descuento ("
+                                + desc.stripTrailingZeros().toPlainString() + "%):",
+                        "-" + formatoMonto(montoDescuento), ANCHO), mono));
+            }
+
+            BigDecimal montoItbis = venta.getMontoItbis() != null
+                    ? venta.getMontoItbis() : BigDecimal.ZERO;
+            if (montoItbis.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal baseImponible = venta.getTotal().subtract(montoItbis);
+                String etiquetaItbis = "ITBIS "
+                        + venta.getItbisPorcentual().stripTrailingZeros().toPlainString() + "%:";
+                doc.add(new Paragraph(
+                        filaMonto("Subtotal:", formatoMonto(baseImponible), ANCHO), mono));
+                doc.add(new Paragraph(
+                        filaMonto(etiquetaItbis, formatoMonto(montoItbis), ANCHO), mono));
+            } else if (!hayDescuento) {
+                doc.add(new Paragraph(
+                        filaMonto("Subtotal:", formatoMonto(venta.getSubtotal()), ANCHO), mono));
+            }
+
+            doc.add(new Paragraph(
+                    filaMonto("TOTAL:", formatoMonto(venta.getTotal()), ANCHO), monoBold));
+
+            doc.add(separador(ANCHO, mono));
+
+            // ---- Pie: pago, cajero, factura interna, garantías ----
+            doc.add(new Paragraph("Forma de pago: "
+                    + com.jordis.jordis.util.TextoFormateador.humanizar(venta.getMetodoPago()), mono));
+            doc.add(new Paragraph("Atendido por: " + venta.getCajero().getNombreCompleto(), mono));
+            doc.add(new Paragraph("Factura interna: " + venta.getNumeroFactura(), mono));
+
+            if (venta.getGarantias() != null && !venta.getGarantias().isEmpty()) {
+                doc.add(new Paragraph("Garantía:", mono));
+                for (VentaGarantia g : venta.getGarantias()) {
+                    doc.add(new Paragraph(
+                            g.getProducto().getNombre() + " — " + g.getMeses() + " meses", mono));
+                }
+            }
+
+            doc.add(separador(ANCHO, mono));
+            doc.add(centrado("¡Gracias por su compra!", mono));
+            doc.add(separador(ANCHO, mono));
+
+            // ---- Garantía y devoluciones (texto legal fijo) ----
+            doc.add(centrado("GARANTÍA Y DEVOLUCIONES", monoBold));
+            for (String linea : TERMINOS_GARANTIA) {
+                Paragraph p = new Paragraph(linea, infoEmpresa);
+                p.setSpacingAfter(4);
+                doc.add(p);
+            }
+            doc.add(separador(ANCHO, mono));
+
+            doc.close();
+            log.info("Ticket 80mm generado: {}", rutaArchivo);
+            return rutaArchivo;
+
+        } catch (Exception e) {
+            log.error("Error generando ticket 80mm", e);
+            throw new RuntimeException("Error al generar el ticket: " + e.getMessage());
+        }
+    }
+
+    private String tituloParaTipoNcf(String tipoNcf) {
+        if (tipoNcf == null) return "FACTURA";
+        return switch (tipoNcf) {
+            case "B01" -> "FACTURA DE CRÉDITO FISCAL";
+            case "B02" -> "FACTURA DE CONSUMO";
+            case "B14" -> "FACTURA RÉGIMEN ESPECIAL";
+            case "B15" -> "FACTURA GUBERNAMENTAL";
+            default -> "FACTURA";
+        };
+    }
+
+    private Paragraph centrado(String texto, Font font) {
+        Paragraph p = new Paragraph(texto, font);
+        p.setAlignment(Element.ALIGN_CENTER);
+        return p;
+    }
+
+    private Paragraph separador(int ancho, Font font) {
+        return new Paragraph("-".repeat(ancho), font);
+    }
+
+    /** Alinea "texto" dentro de un campo de "ancho" caracteres (para columnas monoespaciadas). */
+    private String pad(String texto, int ancho, boolean alinearDerecha) {
+        if (texto.length() >= ancho) return texto.substring(0, ancho);
+        String relleno = " ".repeat(ancho - texto.length());
+        return alinearDerecha ? relleno + texto : texto + relleno;
+    }
+
+    /** Fila "etiqueta ......... monto", con el monto pegado a la derecha del ancho total. */
+    private String filaMonto(String etiqueta, String monto, int ancho) {
+        int espacios = ancho - etiqueta.length() - monto.length();
+        if (espacios < 1) espacios = 1;
+        return etiqueta + " ".repeat(espacios) + monto;
+    }
+
+    private String formatoMonto(BigDecimal monto) {
+        return String.format("%,.2f", monto.doubleValue());
     }
 
     /**

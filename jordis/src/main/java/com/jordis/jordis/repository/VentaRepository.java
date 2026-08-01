@@ -1,8 +1,11 @@
 package com.jordis.jordis.repository;
 
 import com.jordis.jordis.model.Venta;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -24,6 +27,43 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
             ORDER BY v.fechaHora DESC
             """)
     List<Venta> findActivas();
+
+    @Query("""
+            SELECT v
+            FROM Venta v
+            ORDER BY v.fechaHora DESC
+            """)
+    List<Venta> findTodasOrdenadas();
+
+    /**
+     * Página real (LIMIT/OFFSET en la base de datos) para el listado del
+     * módulo de Ventas, con búsqueda opcional por número de factura o
+     * nombre/razón social del cliente. Esto es lo que evita cargar la
+     * tabla completa cada vez que se abre el módulo o se escribe en el
+     * buscador — a diferencia de obtenerTodasIncluyendoAnuladas(), que
+     * trae todo y se sigue usando en flujos puntuales que sí necesitan
+     * el conjunto completo (por ahora ninguno crítico en volumen).
+     */
+    @Query(value = """
+            SELECT v FROM Venta v
+            LEFT JOIN v.cliente c
+            WHERE (:texto IS NULL OR :texto = ''
+                OR LOWER(v.numeroFactura) LIKE LOWER(CONCAT('%', :texto, '%'))
+                OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :texto, '%'))
+                OR LOWER(c.apellido) LIKE LOWER(CONCAT('%', :texto, '%'))
+                OR LOWER(c.razonSocial) LIKE LOWER(CONCAT('%', :texto, '%')))
+            ORDER BY v.fechaHora DESC
+            """,
+            countQuery = """
+            SELECT COUNT(v) FROM Venta v
+            LEFT JOIN v.cliente c
+            WHERE (:texto IS NULL OR :texto = ''
+                OR LOWER(v.numeroFactura) LIKE LOWER(CONCAT('%', :texto, '%'))
+                OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :texto, '%'))
+                OR LOWER(c.apellido) LIKE LOWER(CONCAT('%', :texto, '%'))
+                OR LOWER(c.razonSocial) LIKE LOWER(CONCAT('%', :texto, '%')))
+            """)
+    Page<Venta> buscarPaginado(@Param("texto") String texto, Pageable pageable);
 
     @Query("""
             SELECT v

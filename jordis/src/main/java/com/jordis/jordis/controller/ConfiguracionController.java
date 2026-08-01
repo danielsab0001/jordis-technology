@@ -25,6 +25,9 @@ public class ConfiguracionController {
 
     @FXML
     public void initialize() {
+        com.jordis.jordis.util.CampoMascaraUtil.aplicarMascaraTelefono(txtTelefono);
+        com.jordis.jordis.util.CampoMascaraUtil.aplicarMascaraRnc(txtRnc);
+
         txtNombre.setText(configuracionService.obtener(
                 "negocio.nombre", "Jordis Technology"));
         txtRnc.setText(configuracionService.obtener(

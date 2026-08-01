@@ -24,6 +24,7 @@ public class NCFService {
         String secuencia = switch (tipoNcf) {
             case "B01" -> "ncf_b01_seq";
             case "B02" -> "ncf_b02_seq";
+            case "B04" -> "ncf_b04_seq";
             case "B14" -> "ncf_b14_seq";
             case "B15" -> "ncf_b15_seq";
             default -> throw new IllegalArgumentException(
@@ -54,6 +55,10 @@ public class NCFService {
                 "B14 — Régimen Especial",
                 "B15 — Gubernamental"
         };
+    }
+
+    public String generarNotaCredito() {
+        return generarNCF("B04");
     }
 
     public String extraerCodigo(String tipoConDescripcion) {

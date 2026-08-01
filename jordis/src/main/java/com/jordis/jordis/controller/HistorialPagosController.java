@@ -74,7 +74,7 @@ public class HistorialPagosController {
                 .map(p -> new FilaPago(
                         p.getFechaPago().format(FMT),
                         p.getMonto().toPlainString(),
-                        p.getMetodoPago(),
+                        com.jordis.jordis.util.TextoFormateador.humanizar(p.getMetodoPago()),
                         p.getCajero().getNombreCompleto(),
                         p.getNotas()))
                 .toList();
@@ -99,7 +99,7 @@ public class HistorialPagosController {
                 .map(p -> new FilaPago(
                         p.getFechaPago().format(FMT),
                         p.getMonto().toPlainString(),
-                        p.getMetodoPago(),
+                        com.jordis.jordis.util.TextoFormateador.humanizar(p.getMetodoPago()),
                         p.getCajero().getNombreCompleto(),
                         p.getNotas()))
                 .toList();

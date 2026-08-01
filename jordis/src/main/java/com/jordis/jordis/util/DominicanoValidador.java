@@ -47,8 +47,52 @@ public final class DominicanoValidador {
     public static String formatearTelefono(String telefono) {
         String limpia = soloDigitos(telefono);
         if (limpia.length() != 10) return telefono;
-        return "(" + limpia.substring(0, 3) + ") "
-                + limpia.substring(3, 6) + "-" + limpia.substring(6);
+        return aplicarGrupos(limpia, 3, 3, 4);
+    }
+
+
+    public static String formatearTelefonoParcial(String entrada) {
+        String digitos = soloDigitos(entrada);
+        if (digitos.length() > 10) digitos = digitos.substring(0, 10);
+        return aplicarGrupos(digitos, 3, 3, 4);
+    }
+
+    /** Formato progresivo de cédula: 402-0474910-5 (3-7-1, hasta 11 dígitos). */
+    public static String formatearCedulaParcial(String entrada) {
+        String digitos = soloDigitos(entrada);
+        if (digitos.length() > 11) digitos = digitos.substring(0, 11);
+        return aplicarGrupos(digitos, 3, 7, 1);
+    }
+
+    /**
+     * Formato progresivo de RNC. Un RNC de empresa tiene 9 dígitos
+     * (formato 3-5-1, ej. 130-12345-6); un RNC de persona física es en
+     * realidad su cédula (formato 3-7-1, 11 dígitos) — por eso el
+     * agrupamiento cambia solo si el usuario sigue escribiendo más de 9
+     * dígitos.
+     */
+    public static String formatearRncParcial(String entrada) {
+        String digitos = soloDigitos(entrada);
+        if (digitos.length() > 11) digitos = digitos.substring(0, 11);
+        if (digitos.length() > 9) {
+            return aplicarGrupos(digitos, 3, 7, 1);
+        }
+        return aplicarGrupos(digitos, 3, 5, 1);
+    }
+
+    /** Inserta guiones entre grupos de dígitos según los tamaños dados. */
+    private static String aplicarGrupos(String digitos, int... grupos) {
+        StringBuilder sb = new StringBuilder();
+        int pos = 0;
+        for (int i = 0; i < grupos.length && pos < digitos.length(); i++) {
+            int fin = Math.min(pos + grupos[i], digitos.length());
+            sb.append(digitos, pos, fin);
+            pos = fin;
+            if (pos < digitos.length() && i < grupos.length - 1) {
+                sb.append('-');
+            }
+        }
+        return sb.toString();
     }
 
     public static boolean esCorreoValido(String correo) {

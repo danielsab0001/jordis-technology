@@ -9,11 +9,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.controlsfx.control.SearchableComboBox;
 import org.springframework.stereotype.Component;
+import com.jordis.jordis.config.SpringFXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -60,6 +64,10 @@ public class VentaFormController {
     @FXML private ComboBox<String> cmbItbis;
     @FXML private Label lblItbisLabel;
     @FXML private Label lblItbisMonto;
+    @FXML private HBox boxSaldoAFavor;
+    @FXML private CheckBox chkAplicarSaldoAFavor;
+    @FXML private Label lblSaldoDisponible;
+    @FXML private TextField txtMontoSaldoAFavor;
 
     private final NCFService ncfService;
 
@@ -68,6 +76,7 @@ public class VentaFormController {
     private final ProductoService      productoService;
     private final AutenticacionService autenticacionService;
     private final FacturaService       facturaService;
+    private final SpringFXMLLoader fxmlLoader;
 
     private final ObservableList<FilaVenta> detalles =
             FXCollections.observableArrayList();
@@ -104,6 +113,7 @@ public class VentaFormController {
         todosLosProductos = productoService.obtenerTodos();
         cmbProducto.getItems().setAll(todosLosProductos);
         cmbProducto.setValue(null);
+        actualizarBoxSaldoAFavor(null);
         if (cmbProducto.isEditable()) cmbProducto.getEditor().clear();
 
         cmbMetodoPago.setValue("EFECTIVO");
@@ -148,6 +158,7 @@ public class VentaFormController {
                 chkCredito.setDisable(true);
                 ocultarCredito();
             }
+            actualizarBoxSaldoAFavor(seleccionado);
         });
     }
 
@@ -269,6 +280,28 @@ public class VentaFormController {
     public void setOnGuardado(Runnable cb) { this.onGuardado = cb; }
 
     @FXML
+    public void onNuevoCliente() {
+        try {
+            SpringFXMLLoader.LoadResult<ClienteFormController> result =
+                    fxmlLoader.loadWithController("/fxml/cliente_form.fxml");
+            result.controller.setCliente(null);
+            result.controller.setOnGuardado(() -> {
+                todosLosClientes = clienteService.obtenerTodos();
+                cmbCliente.getItems().setAll(todosLosClientes);
+                Cliente nuevo = todosLosClientes.get(todosLosClientes.size() - 1);
+                cmbCliente.setValue(nuevo);
+            });
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Nuevo Cliente");
+            stage.setScene(new Scene(result.root));
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de cliente", e);
+        }
+    }
+
+    @FXML
     public void onToggleCredito() {
         boolean esCredito = chkCredito.isSelected();
         if (esCredito) {
@@ -292,14 +325,52 @@ public class VentaFormController {
         cmbMetodoPago.setValue("EFECTIVO");
     }
 
+    private void actualizarBoxSaldoAFavor(Cliente cliente) {
+        boolean tieneSaldo = cliente != null
+                && cliente.getSaldoAFavor() != null
+                && cliente.getSaldoAFavor().compareTo(BigDecimal.ZERO) > 0;
+
+        boxSaldoAFavor.setVisible(tieneSaldo);
+        boxSaldoAFavor.setManaged(tieneSaldo);
+        chkAplicarSaldoAFavor.setSelected(false);
+        txtMontoSaldoAFavor.setDisable(true);
+        txtMontoSaldoAFavor.setText("0.00");
+
+        if (tieneSaldo) {
+            lblSaldoDisponible.setText(
+                    "Disponible: RD$" + cliente.getSaldoAFavor().toPlainString());
+        }
+    }
+
+    @FXML
+    public void onToggleSaldoAFavor() {
+        boolean activo = chkAplicarSaldoAFavor.isSelected();
+        txtMontoSaldoAFavor.setDisable(!activo);
+        if (activo) {
+            Cliente cliente = cmbCliente.getValue();
+            BigDecimal disponible = cliente != null ? cliente.getSaldoAFavor() : BigDecimal.ZERO;
+            BigDecimal totalActual = obtenerTotalActual();
+            BigDecimal sugerido = disponible.min(totalActual).setScale(2, RoundingMode.HALF_UP);
+            txtMontoSaldoAFavor.setText(sugerido.toPlainString());
+        } else {
+            txtMontoSaldoAFavor.setText("0.00");
+        }
+    }
+
+    private BigDecimal obtenerTotalActual() {
+        try {
+            return new BigDecimal(lblTotal.getText().replace("RD$", "").trim());
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
     @FXML
     public void onToggleCreditoFiscal() {
         boolean activo = chkCreditoFiscal.isSelected();
         lblTipoNcf.setVisible(activo); lblTipoNcf.setManaged(activo);
         cmbTipoNcf.setVisible(activo); cmbTipoNcf.setManaged(activo);
-        lblItbis.setVisible(activo);   lblItbis.setManaged(activo);
-        cmbItbis.setVisible(activo);   cmbItbis.setManaged(activo);
-        actualizarTotales(); // recalcular al cambiar
+        actualizarTotales();
     }
 
     @FXML
@@ -401,15 +472,35 @@ public class VentaFormController {
 
         boolean esCreditoFiscal = chkCreditoFiscal.isSelected();
         String tipoNcf = null;
-        BigDecimal itbis = BigDecimal.ZERO;
-
         if (esCreditoFiscal) {
             tipoNcf = ncfService.extraerCodigo(cmbTipoNcf.getValue());
+        }
+
+        BigDecimal itbis = BigDecimal.ZERO;
+        try {
+            if (cmbItbis.getValue() != null) {
+                itbis = new BigDecimal(cmbItbis.getValue().replace("%", "").trim());
+            }
+        } catch (Exception e) {
+            itbis = BigDecimal.ZERO;
+        }
+
+        BigDecimal montoSaldoAfavorAplicado = BigDecimal.ZERO;
+        if (chkAplicarSaldoAFavor.isSelected()) {
             try {
-                itbis = new BigDecimal(
-                        cmbItbis.getValue().replace("%", "").trim());
-            } catch (Exception e) {
-                itbis = BigDecimal.ZERO;
+                montoSaldoAfavorAplicado = new BigDecimal(txtMontoSaldoAFavor.getText().trim());
+            } catch (Exception ex) {
+                lblError.setText("El monto de saldo a favor no es válido."); return;
+            }
+            if (montoSaldoAfavorAplicado.compareTo(BigDecimal.ZERO) <= 0) {
+                lblError.setText("Ingresa un monto válido de saldo a favor a aplicar."); return;
+            }
+            if (clienteSel == null) {
+                lblError.setText("Selecciona un cliente para aplicar su saldo a favor."); return;
+            }
+            if (montoSaldoAfavorAplicado.compareTo(clienteSel.getSaldoAFavor()) > 0) {
+                lblError.setText("El cliente no tiene suficiente saldo a favor. Disponible: RD$"
+                        + clienteSel.getSaldoAFavor().toPlainString()); return;
             }
         }
 
@@ -426,7 +517,8 @@ public class VentaFormController {
                     fechaLimite,
                     esCreditoFiscal,
                     tipoNcf,
-                    itbis
+                    itbis,
+                    montoSaldoAfavorAplicado
             );
 
             // Preguntar si desea imprimir la factura
@@ -494,7 +586,7 @@ public class VentaFormController {
         BigDecimal montoItbis = BigDecimal.ZERO;
         BigDecimal baseImponible = totalFinal;
 
-        if (chkCreditoFiscal.isSelected() && cmbItbis.getValue() != null) {
+        if (cmbItbis.getValue() != null) {
             try {
                 itbisPct = new BigDecimal(
                         cmbItbis.getValue().replace("%", "").trim());

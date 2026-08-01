@@ -28,6 +28,11 @@ public class ProveedorFormController {
     private Proveedor proveedorEditar;
     private Runnable onGuardado;
 
+    @FXML
+    public void initialize() {
+        com.jordis.jordis.util.CampoMascaraUtil.aplicarMascaraTelefono(txtTelefono);
+    }
+
     public void setProveedor(Proveedor proveedor) {
         this.proveedorEditar = proveedor;
         if (proveedor != null) {

@@ -72,18 +72,32 @@ public class Venta {
     @Column(name = "monto_itbis", nullable = false, precision = 12, scale = 2)
     private BigDecimal montoItbis = BigDecimal.ZERO;
 
+    @Column(name = "monto_saldo_favor_aplicado", nullable = false, precision = 12, scale = 2)
+    private BigDecimal montoSaldoAfavorAplicado = BigDecimal.ZERO;
+
+    @Deprecated
     @Column(name = "anulada", nullable = false)
     private Boolean anulada = false;
 
     @Column(name = "motivo_anulacion", length = 255)
     private String motivoAnulacion;
 
+    @Column(name = "ncf_nota_credito_anulacion", length = 19)
+    private String ncfNotaCreditoAnulacion;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false, length = 20)
+    private EstadoVenta estado = EstadoVenta.VALIDA;
+
+    @org.hibernate.annotations.BatchSize(size = 25)
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<VentaProducto> detalles = new ArrayList<>();
 
+    @org.hibernate.annotations.BatchSize(size = 25)
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<VentaGarantia> garantias = new ArrayList<>();
 
+    @org.hibernate.annotations.BatchSize(size = 25)
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<CreditoPago> pagos = new ArrayList<>();
 
@@ -100,5 +114,9 @@ public class Venta {
 
     public boolean estaCancelado() {
         return getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0;
+    }
+
+    public boolean estaAnulada() {
+        return estado == EstadoVenta.ANULADA;
     }
 }

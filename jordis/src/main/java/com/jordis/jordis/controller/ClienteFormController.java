@@ -43,7 +43,10 @@ public class ClienteFormController {
 
     @FXML
     public void initialize() {
-        // Cambiar paneles al seleccionar tipo
+        com.jordis.jordis.util.CampoMascaraUtil.aplicarMascaraTelefono(txtTelefono);
+        com.jordis.jordis.util.CampoMascaraUtil.aplicarMascaraCedula(txtCedula);
+        com.jordis.jordis.util.CampoMascaraUtil.aplicarMascaraRnc(txtRnc);
+
         rbPersona.selectedProperty().addListener((obs, old, val) -> {
             panelPersona.setVisible(val);
             panelPersona.setManaged(val);

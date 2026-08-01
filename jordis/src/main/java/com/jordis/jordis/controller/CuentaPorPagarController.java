@@ -126,7 +126,7 @@ public class CuentaPorPagarController {
                 boolean vencida = c.getFechaLimite().isBefore(LocalDateTime.now())
                         && !c.estaCancelada();
                 setText(vencida
-                        ? "⚠ " + c.getFechaLimite().format(FMT)
+                        ? "" + c.getFechaLimite().format(FMT)
                         : c.getFechaLimite().format(FMT));
                 setStyle(vencida
                         ? "-fx-text-fill: #DC2626; -fx-font-weight: bold;" : "");
