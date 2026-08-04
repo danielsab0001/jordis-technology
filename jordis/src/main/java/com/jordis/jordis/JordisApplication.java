@@ -3,6 +3,7 @@ package com.jordis.jordis;
 import com.jordis.jordis.config.StageManager;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -21,6 +22,9 @@ public class JordisApplication extends Application {
     public void start(Stage primaryStage) {
         StageManager stageManager = springContext.getBean(StageManager.class);
         stageManager.setPrimaryStage(primaryStage);
+
+        primaryStage.getIcons().add(
+                new Image(getClass().getResourceAsStream("/images/app-icon.png")));
 
         primaryStage.setMaximized(true);
         primaryStage.setWidth(900);
