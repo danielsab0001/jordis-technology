@@ -11,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
-    @Query("SELECT u FROM Usuario u WHERE u.nombre = :nombre AND u.activo = true")
+    @Query("SELECT u FROM Usuario u WHERE LOWER(u.nombre) = LOWER(:nombre) AND u.activo = true")
     Optional<Usuario> findByNombreActivo(String nombre);
 
     @Query("SELECT u FROM Usuario u WHERE u.activo = true")
@@ -20,12 +20,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     @Query("SELECT u FROM Usuario u WHERE u.bloqueado = true")
     List<Usuario> findBloqueados();
 
-    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE u.nombre = :nombre")
+    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE LOWER(u.nombre) = LOWER(:nombre)")
     boolean existeNombre(String nombre);
 
-    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE u.nombre = :nombre AND u.idUsuario <> :id")
+    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE LOWER(u.nombre) = LOWER(:nombre) AND u.idUsuario <> :id")
     boolean existeNombreEnOtro(String nombre, Integer id);
 
-    @Query("SELECT u FROM Usuario u WHERE u.nombre = :nombre")
+    @Query("SELECT u FROM Usuario u WHERE LOWER(u.nombre) = LOWER(:nombre)")
     Optional<Usuario> findByNombre(String nombre);
 }

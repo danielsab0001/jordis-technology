@@ -96,7 +96,7 @@ public interface VentaRepository extends JpaRepository<Venta, Integer> {
     @Query("""
             SELECT v
             FROM Venta v
-            WHERE v.numeroFactura = :numero
+            WHERE LOWER(v.numeroFactura) = LOWER(:numero)
             """)
     Optional<Venta> findByNumeroFactura(String numero);
 

@@ -31,7 +31,6 @@ public class DevolucionFormController {
             "Cliente cambió de opinión",
             "Talla, color o modelo no adecuado",
             "Producto incompleto o le faltan piezas/accesorios",
-            "Producto no funciona correctamente",
             "Error del cajero al facturar",
             OTRO_MOTIVO
     );
@@ -113,8 +112,6 @@ public class DevolucionFormController {
                 + "  ·  " + (venta.getCliente() != null
                 ? venta.getCliente().getNombreCompleto() : "Cliente ocasional"));
 
-        // El tipo de devolución no lo elige el cajero — lo determina la ley
-        // según si la venta tenía comprobante fiscal o no.
         TipoDevolucion tipo = devolucionService.determinarTipoDevolucion(venta);
         if (tipo == TipoDevolucion.NOTA_CREDITO) {
             lblTipoResultante.setText(
@@ -136,9 +133,17 @@ public class DevolucionFormController {
     private ItemDevolucionUI construirFila(VentaProducto detalle) {
         int disponible = devolucionService.obtenerCantidadDisponibleParaDevolver(detalle);
         int yaDevuelto = detalle.getCantidad() - disponible;
+
+        boolean tuvoDescuento = detalle.getDescuentoMonto() != null
+                && detalle.getDescuentoMonto().compareTo(java.math.BigDecimal.ZERO) > 0;
+        String nombreMostrado = detalle.getProducto().getNombre()
+                + (tuvoDescuento
+                ? " (con descuento — RD$" + detalle.getPrecioUnitario().toPlainString() + " c/u)"
+                : "");
+
         return new ItemDevolucionUI(
-                detalle.getProducto().getIdProducto(),
-                detalle.getProducto().getNombre(),
+                detalle.getIdDetalle(),
+                nombreMostrado,
                 detalle.getCantidad(),
                 yaDevuelto,
                 disponible);
@@ -160,7 +165,7 @@ public class DevolucionFormController {
         for (ItemDevolucionUI fila : tablaItems.getItems()) {
             int cantidad = fila.cantidadSeleccionadaProperty().get();
             if (cantidad > 0) {
-                items.put(fila.idProducto(), cantidad);
+                items.put(fila.idDetalleVenta(), cantidad);
             }
         }
 
@@ -217,24 +222,24 @@ public class DevolucionFormController {
 
     /** Fila liviana solo para la tabla — no es una entidad JPA. */
     public static class ItemDevolucionUI {
-        private final Integer idProducto;
+        private final Integer idDetalleVenta;
         private final String nombreProducto;
         private final int cantidadVendida;
         private final int cantidadYaDevuelta;
         private final int cantidadDisponible;
         private final SimpleIntegerProperty cantidadSeleccionada = new SimpleIntegerProperty(0);
 
-        public ItemDevolucionUI(Integer idProducto, String nombreProducto,
+        public ItemDevolucionUI(Integer idDetalleVenta, String nombreProducto,
                                 int cantidadVendida, int cantidadYaDevuelta,
                                 int cantidadDisponible) {
-            this.idProducto = idProducto;
+            this.idDetalleVenta = idDetalleVenta;
             this.nombreProducto = nombreProducto;
             this.cantidadVendida = cantidadVendida;
             this.cantidadYaDevuelta = cantidadYaDevuelta;
             this.cantidadDisponible = cantidadDisponible;
         }
 
-        public Integer idProducto() { return idProducto; }
+        public Integer idDetalleVenta() { return idDetalleVenta; }
         public String nombreProducto() { return nombreProducto; }
         public int cantidadVendida() { return cantidadVendida; }
         public int cantidadYaDevuelta() { return cantidadYaDevuelta; }

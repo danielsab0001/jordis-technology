@@ -16,6 +16,25 @@
         <Region HBox.hgrow="ALWAYS"/>
     </HBox>
 
+    <VBox style="-fx-background-color: #EFF6FF; -fx-padding: 14 24;
+                 -fx-border-color: #DBEAFE; -fx-border-width: 0 0 1 0;" spacing="8">
+        <Text text="Registrar nueva devolución"
+              style="-fx-font-size: 13; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <TextField fx:id="txtFacturaNueva"
+                       promptText="Número de factura de la venta (ej: FAC-00123)..."
+                       prefWidth="320" prefHeight="34"
+                       style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 10;"/>
+            <Button text="Buscar y registrar devolución" onAction="#onNuevaDevolucion"
+                    style="-fx-background-color: #2563EB; -fx-text-fill: white;
+                           -fx-font-size: 12; -fx-background-radius: 6;
+                           -fx-padding: 8 16; -fx-cursor: hand;"/>
+        </HBox>
+        <Label fx:id="lblMensajeNueva" text=""/>
+    </VBox>
+
     <HBox style="-fx-padding: 12 24;" spacing="10" alignment="CENTER_LEFT">
         <TextField fx:id="txtBuscar"
                    promptText="Buscar por número de factura..."

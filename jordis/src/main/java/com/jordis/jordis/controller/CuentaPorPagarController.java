@@ -202,12 +202,9 @@ public class CuentaPorPagarController {
             SpringFXMLLoader.LoadResult<HistorialPagosController> result =
                     fxmlLoader.loadWithController("/fxml/historial_pagos.fxml");
             result.controller.setCuenta(cuenta);
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Historial de pagos — "
-                    + cuenta.getProveedor().getNombre());
-            stage.setScene(new Scene(result.root, 700, 460));
-            stage.setResizable(true);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Historial de pagos — " + cuenta.getProveedor().getNombre(),
+                    800, 560);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo historial", e);
@@ -284,11 +281,8 @@ public class CuentaPorPagarController {
                 cargarCuentas();
                 mostrarMensaje("Pago registrado correctamente.", false);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Pagar a " + cuenta.getProveedor().getNombre());
-            stage.setScene(new Scene(result.root, 580, 480));
-            stage.setResizable(true);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Pagar a " + cuenta.getProveedor().getNombre(), 580, 580);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de pago", e);

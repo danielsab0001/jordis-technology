@@ -26,6 +26,10 @@ public class VentaGarantia {
     @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_detalle_venta")
+    private VentaProducto detalleVenta;
+
     @Column(name = "descripcion", nullable = false, length = 255)
     private String descripcion;
 

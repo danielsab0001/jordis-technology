@@ -29,7 +29,7 @@ public class CreditoPago {
     @Column(name = "fecha_pago", nullable = false)
     private LocalDateTime fechaPago = LocalDateTime.now();
 
-    @Column(name = "metodo_pago", nullable = false, length = 20)
+    @Column(name = "metodo_pago", nullable = false, length = 30)
     private String metodoPago;
 
     @Column(name = "notas", columnDefinition = "TEXT")

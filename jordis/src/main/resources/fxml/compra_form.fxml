@@ -63,7 +63,7 @@
     </HBox>
 
     <!-- Tabla de detalle -->
-    <TableView fx:id="tablaDetalle" prefHeight="180"
+    <TableView fx:id="tablaDetalle" prefHeight="180" VBox.vgrow="ALWAYS"
                style="-fx-border-color: #DBEAFE; -fx-border-radius: 6; -fx-font-size: 12;">
         <columns>
             <TableColumn fx:id="colProducto" text="Producto"    prefWidth="210"/>

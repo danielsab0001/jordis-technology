@@ -46,16 +46,16 @@
                           -fx-font-size: 12;">
             <columns>
                 <TableColumn fx:id="colId"        text="Factura"    prefWidth="100"/>
-                <TableColumn fx:id="colFecha"     text="Fecha"      prefWidth="130"/>
-                <TableColumn fx:id="colCliente"   text="Cliente"    prefWidth="140"/>
-                <TableColumn fx:id="colProductos" text="Productos"  prefWidth="220"/>
+                <TableColumn fx:id="colFecha"     text="Fecha"      prefWidth="120"/>
+                <TableColumn fx:id="colCliente"   text="Cliente"    prefWidth="150"/>
+                <TableColumn fx:id="colProductos" text="Productos"  prefWidth="250"/>
                 <TableColumn fx:id="colNcf"       text="NCF"        prefWidth="110"/>
-                <TableColumn fx:id="colSubtotal"  text="Subtotal"   prefWidth="100"/>
-                <TableColumn fx:id="colDescuento" text="Descuento"  prefWidth="80"/>
-                <TableColumn fx:id="colTotal"     text="Total"      prefWidth="100"/>
+                <TableColumn fx:id="colSubtotal"  text="Subtotal"   prefWidth="120"/>
+                <TableColumn fx:id="colDescuento" text="Descuento"  prefWidth="70"/>
+                <TableColumn fx:id="colTotal"     text="Total"      prefWidth="120"/>
                 <TableColumn fx:id="colPago"      text="Pago"       prefWidth="90"/>
                 <TableColumn fx:id="colEstado"    text="Estado"     prefWidth="80"/>
-                <TableColumn fx:id="colAcciones"  text="Acciones"   prefWidth="130"/>
+                <TableColumn fx:id="colAcciones"  text="Acciones"   prefWidth="110"/>
             </columns>
         </TableView>
     </VBox>

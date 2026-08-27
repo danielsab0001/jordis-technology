@@ -21,6 +21,9 @@ public class CuentaPagoFormController {
     @FXML private Label     lblSaldo;
     @FXML private TextField txtMonto;
     @FXML private ComboBox<String> cmbMetodoPago;
+    @FXML private javafx.scene.layout.HBox boxOrigenEfectivo;
+    @FXML private RadioButton radioDeLaCaja;
+    @FXML private RadioButton radioOtroOrigen;
     @FXML private TextField txtNotas;
     @FXML private Label     lblError;
     @FXML private Button    btnGuardar;
@@ -43,6 +46,23 @@ public class CuentaPagoFormController {
                 "CHEQUE");
         cmbMetodoPago.setValue("TRANSFERENCIA");
         dpFechaPago.setValue(java.time.LocalDate.now());
+
+        ToggleGroup grupoOrigen = new ToggleGroup();
+        radioDeLaCaja.setToggleGroup(grupoOrigen);
+        radioOtroOrigen.setToggleGroup(grupoOrigen);
+        radioDeLaCaja.setSelected(true);
+
+        actualizarVisibilidadOrigenEfectivo();
+        cmbMetodoPago.setOnAction(e -> actualizarVisibilidadOrigenEfectivo());
+    }
+
+    private void actualizarVisibilidadOrigenEfectivo() {
+        boolean esEfectivo = "EFECTIVO".equals(cmbMetodoPago.getValue());
+        boxOrigenEfectivo.setVisible(esEfectivo);
+        boxOrigenEfectivo.setManaged(esEfectivo);
+        if (esEfectivo && !radioDeLaCaja.isSelected() && !radioOtroOrigen.isSelected()) {
+            radioDeLaCaja.setSelected(true);
+        }
     }
 
     public void setCuenta(CuentaPorPagar c) {
@@ -80,10 +100,14 @@ public class CuentaPagoFormController {
         }
 
         try {
+            boolean pagadoDesdeCaja = !"EFECTIVO".equals(cmbMetodoPago.getValue())
+                    || radioDeLaCaja.isSelected();
+
             cuentaService.registrarPago(
                     cuenta.getIdCuenta(),
                     monto,
                     cmbMetodoPago.getValue(),
+                    pagadoDesdeCaja,
                     txtNotas.getText().trim(),
                     autenticacionService.getUsuarioActivo(),
                     dpFechaPago.getValue().atTime(java.time.LocalTime.now()));

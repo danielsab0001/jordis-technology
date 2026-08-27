@@ -34,7 +34,7 @@
            style="-fx-font-size: 12; -fx-font-weight: bold;
                   -fx-text-fill: #0F172A;"/>
 
-    <TableView fx:id="tablaPagos" prefHeight="280"
+    <TableView fx:id="tablaPagos" prefHeight="280" VBox.vgrow="ALWAYS"
                style="-fx-border-color: #DBEAFE; -fx-border-radius: 6;
                       -fx-font-size: 12;">
         <columns>

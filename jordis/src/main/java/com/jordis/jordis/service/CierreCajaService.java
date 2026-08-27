@@ -128,24 +128,21 @@ public class CierreCajaService {
         BigDecimal montoTransferencia = sumaPorMetodo(ventas, "TRANSFERENCIA");
         BigDecimal montoCredito       = sumaPorMetodo(ventas, "CREDITO");
 
-        List<CreditoPago> pagosCred = creditoPagoRepository.findAll().stream()
-                .filter(p -> !p.getFechaPago().isBefore(desde)
-                        && !p.getFechaPago().isAfter(hasta))
-                .toList();
+        List<CreditoPago> pagosCred =
+                creditoPagoRepository.findByFechaPagoBetween(desde, hasta);
         BigDecimal pagosCreditos = pagosCred.stream()
                 .map(CreditoPago::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal pagosCreditosEfectivo = pagosCred.stream()
                 .filter(p -> "EFECTIVO".equals(p.getMetodoPago()))
                 .map(CreditoPago::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        List<CuentaPago> pagosProv = cuentaPagoRepository.findAll().stream()
-                .filter(p -> !p.getFechaPago().isBefore(desde)
-                        && !p.getFechaPago().isAfter(hasta))
-                .toList();
+        List<CuentaPago> pagosProv =
+                cuentaPagoRepository.findByFechaPagoBetween(desde, hasta);
         BigDecimal pagosProveedores = pagosProv.stream()
                 .map(CuentaPago::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal pagosProveedoresEfectivo = pagosProv.stream()
                 .filter(p -> "EFECTIVO".equals(p.getMetodoPago()))
+                .filter(p -> Boolean.TRUE.equals(p.getPagadoDesdeCaja()))
                 .map(CuentaPago::getMonto).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal g = gastos != null ? gastos : BigDecimal.ZERO;
@@ -232,7 +229,10 @@ public class CierreCajaService {
     private BigDecimal sumaPorMetodo(List<Venta> ventas, String metodo) {
         return ventas.stream()
                 .filter(v -> metodo.equals(v.getMetodoPago()))
-                .map(Venta::getTotal)
+                .map(v -> v.getTotal().subtract(
+                        v.getMontoSaldoAfavorAplicado() != null
+                                ? v.getMontoSaldoAfavorAplicado()
+                                : BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 

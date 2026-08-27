@@ -241,10 +241,8 @@ public class UsuarioController {
             result.controller.setUsuario(usuario);
             result.controller.setOnGuardado(() ->
                     mostrarMensaje("Contraseña actualizada correctamente.", false));
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Cambiar contraseña — " + usuario.getNombreCompleto());
-            stage.setScene(new Scene(result.root, 440, 320));
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Cambiar contraseña — " + usuario.getNombreCompleto(), 400, 330);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo cambio de contraseña", e);
@@ -301,10 +299,8 @@ public class UsuarioController {
                 mostrarMensaje("Usuario guardado correctamente.", false);
             });
 
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle(usuario == null ? "Nuevo Usuario" : "Editar Usuario");
-            stage.setScene(new Scene(result.root, 440, 420));
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, usuario == null ? "Nuevo Usuario" : "Editar Usuario", 400, 380);
             stage.showAndWait();
 
         } catch (Exception e) {

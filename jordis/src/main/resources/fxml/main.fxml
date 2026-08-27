@@ -98,7 +98,7 @@
             </Button>
             <Button fx:id="btnCierreCaja" text="Cierre de Caja" styleClass="sidebar-button"
                     contentDisplay="LEFT" prefWidth="204" prefHeight="40" onAction="#onCierreCaja">
-                <graphic><Label text="🧾" styleClass="sidebar-icon"/></graphic>
+                <graphic><Label text="📄" styleClass="sidebar-icon"/></graphic>
                 <VBox.margin><Insets left="8" right="8"/></VBox.margin>
             </Button>
 

@@ -10,6 +10,7 @@
       fx:controller="com.jordis.jordis.controller.LoginController"
       alignment="CENTER"
       spacing="0"
+      stylesheets="@../css/login.css"
       style="-fx-background-color: #F5F5F5;">
 
     <!-- Encabezado -->
@@ -65,8 +66,7 @@
                 prefWidth="320"
                 prefHeight="42"
                 onAction="#onIngresar"
-                style="-fx-background-color: #1A237E; -fx-text-fill: white; -fx-font-size: 14;
-                       -fx-font-weight: bold; -fx-background-radius: 4; -fx-cursor: hand;"/>
+                styleClass="btn-ingresar"/>
 
         <Label text="Jordis Technology © 2026"
                style="-fx-text-fill: #9E9E9E; -fx-font-size: 11;"/>

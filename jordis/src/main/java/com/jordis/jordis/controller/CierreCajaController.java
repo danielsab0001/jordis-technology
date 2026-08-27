@@ -257,10 +257,8 @@ public class CierreCajaController {
         try {
             SpringFXMLLoader.LoadResult<HistorialCierresController> result =
                     fxmlLoader.loadWithController("/fxml/historial_cierres.fxml");
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Historial de Cierres de Caja");
-            stage.setScene(new Scene(result.root, 1000, 620));
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Historial de Cierres de Caja", 1000, 620);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo historial de cierres", e);

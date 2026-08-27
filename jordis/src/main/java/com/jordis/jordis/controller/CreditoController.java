@@ -246,14 +246,11 @@ public class CreditoController {
             SpringFXMLLoader.LoadResult<HistorialPagosController> result =
                     fxmlLoader.loadWithController("/fxml/historial_pagos.fxml");
             result.controller.setVenta(venta);
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Historial de pagos — "
-                    + (venta.getNumeroFactura() != null
-                    ? venta.getNumeroFactura()
-                    : "#" + venta.getIdVenta()));
-            stage.setScene(new Scene(result.root, 700, 460));
-            stage.setResizable(true);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root,
+                    "Historial de pagos — " + (venta.getNumeroFactura() != null
+                            ? venta.getNumeroFactura() : "#" + venta.getIdVenta()),
+                    800, 560);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo historial de pagos", e);
@@ -320,11 +317,8 @@ public class CreditoController {
                 cargarCreditos();
                 mostrarMensaje("Pago registrado correctamente.", false);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Registrar pago — " + venta.getNumeroFactura());
-            stage.setScene(new Scene(result.root, 580, 460));
-            stage.setResizable(true);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Registrar pago — " + venta.getNumeroFactura(), 580, 465);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de pago", e);

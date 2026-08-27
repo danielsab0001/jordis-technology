@@ -35,17 +35,11 @@ public interface DevolucionRepository extends JpaRepository<Devolucion, Integer>
             """)
     List<Devolucion> findEntreFechas(LocalDateTime desde, LocalDateTime hasta);
 
-    /**
-     * Cantidad ya devuelta (en devoluciones activas) de un producto
-     * específico dentro de una venta específica. Se usa para validar
-     * que no se pueda devolver más de lo que quedó disponible.
-     */
     @Query("""
             SELECT COALESCE(SUM(dd.cantidad), 0)
             FROM DevolucionDetalle dd
-            WHERE dd.devolucion.venta.idVenta = :idVenta
-            AND dd.producto.idProducto = :idProducto
+            WHERE dd.detalleVenta.idDetalle = :idDetalleVenta
             AND dd.devolucion.estado = com.jordis.jordis.model.EstadoDevolucion.REGISTRADA
             """)
-    Integer cantidadYaDevuelta(Integer idVenta, Integer idProducto);
+    Integer cantidadYaDevueltaPorDetalle(Integer idDetalleVenta);
 }

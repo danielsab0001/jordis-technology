@@ -327,11 +327,8 @@ public class InventarioController {
                 }
                 mostrarMensaje("Ajuste realizado correctamente.", false);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Ajuste — " + producto.getNombre());
-            stage.setScene(new Scene(result.root, 500, 480));
-            stage.setResizable(false);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Ajuste — " + producto.getNombre(), 500, 440);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo ajuste de inventario", e);
@@ -344,11 +341,8 @@ public class InventarioController {
             SpringFXMLLoader.LoadResult<AjusteHistorialController> result =
                     fxmlLoader.loadWithController("/fxml/ajuste_historial.fxml");
             result.controller.setProducto(producto);
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Ajustes — " + producto.getNombre());
-            stage.setScene(new Scene(result.root, 780, 480));
-            stage.setResizable(true);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Ajustes — " + producto.getNombre(), 780, 480);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo historial de ajustes", e);

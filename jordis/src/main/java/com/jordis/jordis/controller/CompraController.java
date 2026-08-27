@@ -111,12 +111,6 @@ public class CompraController {
         });
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
-            private final Button btnRecibir = btn("Recibir", "#15803D", "#DCFCE7");
-            private final Button btnEditar = btn("Editar", "#2563EB", "#EFF6FF");
-            private final Button btnVer = btn("Ver", "#6D28D9", "#EDE9FE");
-            private final Button btnCancelar = btn("Cancelar", "#DC2626", "#FEE2E2");
-            private final HBox box = new HBox(5, btnRecibir, btnEditar, btnVer, btnCancelar);
-
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -128,35 +122,32 @@ public class CompraController {
                 boolean pendiente = "PENDIENTE".equals(c.getEstado());
                 boolean cancelada = "CANCELADA".equals(c.getEstado());
 
-                btnRecibir.setOnAction(e -> recibirCompra(c));
-                btnEditar.setOnAction(e -> abrirEdicion(c));
-                btnVer.setOnAction(e -> verDetalleCompra(c));
-                btnCancelar.setOnAction(e -> cancelarCompra(c));
+                MenuButton menu = new MenuButton("⋮ Acciones");
+                menu.setStyle("-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;"
+                        + " -fx-border-color: #BFDBFE; -fx-border-radius: 4;"
+                        + " -fx-background-radius: 4; -fx-font-size: 10;"
+                        + " -fx-padding: 3 8; -fx-cursor: hand;");
 
-                // Recibir y Editar solo para pendientes
-                btnRecibir.setVisible(pendiente);
-                btnRecibir.setManaged(pendiente);
-                btnEditar.setVisible(pendiente);  // solo editar pendientes
-                btnEditar.setManaged(pendiente);
-                btnCancelar.setVisible(pendiente);
-                btnCancelar.setManaged(pendiente);
+                MenuItem miVer = new MenuItem("Ver detalle");
+                miVer.setDisable(cancelada);
+                miVer.setOnAction(e -> verDetalleCompra(c));
 
-                // Ver siempre disponible excepto canceladas
-                btnVer.setVisible(!cancelada);
-                btnVer.setManaged(!cancelada);
+                MenuItem miRecibir = new MenuItem("Recibir");
+                miRecibir.setDisable(!pendiente);
+                miRecibir.setOnAction(e -> recibirCompra(c));
 
-                setGraphic(box);
+                MenuItem miEditar = new MenuItem("Editar");
+                miEditar.setDisable(!pendiente);
+                miEditar.setOnAction(e -> abrirEdicion(c));
+
+                MenuItem miCancelar = new MenuItem("Cancelar compra");
+                miCancelar.setDisable(!pendiente);
+                miCancelar.setOnAction(e -> cancelarCompra(c));
+
+                menu.getItems().addAll(miVer, miRecibir, miEditar, miCancelar);
+                setGraphic(menu);
             }
         });
-    }
-
-    private Button btn(String texto, String colorTexto, String colorFondo) {
-        Button b = new Button(texto);
-        b.setStyle("-fx-background-color: " + colorFondo + "; -fx-text-fill: "
-                + colorTexto + "; -fx-border-color: " + colorTexto
-                + "; -fx-border-radius: 4; -fx-background-radius: 4;"
-                + " -fx-font-size: 10; -fx-padding: 3 8; -fx-cursor: hand;");
-        return b;
     }
 
     private void abrirEdicion(Compra compra) {
@@ -168,10 +159,8 @@ public class CompraController {
                 cargarCompras();
                 mostrarMensaje("Compra actualizada correctamente.", false);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Editar Compra #" + compra.getIdCompra());
-            stage.setScene(new Scene(result.root, 680, 520));
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Editar Compra #" + compra.getIdCompra(), 680, 520);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo edición de compra", e);
@@ -205,10 +194,8 @@ public class CompraController {
                 cargarCompras();
                 mostrarMensaje("Compra registrada correctamente.", false);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Nueva Compra");
-            stage.setScene(new Scene(result.root, 700, 600));
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Nueva Compra", 700, 600);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de compra", e);
@@ -216,20 +203,18 @@ public class CompraController {
         }
     }
 
-        private void verDetalleCompra(Compra compra) {
-            try {
-                SpringFXMLLoader.LoadResult<CompraDetalleController> result =
-                        fxmlLoader.loadWithController("/fxml/compra_detalle.fxml");
-                result.controller.setCompra(compra);
-                Stage stage = new Stage();
-                stage.initModality(Modality.APPLICATION_MODAL);
-                stage.setTitle("Detalle Compra #" + compra.getIdCompra());
-                stage.setScene(new Scene(result.root, 680, 500));
-                stage.showAndWait();
-            } catch (Exception e) {
-                log.error("Error abriendo detalle de compra", e);
-                mostrarMensaje("Error al abrir: " + e.getMessage(), true);
-            }
+    private void verDetalleCompra(Compra compra) {
+        try {
+            SpringFXMLLoader.LoadResult<CompraDetalleController> result =
+                    fxmlLoader.loadWithController("/fxml/compra_detalle.fxml");
+            result.controller.setCompra(compra);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Detalle Compra #" + compra.getIdCompra(), 760, 500);
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo detalle de compra", e);
+            mostrarMensaje("Error al abrir: " + e.getMessage(), true);
+        }
         }
 
         private void recibirCompra(Compra compra) {

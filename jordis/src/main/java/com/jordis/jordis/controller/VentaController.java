@@ -217,13 +217,8 @@ public class VentaController {
                 refrescarPaginaActual();
                 mostrarMensaje("Venta registrada correctamente.", false);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Nueva Venta");
-            Scene scene = new Scene(result.root, 950, 800);
-            stage.setScene(scene);
-            stage.setMinWidth(800);
-            stage.setMinHeight(550);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Nueva Venta", 950, 800);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de venta", e);
@@ -274,14 +269,9 @@ public class VentaController {
                 mostrarMensaje("Devolución registrada. Stock actualizado.", false);
             });
 
-            Stage stage = new Stage();
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Registrar devolución", 720, 620);
             result.controller.setStage(stage);
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Registrar devolución");
-            Scene scene = new Scene(result.root, 720, 620);
-            stage.setScene(scene);
-            stage.setMinWidth(650);
-            stage.setMinHeight(550);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de devolución", e);

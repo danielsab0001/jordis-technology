@@ -37,11 +37,11 @@
             <columns>
                 <TableColumn fx:id="colId"          text="#"           prefWidth="50"/>
                 <TableColumn fx:id="colFecha"        text="Fecha"       prefWidth="130"/>
-                <TableColumn fx:id="colProveedor"    text="Proveedor"   prefWidth="140"/>
-                <TableColumn fx:id="colProductos"    text="Productos"   prefWidth="200"/>
-                <TableColumn fx:id="colTotal"        text="Total"       prefWidth="100"/>
+                <TableColumn fx:id="colProveedor"    text="Proveedor"   prefWidth="180"/>
+                <TableColumn fx:id="colProductos"    text="Productos"   prefWidth="250"/>
+                <TableColumn fx:id="colTotal"        text="Total"       prefWidth="110"/>
                 <TableColumn fx:id="colEstado"       text="Estado"      prefWidth="90"/>
-                <TableColumn fx:id="colAcciones"     text="Acciones"    prefWidth="210"/>
+                <TableColumn fx:id="colAcciones"     text="Acciones"    prefWidth="110"/>
             </columns>
         </TableView>
     </VBox>

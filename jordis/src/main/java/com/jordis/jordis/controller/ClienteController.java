@@ -177,10 +177,8 @@ public class ClienteController {
                 cargarClientes();
                 mostrarMensaje("Cliente guardado correctamente.", false);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle(cliente == null ? "Nuevo Cliente" : "Editar Cliente");
-            stage.setScene(new Scene(result.root, 520, 420));
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, cliente == null ? "Nuevo Cliente" : "Editar Cliente", 520, 400);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de cliente", e);
@@ -193,11 +191,8 @@ public class ClienteController {
             SpringFXMLLoader.LoadResult<ClienteHistorialController> result =
                     fxmlLoader.loadWithController("/fxml/cliente_historial.fxml");
             result.controller.setCliente(cliente);
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Historial — " + cliente.getNombreCompleto());
-            stage.setScene(new Scene(result.root, 750, 520));
-            stage.setResizable(true);
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Historial — " + cliente.getNombreCompleto(), 750, 520);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo historial de cliente", e);

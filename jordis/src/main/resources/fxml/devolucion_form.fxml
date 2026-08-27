@@ -17,7 +17,7 @@
     <Label text="Selecciona los productos y la cantidad a devolver:"
            style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
 
-    <TableView fx:id="tablaItems" prefHeight="220"
+    <TableView fx:id="tablaItems" prefHeight="220" VBox.vgrow="ALWAYS"
                style="-fx-border-color: #DBEAFE; -fx-border-radius: 8; -fx-font-size: 12;">
         <columns>
             <TableColumn fx:id="colProducto"   text="Producto"           prefWidth="220"/>

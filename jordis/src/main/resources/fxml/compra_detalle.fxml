@@ -25,15 +25,15 @@
     <Label text="Productos — Pedido vs Recibido:"
            style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
 
-    <TableView fx:id="tablaProductos" prefHeight="200"
+    <TableView fx:id="tablaProductos" prefHeight="200" VBox.vgrow="ALWAYS"
                style="-fx-border-color: #DBEAFE; -fx-border-radius: 6; -fx-font-size: 12;">
         <columns>
             <TableColumn fx:id="colProducto"  text="Producto"       prefWidth="220"/>
-            <TableColumn fx:id="colPedido"    text="Pedido"         prefWidth="80"/>
-            <TableColumn fx:id="colRecibido"  text="Recibido"       prefWidth="80"/>
-            <TableColumn fx:id="colDiferencia" text="Diferencia"    prefWidth="90"/>
-            <TableColumn fx:id="colCosto"     text="Costo unit."    prefWidth="110"/>
-            <TableColumn fx:id="colSubtotal"  text="Subtotal"       prefWidth="110"/>
+            <TableColumn fx:id="colPedido"    text="Pedido"         prefWidth="60"/>
+            <TableColumn fx:id="colRecibido"  text="Recibido"       prefWidth="60"/>
+            <TableColumn fx:id="colDiferencia" text="Diferencia"    prefWidth="60"/>
+            <TableColumn fx:id="colCosto"     text="Costo unit."    prefWidth="120"/>
+            <TableColumn fx:id="colSubtotal"  text="Subtotal"       prefWidth="120"/>
         </columns>
     </TableView>
 
@@ -43,11 +43,11 @@
     <TableView fx:id="tablaEdiciones" prefHeight="120"
                style="-fx-border-color: #DBEAFE; -fx-border-radius: 6; -fx-font-size: 11;">
         <columns>
-            <TableColumn fx:id="colEdFecha"   text="Fecha"     prefWidth="120"/>
+            <TableColumn fx:id="colEdFecha"   text="Fecha"     prefWidth="105"/>
             <TableColumn fx:id="colEdUsuario" text="Usuario"   prefWidth="120"/>
-            <TableColumn fx:id="colEdMotivo"  text="Motivo"    prefWidth="180"/>
-            <TableColumn fx:id="colEdCambios" text="Cambios"   prefWidth="200"/>
-            <TableColumn fx:id="colEdNota"    text="Nota cred." prefWidth="80"/>
+            <TableColumn fx:id="colEdMotivo"  text="Motivo"    prefWidth="190"/>
+            <TableColumn fx:id="colEdCambios" text="Cambios"   prefWidth="210"/>
+            <TableColumn fx:id="colEdNota"    text="Nota cred." prefWidth="70"/>
         </columns>
     </TableView>
 

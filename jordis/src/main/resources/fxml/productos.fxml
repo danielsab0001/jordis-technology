@@ -51,11 +51,11 @@
             <columns>
                 <TableColumn fx:id="colId"        text="ID"          prefWidth="50"/>
                 <TableColumn fx:id="colNombre"    text="Nombre"      prefWidth="170"/>
-                <TableColumn fx:id="colMarca"     text="Marca"       prefWidth="100"/>
-                <TableColumn fx:id="colModelo"    text="Modelo"      prefWidth="100"/>
-                <TableColumn fx:id="colCategoria" text="Categoría"   prefWidth="110"/>
-                <TableColumn fx:id="colPrecio"    text="Precio"      prefWidth="110"/>
-                <TableColumn fx:id="colAcciones"  text="Acciones"    prefWidth="150"/>
+                <TableColumn fx:id="colMarca"     text="Marca"       prefWidth="120"/>
+                <TableColumn fx:id="colModelo"    text="Modelo"      prefWidth="120"/>
+                <TableColumn fx:id="colCategoria" text="Categoría"   prefWidth="120"/>
+                <TableColumn fx:id="colPrecio"    text="Precio"      prefWidth="120"/>
+                <TableColumn fx:id="colAcciones"  text="Acciones"    prefWidth="110"/>
             </columns>
         </TableView>
     </VBox>

@@ -21,7 +21,7 @@
                style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
     </VBox>
 
-    <TableView fx:id="tablaAjustes" prefHeight="320"
+    <TableView fx:id="tablaAjustes" prefHeight="320" VBox.vgrow="ALWAYS"
                style="-fx-border-color: #DBEAFE; -fx-border-radius: 6;
                       -fx-font-size: 12;">
         <columns>

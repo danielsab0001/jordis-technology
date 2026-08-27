@@ -30,7 +30,7 @@ public class CuentaPago {
     @Column(name = "fecha_pago", nullable = false)
     private LocalDateTime fechaPago = LocalDateTime.now();
 
-    @Column(name = "metodo_pago", nullable = false, length = 20)
+    @Column(name = "metodo_pago", nullable = false, length = 30)
     private String metodoPago;
 
     @Column(name = "notas", columnDefinition = "TEXT")
@@ -39,4 +39,7 @@ public class CuentaPago {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_cajero", nullable = false)
     private Usuario cajero;
+
+    @Column(name = "pagado_desde_caja", nullable = false)
+    private Boolean pagadoDesdeCaja = true;
 }

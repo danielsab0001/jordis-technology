@@ -44,11 +44,11 @@
                           -fx-font-size: 12;">
             <columns>
                 <TableColumn fx:id="colId"        text="ID"        prefWidth="50"/>
-                <TableColumn fx:id="colNombre"    text="Nombre"    prefWidth="150"/>
-                <TableColumn fx:id="colContacto"  text="Contacto"  prefWidth="120"/>
+                <TableColumn fx:id="colNombre"    text="Nombre"    prefWidth="180"/>
+                <TableColumn fx:id="colContacto"  text="Contacto"  prefWidth="180"/>
                 <TableColumn fx:id="colTelefono"  text="Teléfono"  prefWidth="110"/>
                 <TableColumn fx:id="colEstado"    text="Estado"    prefWidth="80"/>
-                <TableColumn fx:id="colAcciones"  text="Acciones"  prefWidth="220"/>
+                <TableColumn fx:id="colAcciones"  text="Acciones"  prefWidth="180"/>
             </columns>
         </TableView>
     </VBox>

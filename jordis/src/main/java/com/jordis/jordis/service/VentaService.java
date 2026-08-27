@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +30,7 @@ public class VentaService {
     private final JdbcTemplate jdbcTemplate;
     private final DevolucionRepository devolucionRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
+    private final CierreCajaService cierreCajaService;
 
     public List<Venta> obtenerTodas() {
         return ventaRepository.findActivas();
@@ -55,6 +55,18 @@ public class VentaService {
         return ventaRepository.findCreditos();
     }
 
+    /**
+     * Busca una venta por su número de factura exacto — se usa desde el
+     * módulo de Devoluciones para registrar una devolución sin tener que
+     * pasar primero por la lista de ventas.
+     */
+    public java.util.Optional<Venta> buscarPorNumeroFactura(String numeroFactura) {
+        if (numeroFactura == null || numeroFactura.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        return ventaRepository.findByNumeroFactura(numeroFactura.trim());
+    }
+
     public List<Venta> filtrarEntreFechas(LocalDateTime desde, LocalDateTime hasta) {
         return ventaRepository.findEntreFechas(desde, hasta);
     }
@@ -72,6 +84,14 @@ public class VentaService {
                 .orElseThrow(() -> new RuntimeException("Venta no encontrada: " + idVenta));
     }
 
+    public record ItemVenta(
+            Integer idProducto,
+            int cantidad,
+            BigDecimal descuentoProducto,
+            String garantiaDescripcion,
+            Integer garantiaMeses
+    ) {}
+
     /**
      * Registra una venta completa con garantías y soporte de crédito.
      *
@@ -79,8 +99,7 @@ public class VentaService {
      * @param cajero              usuario que realiza la venta
      * @param metodoPago          EFECTIVO, TARJETA, TRANSFERENCIA, CREDITO
      * @param descuentoPorcentual 0-100
-     * @param items               Map<idProducto, cantidad>
-     * @param garantias           Map<idProducto, [descripcion, meses]>
+     * @param items               lista de líneas a vender (ver {@link ItemVenta})
      * @param notas               notas adicionales de la venta
      * @param esCredito           si la venta es a crédito
      * @param fechaLimiteCredito  fecha límite de pago (solo si esCredito=true)
@@ -90,8 +109,7 @@ public class VentaService {
                                 Usuario cajero,
                                 String metodoPago,
                                 BigDecimal descuentoPorcentual,
-                                Map<Integer, Integer> items,
-                                Map<Integer, String[]> garantias,
+                                List<ItemVenta> items,
                                 String notas,
                                 boolean esCredito,
                                 LocalDateTime fechaLimiteCredito,
@@ -100,8 +118,14 @@ public class VentaService {
                                 BigDecimal itbisPorcentual,
                                 BigDecimal montoSaldoAfavorAplicado) {
 
-        if (items.isEmpty()) {
+        if (items == null || items.isEmpty()) {
             throw new VentaInvalidaException("La venta debe tener al menos un producto.");
+        }
+
+        if (!esCredito && "EFECTIVO".equals(metodoPago) && !cierreCajaService.hayCajaAbierta()) {
+            throw new VentaInvalidaException(
+                    "No hay ninguna caja abierta. Debes abrir la caja antes de registrar "
+                            + "una venta en efectivo.");
         }
 
         // Validar cliente para crédito
@@ -143,9 +167,13 @@ public class VentaService {
 
         BigDecimal subtotal = BigDecimal.ZERO;
 
-        for (Map.Entry<Integer, Integer> entry : items.entrySet()) {
-            Integer idProducto = entry.getKey();
-            Integer cantidad = entry.getValue();
+        for (ItemVenta item : items) {
+            Integer idProducto = item.idProducto();
+            int cantidad = item.cantidad();
+
+            if (cantidad <= 0) {
+                throw new VentaInvalidaException("La cantidad debe ser mayor a 0.");
+            }
 
             Producto producto = productoRepository.findById(idProducto)
                     .orElseThrow(() -> new RuntimeException(
@@ -157,15 +185,40 @@ public class VentaService {
                                 + "'. Disponible: " + producto.getStock());
             }
 
-            BigDecimal lineaSubtotal = producto.getPrecioUnitario()
+            BigDecimal precioOriginal = producto.getPrecioUnitario();
+            BigDecimal subtotalBruto = precioOriginal
                     .multiply(BigDecimal.valueOf(cantidad))
                     .setScale(2, RoundingMode.HALF_UP);
+
+            BigDecimal descuentoLinea = item.descuentoProducto() != null
+                    ? item.descuentoProducto() : BigDecimal.ZERO;
+
+            if (descuentoLinea.compareTo(BigDecimal.ZERO) < 0) {
+                throw new VentaInvalidaException(
+                        "El descuento de '" + producto.getNombre()
+                                + "' no puede ser negativo.");
+            }
+            if (descuentoLinea.compareTo(subtotalBruto) > 0) {
+                throw new VentaInvalidaException(
+                        "El descuento de '" + producto.getNombre()
+                                + "' (RD$" + descuentoLinea.toPlainString()
+                                + ") no puede ser mayor a su subtotal (RD$"
+                                + subtotalBruto.toPlainString() + ").");
+            }
+
+            BigDecimal lineaSubtotal = subtotalBruto.subtract(descuentoLinea)
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            BigDecimal precioUnitarioEfectivo = lineaSubtotal
+                    .divide(BigDecimal.valueOf(cantidad), 2, RoundingMode.HALF_UP);
 
             VentaProducto detalle = new VentaProducto();
             detalle.setVenta(venta);
             detalle.setProducto(producto);
             detalle.setCantidad(cantidad);
-            detalle.setPrecioUnitario(producto.getPrecioUnitario());
+            detalle.setPrecioOriginal(precioOriginal);
+            detalle.setDescuentoMonto(descuentoLinea);
+            detalle.setPrecioUnitario(precioUnitarioEfectivo);
             detalle.setSubtotal(lineaSubtotal);
             venta.getDetalles().add(detalle);
 
@@ -181,25 +234,19 @@ public class VentaService {
                                 + "se registró al mismo tiempo. Vuelve a intentar la venta.");
             }
 
-            // Agregar garantía si existe
-            if (garantias != null && garantias.containsKey(idProducto)) {
-                String[] g = garantias.get(idProducto);
-                String descGarantia = g[0];
-                int meses = g.length > 1 && g[1] != null
-                        ? Integer.parseInt(g[1]) : 0;
-
-                if (descGarantia != null && !descGarantia.isBlank()) {
-                    VentaGarantia garantia = new VentaGarantia();
-                    garantia.setVenta(venta);
-                    garantia.setProducto(producto);
-                    garantia.setDescripcion(descGarantia);
-                    garantia.setMeses(meses);
-                    if (meses > 0) {
-                        garantia.setFechaVence(
-                                LocalDateTime.now().plusMonths(meses));
-                    }
-                    venta.getGarantias().add(garantia);
+            String descGarantia = item.garantiaDescripcion();
+            if (descGarantia != null && !descGarantia.isBlank()) {
+                int meses = item.garantiaMeses() != null ? item.garantiaMeses() : 0;
+                VentaGarantia garantia = new VentaGarantia();
+                garantia.setVenta(venta);
+                garantia.setProducto(producto);
+                garantia.setDetalleVenta(detalle);
+                garantia.setDescripcion(descGarantia);
+                garantia.setMeses(meses);
+                if (meses > 0) {
+                    garantia.setFechaVence(LocalDateTime.now().plusMonths(meses));
                 }
+                venta.getGarantias().add(garantia);
             }
         }
 
@@ -272,6 +319,19 @@ public class VentaService {
             if (aplicado.compareTo(total) == 0) {
                 venta.setMetodoPago("SALDO_A_FAVOR");
             }
+
+            if (esCredito) {
+                CreditoPago pagoConSaldoAFavor = new CreditoPago();
+                pagoConSaldoAFavor.setVenta(venta);
+                pagoConSaldoAFavor.setMonto(aplicado);
+                pagoConSaldoAFavor.setMetodoPago("SALDO_A_FAVOR");
+                pagoConSaldoAFavor.setNotas(
+                        "Abono aplicado automáticamente desde el saldo a "
+                                + "favor del cliente al registrar la venta.");
+                pagoConSaldoAFavor.setCajero(cajero);
+                pagoConSaldoAFavor.setFechaPago(venta.getFechaHora());
+                venta.getPagos().add(pagoConSaldoAFavor);
+            }
         }
 
         Venta guardada = ventaRepository.save(venta);
@@ -304,6 +364,13 @@ public class VentaService {
         if (venta.estaCancelado()) {
             throw new VentaInvalidaException("Esta venta ya está completamente pagada.");
         }
+
+        if ("EFECTIVO".equals(metodoPago) && !cierreCajaService.hayCajaAbierta()) {
+            throw new VentaInvalidaException(
+                    "No hay ninguna caja abierta. Debes abrir la caja antes de recibir "
+                            + "un pago en efectivo.");
+        }
+
 
         BigDecimal saldo = venta.getSaldoPendiente();
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
@@ -393,8 +460,9 @@ public class VentaService {
         // Restaurar stock
 
         for (VentaProducto detalle : venta.getDetalles()) {
-            Integer yaDevuelto = devolucionRepository.cantidadYaDevuelta(
-                    venta.getIdVenta(), detalle.getProducto().getIdProducto());
+
+            Integer yaDevuelto = devolucionRepository.cantidadYaDevueltaPorDetalle(
+                    detalle.getIdDetalle());
             int cantidadARestaurar = detalle.getCantidad()
                     - (yaDevuelto != null ? yaDevuelto : 0);
             if (cantidadARestaurar <= 0) {

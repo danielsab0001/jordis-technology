@@ -23,9 +23,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -36,7 +34,9 @@ public class VentaFormController {
     @FXML private ComboBox<String>     cmbMetodoPago;
     @FXML private SearchableComboBox<Producto>   cmbProducto;
     @FXML private TextField            txtCantidad;
-    @FXML private TextField            txtGarantiaDesc;
+    @FXML private TextField            txtDescuentoProducto;
+    @FXML private ComboBox<String>     cmbGarantiaTipo;
+    @FXML private TextField            txtGarantiaOtra;
     @FXML private TextField            txtGarantiaMeses;
     @FXML private CheckBox             chkCredito;
     @FXML private Label                lblFechaLimite;
@@ -45,12 +45,15 @@ public class VentaFormController {
     @FXML private TableColumn<FilaVenta, String> colProducto;
     @FXML private TableColumn<FilaVenta, String> colCantidad;
     @FXML private TableColumn<FilaVenta, String> colPrecio;
+    @FXML private TableColumn<FilaVenta, String> colDescuentoProducto;
     @FXML private TableColumn<FilaVenta, String> colGarantia;
     @FXML private TableColumn<FilaVenta, String> colSubtotal;
     @FXML private TableColumn<FilaVenta, Void>   colQuitar;
     @FXML private ComboBox<String>     cmbDescuento;
     @FXML private TextField            txtDescuentoManual;
     @FXML private Label                lblSubtotal;
+    @FXML private Label                lblDescuentoProductosLabel;
+    @FXML private Label                lblDescuentoProductosMonto;
     @FXML private Label                lblDescuentoLabel;
     @FXML private Label                lblDescuentoMonto;
     @FXML private Label                lblTotal;
@@ -84,19 +87,47 @@ public class VentaFormController {
     private List<Cliente> todosLosClientes;
     private Runnable onGuardado;
 
+    // Tipos de garantía más comunes en una tienda de electrónicos —
+    // se puede elegir uno de la lista o escribir una descripción propia
+    // con "Otra descripción...".
+    private static final String GARANTIA_SIN = "Sin garantía";
+    private static final String GARANTIA_OTRA = "Otra descripción...";
+    private static final List<String> TIPOS_GARANTIA = List.of(
+            GARANTIA_SIN,
+            "Garantía de fábrica",
+            "Garantía de tienda",
+            "Garantía por defectos de fabricación",
+            "Garantía limitada (no cubre golpes ni agua)",
+            "Garantía extendida",
+            "Producto reacondicionado — garantía reducida",
+            GARANTIA_OTRA
+    );
+
     @FXML
     public void initialize() {
         configurarClientes();
         configurarMetodoPago();
         configurarProductoEditable();
         configurarDescuento();
+        configurarGarantia();
         configurarTabla();
         tablaDetalle.setItems(detalles);
         cmbTipoNcf.getItems().setAll(ncfService.obtenerTiposDisponibles());
-        cmbTipoNcf.setValue("B01 — Crédito Fiscal");
+        cmbTipoNcf.setValue("B02 — Consumidor Final");
         cmbItbis.getItems().setAll("0%", "18%"); // 18% es el ITBIS estándar en RD
         cmbItbis.setValue("18%");
         cmbItbis.setOnAction(e -> actualizarTotales());
+    }
+
+    private void configurarGarantia() {
+        cmbGarantiaTipo.getItems().setAll(TIPOS_GARANTIA);
+        cmbGarantiaTipo.setValue(GARANTIA_SIN);
+        cmbGarantiaTipo.setOnAction(e -> {
+            boolean esOtra = GARANTIA_OTRA.equals(cmbGarantiaTipo.getValue());
+            txtGarantiaOtra.setVisible(esOtra);
+            txtGarantiaOtra.setManaged(esOtra);
+            if (!esOtra) txtGarantiaOtra.clear();
+        });
     }
 
     public void prepararNuevaVenta() {
@@ -128,13 +159,21 @@ public class VentaFormController {
         onToggleCreditoFiscal();
 
         txtCantidad.clear();
-        txtGarantiaDesc.clear();
+        txtDescuentoProducto.clear();
+        cmbGarantiaTipo.setValue(GARANTIA_SIN);
+        txtGarantiaOtra.clear();
+        txtGarantiaOtra.setVisible(false);
+        txtGarantiaOtra.setManaged(false);
         txtGarantiaMeses.clear();
         txtNotas.clear();
         txtDescuentoManual.clear();
         txtDescuentoManual.setDisable(true);
         lblDescuentoLabel.setText("Descuento (0%):");
         lblDescuentoMonto.setText("—");
+        lblDescuentoProductosLabel.setVisible(false);
+        lblDescuentoProductosLabel.setManaged(false);
+        lblDescuentoProductosMonto.setVisible(false);
+        lblDescuentoProductosMonto.setManaged(false);
         lblSubtotal.setText("RD$0.00");
         lblTotal.setText("RD$0.00");
         lblError.setText("");
@@ -244,6 +283,13 @@ public class VentaFormController {
         colPrecio.setCellValueFactory(d ->
                 new SimpleStringProperty("RD$" +
                         d.getValue().producto.getPrecioUnitario().toPlainString()));
+        colDescuentoProducto.setCellValueFactory(d -> {
+            BigDecimal desc = d.getValue().descuentoProducto;
+            if (desc == null || desc.compareTo(BigDecimal.ZERO) <= 0) {
+                return new SimpleStringProperty("—");
+            }
+            return new SimpleStringProperty("- RD$" + desc.setScale(2, RoundingMode.HALF_UP).toPlainString());
+        });
         colGarantia.setCellValueFactory(d -> {
             String g = d.getValue().garantiaDesc;
             int m = d.getValue().garantiaMeses;
@@ -291,10 +337,8 @@ public class VentaFormController {
                 Cliente nuevo = todosLosClientes.get(todosLosClientes.size() - 1);
                 cmbCliente.setValue(nuevo);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Nuevo Cliente");
-            stage.setScene(new Scene(result.root));
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, "Nuevo Cliente");
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de cliente", e);
@@ -393,22 +437,69 @@ public class VentaFormController {
                         + producto.getStock()); return;
             }
 
-            String garantiaDesc  = txtGarantiaDesc.getText().trim();
-            int    garantiaMeses = 0;
+            BigDecimal subtotalBrutoLinea = producto.getPrecioUnitario()
+                    .multiply(BigDecimal.valueOf(cantidad));
+
+            BigDecimal descuentoProducto = BigDecimal.ZERO;
+            String txtDesc = txtDescuentoProducto.getText().trim();
+            if (!txtDesc.isEmpty()) {
+                try {
+                    descuentoProducto = new BigDecimal(txtDesc);
+                } catch (NumberFormatException ex) {
+                    lblError.setText("El descuento del producto no es un monto válido."); return;
+                }
+                if (descuentoProducto.compareTo(BigDecimal.ZERO) < 0) {
+                    lblError.setText("El descuento del producto no puede ser negativo."); return;
+                }
+                if (descuentoProducto.compareTo(subtotalBrutoLinea) > 0) {
+                    lblError.setText("El descuento (RD$" + descuentoProducto.toPlainString()
+                            + ") no puede ser mayor al subtotal de esta línea (RD$"
+                            + subtotalBrutoLinea.setScale(2, RoundingMode.HALF_UP).toPlainString()
+                            + ")."); return;
+                }
+            }
+
+            int yaEnCarrito = detalles.stream()
+                    .filter(f -> f.producto.getIdProducto().equals(producto.getIdProducto()))
+                    .mapToInt(f -> f.cantidad)
+                    .sum();
+            if (yaEnCarrito + cantidad > producto.getStock()) {
+                lblError.setText("Stock insuficiente. Ya agregaste " + yaEnCarrito
+                        + " unidad(es) de este producto en el carrito. Disponible en total: "
+                        + producto.getStock()); return;
+            }
+
+            String tipoGarantiaSel = cmbGarantiaTipo.getValue();
+            String garantiaDesc;
+            if (tipoGarantiaSel == null || GARANTIA_SIN.equals(tipoGarantiaSel)) {
+                garantiaDesc = "";
+            } else if (GARANTIA_OTRA.equals(tipoGarantiaSel)) {
+                garantiaDesc = txtGarantiaOtra.getText() != null
+                        ? txtGarantiaOtra.getText().trim() : "";
+                if (garantiaDesc.isEmpty()) {
+                    lblError.setText("Escribe la descripción de la garantía."); return;
+                }
+            } else {
+                garantiaDesc = tipoGarantiaSel;
+            }
+
+            int garantiaMeses = 0;
             try {
                 String m = txtGarantiaMeses.getText().trim();
                 if (!m.isEmpty()) garantiaMeses = Integer.parseInt(m);
             } catch (NumberFormatException ignored) {}
 
-            detalles.removeIf(f -> f.producto.getIdProducto()
-                    .equals(producto.getIdProducto()));
-            detalles.add(new FilaVenta(producto, cantidad,
-                    garantiaDesc, garantiaMeses));
+            detalles.add(new FilaVenta(contadorLineas++, producto, cantidad,
+                    garantiaDesc, garantiaMeses, descuentoProducto));
             actualizarTotales();
 
             // Limpiar campos de agregar
             txtCantidad.clear();
-            txtGarantiaDesc.clear();
+            txtDescuentoProducto.clear();
+            cmbGarantiaTipo.setValue(GARANTIA_SIN);
+            txtGarantiaOtra.clear();
+            txtGarantiaOtra.setVisible(false);
+            txtGarantiaOtra.setManaged(false);
             txtGarantiaMeses.clear();
             cmbProducto.setValue(null);
             cmbProducto.getEditor().clear();
@@ -450,15 +541,18 @@ public class VentaFormController {
             lblError.setText("El descuento debe estar entre 0% y 100%."); return;
         }
 
-        Map<Integer, Integer>  items     = new HashMap<>();
-        Map<Integer, String[]> garantias = new HashMap<>();
+        List<VentaService.ItemVenta> items = new java.util.ArrayList<>();
         for (FilaVenta f : detalles) {
-            items.put(f.producto.getIdProducto(), f.cantidad);
-            if (f.garantiaDesc != null && !f.garantiaDesc.isBlank()) {
-                garantias.put(f.producto.getIdProducto(),
-                        new String[]{f.garantiaDesc,
-                                String.valueOf(f.garantiaMeses)});
-            }
+            items.add(new VentaService.ItemVenta(
+                    f.producto.getIdProducto(),
+                    f.cantidad,
+                    (f.descuentoProducto != null
+                            && f.descuentoProducto.compareTo(BigDecimal.ZERO) > 0)
+                            ? f.descuentoProducto : null,
+                    (f.garantiaDesc != null && !f.garantiaDesc.isBlank())
+                            ? f.garantiaDesc : null,
+                    f.garantiaMeses
+            ));
         }
 
         LocalDateTime fechaLimite = null;
@@ -511,7 +605,6 @@ public class VentaFormController {
                     metodoPago,
                     descuento,
                     items,
-                    garantias,
                     txtNotas.getText().trim(),
                     esCredito,
                     fechaLimite,
@@ -570,9 +663,18 @@ public class VentaFormController {
     }
 
     private void actualizarTotales() {
-        BigDecimal subtotalBruto = detalles.stream()
-                .map(FilaVenta::subtotal)
+        BigDecimal subtotalCatalogo = detalles.stream()
+                .map(FilaVenta::subtotalBruto)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalDescuentosProducto = detalles.stream()
+                .map(f -> f.descuentoProducto != null ? f.descuentoProducto : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // subtotalBruto = base sobre la que aplica el descuento porcentual
+        // de toda la venta: precio de catálogo YA con los descuentos por
+        // producto restados (los RD$ acordados línea por línea).
+        BigDecimal subtotalBruto = subtotalCatalogo.subtract(totalDescuentosProducto);
 
         BigDecimal descPct = obtenerDescuento();
         BigDecimal montoDesc = subtotalBruto.multiply(descPct)
@@ -599,7 +701,17 @@ public class VentaFormController {
             } catch (Exception ignored) {}
         }
 
-        lblSubtotal.setText("RD$" + subtotalBruto.setScale(2).toPlainString());
+        lblSubtotal.setText("RD$" + subtotalCatalogo.setScale(2, RoundingMode.HALF_UP).toPlainString());
+
+        boolean hayDescuentoProducto = totalDescuentosProducto.compareTo(BigDecimal.ZERO) > 0;
+        lblDescuentoProductosLabel.setVisible(hayDescuentoProducto);
+        lblDescuentoProductosLabel.setManaged(hayDescuentoProducto);
+        lblDescuentoProductosMonto.setVisible(hayDescuentoProducto);
+        lblDescuentoProductosMonto.setManaged(hayDescuentoProducto);
+        if (hayDescuentoProducto) {
+            lblDescuentoProductosMonto.setText("- RD$"
+                    + totalDescuentosProducto.setScale(2, RoundingMode.HALF_UP).toPlainString());
+        }
 
         if (descPct.compareTo(BigDecimal.ZERO) > 0) {
             lblDescuentoLabel.setText("Descuento ("
@@ -628,15 +740,23 @@ public class VentaFormController {
         ((Stage) btnGuardar.getScene().getWindow()).close();
     }
 
+    private long contadorLineas = 0;
+
     record FilaVenta(
+            long id,
             Producto producto,
             int cantidad,
             String garantiaDesc,
-            int garantiaMeses
+            int garantiaMeses,
+            BigDecimal descuentoProducto
     ) {
+        BigDecimal subtotalBruto() {
+            return producto.getPrecioUnitario().multiply(BigDecimal.valueOf(cantidad));
+        }
+
         BigDecimal subtotal() {
-            return producto.getPrecioUnitario()
-                    .multiply(BigDecimal.valueOf(cantidad));
+            BigDecimal desc = descuentoProducto != null ? descuentoProducto : BigDecimal.ZERO;
+            return subtotalBruto().subtract(desc);
         }
     }
 }

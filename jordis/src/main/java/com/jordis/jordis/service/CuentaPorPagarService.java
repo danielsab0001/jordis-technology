@@ -19,6 +19,7 @@ public class CuentaPorPagarService {
 
     private final CuentaPorPagarRepository cuentaRepository;
     private final CuentaPagoRepository     pagoRepository;
+    private final CierreCajaService        cierreCajaService;
 
     public List<CuentaPorPagar> obtenerTodas() {
         return cuentaRepository.findTodas();
@@ -65,12 +66,19 @@ public class CuentaPorPagarService {
 
     @Transactional
     public CuentaPago registrarPago(Integer idCuenta, BigDecimal monto,
-                                    String metodoPago, String notas,
-                                    Usuario cajero, LocalDateTime fechaPago) {
+                                    String metodoPago, boolean pagadoDesdeCaja,
+                                    String notas, Usuario cajero, LocalDateTime fechaPago) {
         CuentaPorPagar cuenta = obtenerPorId(idCuenta);
 
         if (cuenta.estaCancelada()) {
             throw new RuntimeException("Esta cuenta ya está completamente pagada.");
+        }
+
+        if ("EFECTIVO".equals(metodoPago) && pagadoDesdeCaja
+                && !cierreCajaService.hayCajaAbierta()) {
+            throw new RuntimeException(
+                    "No hay ninguna caja abierta. Debes abrir la caja antes de pagar en "
+                            + "efectivo desde la gaveta (o marca que el efectivo es de otro origen).");
         }
 
         BigDecimal saldo = cuenta.getSaldoPendiente();
@@ -86,20 +94,24 @@ public class CuentaPorPagarService {
         pago.setCuenta(cuenta);
         pago.setMonto(monto);
         pago.setMetodoPago(metodoPago);
+        pago.setPagadoDesdeCaja(pagadoDesdeCaja);
         pago.setNotas(notas);
         pago.setCajero(cajero);
         pago.setFechaPago(fechaPago);
 
         CuentaPago guardado = pagoRepository.save(pago);
 
-        // Marcar como pagada si el saldo llega a 0
         if (cuenta.estaCancelada()) {
             cuenta.setEstado("PAGADA");
             cuentaRepository.save(cuenta);
         }
 
-        log.info("Pago registrado — Cuenta #{} — Monto: RD${} — Saldo restante: RD${}",
-                idCuenta, monto, cuenta.getSaldoPendiente());
+        log.info("Pago registrado — Cuenta #{} — Monto: RD${} — Método: {}{} — Saldo restante: RD${}",
+                idCuenta, monto, metodoPago,
+                "EFECTIVO".equals(metodoPago)
+                        ? (pagadoDesdeCaja ? " (de la caja)" : " (de otro origen, NO de la caja)")
+                        : "",
+                cuenta.getSaldoPendiente());
         return guardado;
     }
 }

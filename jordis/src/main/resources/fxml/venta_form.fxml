@@ -113,10 +113,23 @@
                               -fx-padding: 4 10;"/>
         </VBox>
         <VBox spacing="4">
-            <Label text="Garantía (desc.)"
+            <Label text="Descuento producto (RD$)"
                    style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
-            <TextField fx:id="txtGarantiaDesc" promptText="Ej: Garantía de fábrica"
-                       prefWidth="160" prefHeight="34"
+            <TextField fx:id="txtDescuentoProducto" promptText="0.00" prefWidth="110"
+                       prefHeight="34"
+                       style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                              -fx-border-radius: 6; -fx-background-radius: 6;
+                              -fx-padding: 4 10;"/>
+        </VBox>
+        <VBox spacing="4">
+            <Label text="Garantía"
+                   style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+            <ComboBox fx:id="cmbGarantiaTipo" prefWidth="190" prefHeight="34"
+                      style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
+                             -fx-border-radius: 6; -fx-background-radius: 6;"/>
+            <TextField fx:id="txtGarantiaOtra" promptText="Describe la garantía..."
+                       visible="false" managed="false"
+                       prefWidth="190" prefHeight="34"
                        style="-fx-font-size: 12; -fx-border-color: #BFDBFE;
                               -fx-border-radius: 6; -fx-background-radius: 6;
                               -fx-padding: 4 10;"/>
@@ -144,6 +157,7 @@
             <TableColumn fx:id="colProducto"  text="Producto"    prefWidth="190"/>
             <TableColumn fx:id="colCantidad"  text="Cant."       prefWidth="55"/>
             <TableColumn fx:id="colPrecio"    text="Precio"      prefWidth="100"/>
+            <TableColumn fx:id="colDescuentoProducto" text="Desc. producto" prefWidth="110"/>
             <TableColumn fx:id="colGarantia"  text="Garantía"    prefWidth="230"/>
             <TableColumn fx:id="colSubtotal"  text="Subtotal"    prefWidth="100"/>
             <TableColumn fx:id="colQuitar"    text=""            prefWidth="60"/>
@@ -189,6 +203,15 @@
                        style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
                 <Label fx:id="lblSubtotal" text="RD$0.00"
                        style="-fx-font-size: 13; -fx-text-fill: #0F172A;
+                              -fx-min-width: 100; -fx-alignment: CENTER_RIGHT;"/>
+            </HBox>
+            <HBox spacing="24" alignment="CENTER_RIGHT">
+                <Label fx:id="lblDescuentoProductosLabel" text="Descuento en productos:"
+                       visible="false" managed="false"
+                       style="-fx-font-size: 12; -fx-text-fill: #DC2626;"/>
+                <Label fx:id="lblDescuentoProductosMonto" text="—"
+                       visible="false" managed="false"
+                       style="-fx-font-size: 12; -fx-text-fill: #DC2626;
                               -fx-min-width: 100; -fx-alignment: CENTER_RIGHT;"/>
             </HBox>
             <HBox spacing="24" alignment="CENTER_RIGHT">

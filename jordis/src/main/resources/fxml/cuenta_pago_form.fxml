@@ -38,6 +38,20 @@
                          -fx-border-radius: 6; -fx-background-radius: 6;"/>
     </VBox>
 
+    <HBox fx:id="boxOrigenEfectivo" spacing="16"
+          style="-fx-background-color: #FFFBEB; -fx-padding: 10 14;
+                 -fx-border-radius: 6; -fx-background-radius: 6;
+                 -fx-border-color: #FDE68A;">
+        <VBox spacing="4" HBox.hgrow="ALWAYS">
+            <Label text="¿De dónde salió el efectivo?"
+                   style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #92400E;"/>
+            <RadioButton fx:id="radioDeLaCaja" text="De la caja registradora"
+                         style="-fx-font-size: 12; -fx-text-fill: #78350F;"/>
+            <RadioButton fx:id="radioOtroOrigen" text="De otro origen (no afecta la caja)"
+                         style="-fx-font-size: 12; -fx-text-fill: #78350F;"/>
+        </VBox>
+    </HBox>
+
     <VBox spacing="4">
         <Label text="Fecha del pago *"
                style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>

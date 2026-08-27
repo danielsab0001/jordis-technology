@@ -1,0 +1,23 @@
+/* ============================================================
+   Login — Jordis Technology
+   ============================================================ */
+
+.btn-ingresar {
+    -fx-background-color: #1A237E;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+    -fx-effect: none;
+}
+
+.btn-ingresar:hover {
+    -fx-background-color: #202C8C;
+    -fx-effect: dropshadow(gaussian, rgba(26, 35, 126, 0.45), 14, 0.25, 0, 4);
+}
+
+.btn-ingresar:pressed {
+    -fx-background-color: #141B5E;
+    -fx-effect: dropshadow(gaussian, rgba(26, 35, 126, 0.3), 6, 0.25, 0, 2);
+}

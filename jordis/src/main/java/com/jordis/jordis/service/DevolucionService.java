@@ -2,6 +2,7 @@ package com.jordis.jordis.service;
 
 import com.jordis.jordis.model.*;
 import com.jordis.jordis.repository.ClienteRepository;
+import com.jordis.jordis.repository.CreditoPagoRepository;
 import com.jordis.jordis.repository.DevolucionRepository;
 import com.jordis.jordis.repository.ProductoRepository;
 import com.jordis.jordis.repository.VentaRepository;
@@ -41,6 +42,7 @@ public class DevolucionService {
     private final ProductoRepository productoRepository;
     private final ClienteRepository clienteRepository;
     private final VentaRepository ventaRepository;
+    private final CreditoPagoRepository creditoPagoRepository;
     private final AuditoriaService auditoriaService;
     private final AutenticacionService autenticacionService;
     private final Map<TipoDevolucion, ProcesadorDevolucion> procesadores;
@@ -49,6 +51,7 @@ public class DevolucionService {
                              ProductoRepository productoRepository,
                              ClienteRepository clienteRepository,
                              VentaRepository ventaRepository,
+                             CreditoPagoRepository creditoPagoRepository,
                              AuditoriaService auditoriaService,
                              AutenticacionService autenticacionService,
                              List<ProcesadorDevolucion> procesadoresDisponibles) {
@@ -56,6 +59,7 @@ public class DevolucionService {
         this.productoRepository = productoRepository;
         this.clienteRepository = clienteRepository;
         this.ventaRepository = ventaRepository;
+        this.creditoPagoRepository = creditoPagoRepository;
         this.auditoriaService = auditoriaService;
         this.autenticacionService = autenticacionService;
         this.procesadores = procesadoresDisponibles.stream()
@@ -76,14 +80,9 @@ public class DevolucionService {
                         "Devolución no encontrada: " + idDevolucion));
     }
 
-    /**
-     * Cantidad máxima que todavía se puede devolver de un producto dentro
-     * de una venta (lo vendido menos lo ya devuelto en devoluciones activas).
-     */
     public int obtenerCantidadDisponibleParaDevolver(VentaProducto lineaVenta) {
-        Integer yaDevuelto = devolucionRepository.cantidadYaDevuelta(
-                lineaVenta.getVenta().getIdVenta(),
-                lineaVenta.getProducto().getIdProducto());
+        Integer yaDevuelto = devolucionRepository.cantidadYaDevueltaPorDetalle(
+                lineaVenta.getIdDetalle());
         return lineaVenta.getCantidad() - (yaDevuelto != null ? yaDevuelto : 0);
     }
 
@@ -93,12 +92,6 @@ public class DevolucionService {
         return dias <= DIAS_LIMITE_ITBIS;
     }
 
-    /**
-     * Determina automáticamente el tipo de devolución. No es una elección
-     * del cajero: la decide la ley. Si la venta original tenía NCF fiscal,
-     * la devolución debe respaldarse con una Nota de Crédito Fiscal (B04);
-     * si no, es un simple saldo a favor interno sin comprobante fiscal.
-     */
     public TipoDevolucion determinarTipoDevolucion(Venta venta) {
         return Boolean.TRUE.equals(venta.getEsCreditoFiscal())
                 ? TipoDevolucion.NOTA_CREDITO
@@ -106,10 +99,12 @@ public class DevolucionService {
     }
 
     /**
-     * Registra una devolución de uno o varios productos de una venta.
+     * Registra una devolución de una o varias LÍNEAS de una venta.
      *
      * @param venta      venta original (debe existir y no estar anulada)
-     * @param items      Map<idProducto, cantidad a devolver>
+     * @param items      Map<idDetalleVenta, cantidad a devolver> — la
+     *                   llave es el id de la LÍNEA (venta_producto.id_detalle),
+     *                   no el id del producto.
      * @param motivo     motivo de la devolución (obligatorio)
      * @param observaciones notas adicionales, opcional
      */
@@ -173,7 +168,7 @@ public class DevolucionService {
         BigDecimal montoTotal = BigDecimal.ZERO;
 
         for (Map.Entry<Integer, Integer> entry : items.entrySet()) {
-            Integer idProducto = entry.getKey();
+            Integer idDetalleVenta = entry.getKey();
             Integer cantidadDevuelta = entry.getValue();
 
             if (cantidadDevuelta == null || cantidadDevuelta <= 0) {
@@ -182,10 +177,10 @@ public class DevolucionService {
             }
 
             VentaProducto lineaVenta = venta.getDetalles().stream()
-                    .filter(vp -> vp.getProducto().getIdProducto().equals(idProducto))
+                    .filter(vp -> vp.getIdDetalle().equals(idDetalleVenta))
                     .findFirst()
                     .orElseThrow(() -> new DevolucionInvalidaException(
-                            "El producto no pertenece a esta venta."));
+                            "Esa línea no pertenece a esta venta."));
 
             int disponible = obtenerCantidadDisponibleParaDevolver(lineaVenta);
             if (cantidadDevuelta > disponible) {
@@ -206,6 +201,7 @@ public class DevolucionService {
             DevolucionDetalle detalle = new DevolucionDetalle();
             detalle.setDevolucion(devolucion);
             detalle.setProducto(lineaVenta.getProducto());
+            detalle.setDetalleVenta(lineaVenta);
             detalle.setCantidad(cantidadDevuelta);
             detalle.setPrecioUnitario(precioUnitario);
             detalle.setSubtotal(subtotalLinea);
@@ -233,14 +229,40 @@ public class DevolucionService {
         guardada = devolucionRepository.save(guardada);
 
         Cliente cliente = venta.getCliente();
-        cliente.setSaldoAFavor(cliente.getSaldoAFavor().add(guardada.getMontoTotal()));
-        clienteRepository.save(cliente);
+        BigDecimal montoDevuelto = guardada.getMontoTotal();
+        BigDecimal montoAmortizadoDeuda = BigDecimal.ZERO;
+
+        if (Boolean.TRUE.equals(venta.getEsCredito())) {
+            BigDecimal saldoPendienteVenta = venta.getSaldoPendiente();
+            if (saldoPendienteVenta.compareTo(BigDecimal.ZERO) > 0) {
+                montoAmortizadoDeuda = montoDevuelto.min(saldoPendienteVenta);
+
+                CreditoPago pagoPorDevolucion = new CreditoPago();
+                pagoPorDevolucion.setVenta(venta);
+                pagoPorDevolucion.setMonto(montoAmortizadoDeuda);
+                pagoPorDevolucion.setMetodoPago("NOTA_CREDITO_DEVOLUCION");
+                pagoPorDevolucion.setNotas(
+                        "Amortización automática por devolución #"
+                                + guardada.getIdDevolucion()
+                                + " sobre la factura " + venta.getNumeroFactura() + ".");
+                pagoPorDevolucion.setCajero(usuario);
+                pagoPorDevolucion.setFechaPago(LocalDateTime.now());
+                creditoPagoRepository.save(pagoPorDevolucion);
+            }
+        }
+
+        BigDecimal excedenteASaldoAFavor = montoDevuelto.subtract(montoAmortizadoDeuda);
+        if (excedenteASaldoAFavor.compareTo(BigDecimal.ZERO) > 0) {
+            cliente.setSaldoAFavor(cliente.getSaldoAFavor().add(excedenteASaldoAFavor));
+            clienteRepository.save(cliente);
+        }
 
         log.info("Devolución #{} registrada — Venta: {} — Tipo: {} — Monto: RD${}"
-                        + " — Incluye ITBIS: {} — Saldo a favor del cliente: RD${} — Usuario: {}",
+                        + " — Incluye ITBIS: {} — Amortizado a deuda: RD${}"
+                        + " — Saldo a favor del cliente: RD${} — Usuario: {}",
                 guardada.getIdDevolucion(), venta.getNumeroFactura(), tipo,
-                guardada.getMontoTotal(), incluyeItbis, cliente.getSaldoAFavor(),
-                usuario.getNombreCompleto());
+                guardada.getMontoTotal(), incluyeItbis, montoAmortizadoDeuda,
+                cliente.getSaldoAFavor(), usuario.getNombreCompleto());
 
         auditoriaService.registrar(usuario, "DEVOLUCION_REGISTRADA", "Devolucion",
                 guardada.getIdDevolucion(),

@@ -1,8 +1,12 @@
 package com.jordis.jordis.controller;
 
+import com.jordis.jordis.config.SpringFXMLLoader;
 import com.jordis.jordis.model.Devolucion;
+import com.jordis.jordis.model.Venta;
 import com.jordis.jordis.service.DevolucionService;
+import com.jordis.jordis.service.VentaService;
 import com.jordis.jordis.util.Paginador;
+import com.jordis.jordis.util.VentanaUtil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -10,15 +14,19 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DevolucionController {
 
     @FXML private TableView<Devolucion> tablaDevoluciones;
@@ -32,9 +40,13 @@ public class DevolucionController {
     @FXML private TableColumn<Devolucion, String> colEstado;
     @FXML private TableColumn<Devolucion, String> colMotivo;
     @FXML private TextField txtBuscar;
+    @FXML private TextField txtFacturaNueva;
     @FXML private Label lblMensaje;
+    @FXML private Label lblMensajeNueva;
 
     private final DevolucionService devolucionService;
+    private final VentaService ventaService;
+    private final SpringFXMLLoader fxmlLoader;
 
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -118,5 +130,83 @@ public class DevolucionController {
                 .filter(d -> d.getVenta().getNumeroFactura() != null
                         && d.getVenta().getNumeroFactura().toLowerCase().contains(t))
                 .toList());
+    }
+
+    /**
+     * Registrar una devolución directamente desde este módulo, sin tener
+     * que ir primero a la lista de Ventas: se busca la venta por número
+     * de factura y, si tiene productos disponibles para devolver, se abre
+     * el mismo formulario de devolución que se usa desde Ventas.
+     */
+    @FXML
+    public void onNuevaDevolucion() {
+        lblMensajeNueva.setText("");
+        String numeroFactura = txtFacturaNueva.getText() != null
+                ? txtFacturaNueva.getText().trim() : "";
+
+        if (numeroFactura.isEmpty()) {
+            mostrarMensajeNueva("Escribe el número de factura de la venta a devolver.", true);
+            return;
+        }
+
+        Optional<Venta> ventaOpt = ventaService.buscarPorNumeroFactura(numeroFactura);
+        if (ventaOpt.isEmpty()) {
+            mostrarMensajeNueva("No se encontró ninguna venta con la factura \""
+                    + numeroFactura + "\".", true);
+            return;
+        }
+
+        Venta venta = ventaOpt.get();
+        if (venta.estaAnulada()) {
+            mostrarMensajeNueva("Esa venta ya está anulada — no se le pueden "
+                    + "registrar devoluciones.", true);
+            return;
+        }
+
+        boolean quedaAlgoPorDevolver = venta.getDetalles().stream()
+                .anyMatch(det -> devolucionService
+                        .obtenerCantidadDisponibleParaDevolver(det) > 0);
+        if (!quedaAlgoPorDevolver) {
+            mostrarMensajeNueva("Esa venta ya no tiene productos disponibles "
+                    + "para devolver (ya se devolvió todo).", true);
+            return;
+        }
+
+        abrirFormularioDevolucion(venta);
+    }
+
+    private void abrirFormularioDevolucion(Venta venta) {
+        try {
+            SpringFXMLLoader.LoadResult<DevolucionFormController> result =
+                    fxmlLoader.loadWithController("/fxml/devolucion_form.fxml");
+
+            result.controller.prepararParaVenta(venta);
+            result.controller.setOnGuardado(() -> {
+                cargar();
+                txtFacturaNueva.clear();
+                mostrarMensajeNueva("", false);
+                mostrarMensaje("Devolución registrada. Stock actualizado.", false);
+            });
+
+            Stage stage = VentanaUtil.crearDialogoModal(
+                    result.root, "Registrar devolución", 720, 620);
+            result.controller.setStage(stage);
+            stage.showAndWait();
+        } catch (Exception e) {
+            log.error("Error abriendo formulario de devolución", e);
+            mostrarMensajeNueva("Error al abrir: " + e.getMessage(), true);
+        }
+    }
+
+    private void mostrarMensajeNueva(String texto, boolean esError) {
+        lblMensajeNueva.setText(texto);
+        lblMensajeNueva.setStyle("-fx-font-size: 12; -fx-text-fill: "
+                + (esError ? "#DC2626" : "#16A34A") + ";");
+    }
+
+    private void mostrarMensaje(String texto, boolean esError) {
+        lblMensaje.setText(texto);
+        lblMensaje.setStyle("-fx-padding: 0 24 10 24; -fx-font-size: 12; -fx-text-fill: "
+                + (esError ? "#DC2626" : "#16A34A") + ";");
     }
 }

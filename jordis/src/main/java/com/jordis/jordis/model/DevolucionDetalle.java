@@ -27,6 +27,10 @@ public class DevolucionDetalle {
     @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_detalle_venta")
+    private VentaProducto detalleVenta;
+
     @Column(name = "cantidad", nullable = false)
     private Integer cantidad;
 

@@ -34,16 +34,16 @@
     <Label text="Ventas realizadas:"
            style="-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #0F172A;"/>
 
-    <TableView fx:id="tablaVentas" prefHeight="300"
+    <TableView fx:id="tablaVentas" prefHeight="300" VBox.vgrow="ALWAYS"
                style="-fx-border-color: #DBEAFE; -fx-border-radius: 6;
                       -fx-font-size: 12;">
         <columns>
-            <TableColumn fx:id="colFactura"  text="Factura"    prefWidth="100"/>
-            <TableColumn fx:id="colFecha"    text="Fecha"      prefWidth="130"/>
-            <TableColumn fx:id="colProductos" text="Productos" prefWidth="200"/>
-            <TableColumn fx:id="colTotal"    text="Total"      prefWidth="100"/>
-            <TableColumn fx:id="colPago"     text="Pago"       prefWidth="90"/>
-            <TableColumn fx:id="colEstado"   text="Estado"     prefWidth="90"/>
+            <TableColumn fx:id="colFactura"  text="Factura"    prefWidth="90"/>
+            <TableColumn fx:id="colFecha"    text="Fecha"      prefWidth="105"/>
+            <TableColumn fx:id="colProductos" text="Productos" prefWidth="220"/>
+            <TableColumn fx:id="colTotal"    text="Total"      prefWidth="110"/>
+            <TableColumn fx:id="colPago"     text="Pago"       prefWidth="85"/>
+            <TableColumn fx:id="colEstado"   text="Estado"     prefWidth="80"/>
         </columns>
     </TableView>
 

@@ -214,10 +214,8 @@ public class ProveedorController {
                 cargarProveedores();
                 mostrarMensaje("Proveedor guardado correctamente.", false);
             });
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle(proveedor == null ? "Nuevo Proveedor" : "Editar Proveedor");
-            stage.setScene(new Scene(result.root, 480, 460));
+            Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
+                    result.root, proveedor == null ? "Nuevo Proveedor" : "Editar Proveedor", 480, 480);
             stage.showAndWait();
         } catch (Exception e) {
             log.error("Error abriendo formulario de proveedor", e);

@@ -36,7 +36,7 @@ public class Venta {
     @JoinColumn(name = "id_cajero", nullable = false)
     private Usuario cajero;
 
-    @Column(name = "metodo_pago", nullable = false, length = 20)
+    @Column(name = "metodo_pago", nullable = false, length = 30)
     private String metodoPago;
 
     @Column(name = "descuento_porcentual", nullable = false, precision = 5, scale = 2)

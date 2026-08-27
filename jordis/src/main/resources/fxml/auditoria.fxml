@@ -13,8 +13,6 @@
           alignment="CENTER_LEFT" spacing="12">
         <Text text="Auditoría"
               style="-fx-font-size: 18; -fx-font-weight: bold; -fx-fill: #1E40AF;"/>
-        <Label text="Historial de acciones sensibles: ventas anuladas, precios modificados, usuarios desbloqueados."
-               style="-fx-font-size: 11; -fx-text-fill: #94A3B8;"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="↻  Actualizar" onAction="#onActualizar"
                 style="-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;

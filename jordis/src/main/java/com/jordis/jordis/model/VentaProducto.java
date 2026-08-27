@@ -14,17 +14,17 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class VentaProducto {
 
-    @EmbeddedId
-    private VentaProductoId id = new VentaProductoId();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_detalle")
+    private Integer idDetalle;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @MapsId("idVenta")
-    @JoinColumn(name = "id_venta")
+    @JoinColumn(name = "id_venta", nullable = false)
     private Venta venta;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @MapsId("idProducto")
-    @JoinColumn(name = "id_producto")
+    @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
     @Column(name = "cantidad", nullable = false)
@@ -33,15 +33,12 @@ public class VentaProducto {
     @Column(name = "precio_unitario", nullable = false, precision = 12, scale = 2)
     private BigDecimal precioUnitario;
 
+    @Column(name = "precio_original", nullable = false, precision = 12, scale = 2)
+    private BigDecimal precioOriginal;
+
+    @Column(name = "descuento_monto", nullable = false, precision = 12, scale = 2)
+    private BigDecimal descuentoMonto = BigDecimal.ZERO;
+
     @Column(name = "subtotal", nullable = false, precision = 12, scale = 2)
     private BigDecimal subtotal;
-
-    @Embeddable
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class VentaProductoId implements java.io.Serializable {
-        private Integer idVenta;
-        private Integer idProducto;
-    }
 }

@@ -252,9 +252,16 @@ public class FacturaService {
                 new Color(219, 234, 254), Element.ALIGN_CENTER, -2)));
         doc.add(new Paragraph(" "));
 
-        PdfPTable tabla = new PdfPTable(5);
+        boolean hayDescuentoProducto = venta.getDetalles().stream()
+                .anyMatch(vp -> vp.getDescuentoMonto() != null
+                        && vp.getDescuentoMonto().compareTo(BigDecimal.ZERO) > 0);
+
+        int numColumnas = hayDescuentoProducto ? 6 : 5;
+        PdfPTable tabla = new PdfPTable(numColumnas);
         tabla.setWidthPercentage(100);
-        tabla.setWidths(new float[]{4f, 1.5f, 2f, 1.5f, 2f});
+        tabla.setWidths(hayDescuentoProducto
+                ? new float[]{3.3f, 1.3f, 1.7f, 1.5f, 1.7f, 1.7f}
+                : new float[]{4f, 1.5f, 2f, 1.5f, 2f});
         tabla.setSpacingAfter(8);
 
         // Encabezados
@@ -264,6 +271,9 @@ public class FacturaService {
         agregarEncabezadoTabla(tabla, "Producto",     colorEncabezado, fontEncabezado);
         agregarEncabezadoTabla(tabla, "Cant.",        colorEncabezado, fontEncabezado);
         agregarEncabezadoTabla(tabla, "Precio unit.", colorEncabezado, fontEncabezado);
+        if (hayDescuentoProducto) {
+            agregarEncabezadoTabla(tabla, "Desc.",    colorEncabezado, fontEncabezado);
+        }
         agregarEncabezadoTabla(tabla, "Garantía",     colorEncabezado, fontEncabezado);
         agregarEncabezadoTabla(tabla, "Subtotal",     colorEncabezado, fontEncabezado);
 
@@ -271,15 +281,29 @@ public class FacturaService {
         for (VentaProducto vp : venta.getDetalles()) {
             // Buscar garantía del producto
             String garantiaTexto = venta.getGarantias().stream()
-                    .filter(g -> g.getProducto().getIdProducto()
-                            .equals(vp.getProducto().getIdProducto()))
+                    .filter(g -> g.getDetalleVenta() != null
+                            && g.getDetalleVenta().getIdDetalle().equals(vp.getIdDetalle()))
                     .map(g -> g.getMeses() > 0 ? g.getMeses() + " meses" : g.getDescripcion())
-                    .findFirst().orElse("—");
+                    .findFirst()
+                    .or(() -> venta.getGarantias().stream()
+                            .filter(g -> g.getDetalleVenta() == null
+                                    && g.getProducto().getIdProducto()
+                                    .equals(vp.getProducto().getIdProducto()))
+                            .map(g -> g.getMeses() > 0 ? g.getMeses() + " meses" : g.getDescripcion())
+                            .findFirst())
+                    .orElse("—");
 
             agregarCeldaTabla(tabla, vp.getProducto().getNombre(), Element.ALIGN_LEFT);
             agregarCeldaTabla(tabla, String.valueOf(vp.getCantidad()), Element.ALIGN_CENTER);
             agregarCeldaTabla(tabla,
                     "RD$" + vp.getPrecioUnitario().toPlainString(), Element.ALIGN_RIGHT);
+            if (hayDescuentoProducto) {
+                boolean tieneDescuento = vp.getDescuentoMonto() != null
+                        && vp.getDescuentoMonto().compareTo(BigDecimal.ZERO) > 0;
+                agregarCeldaTabla(tabla,
+                        tieneDescuento ? "- RD$" + vp.getDescuentoMonto().toPlainString() : "—",
+                        Element.ALIGN_RIGHT);
+            }
             agregarCeldaTabla(tabla, garantiaTexto, Element.ALIGN_CENTER);
             agregarCeldaTabla(tabla,
                     "RD$" + vp.getSubtotal().toPlainString(), Element.ALIGN_RIGHT);
@@ -608,6 +632,14 @@ public class FacturaService {
                                 + pad(formatoMonto(vp.getPrecioUnitario()), 15, true)
                                 + pad(formatoMonto(vp.getSubtotal()), 17, true),
                         mono));
+                boolean tieneDescuentoProducto = vp.getDescuentoMonto() != null
+                        && vp.getDescuentoMonto().compareTo(BigDecimal.ZERO) > 0;
+                if (tieneDescuentoProducto) {
+                    doc.add(new Paragraph(
+                            "  Desc. producto: -" + formatoMonto(vp.getDescuentoMonto())
+                                    + " (antes RD$" + vp.getPrecioOriginal().toPlainString() + " c/u)",
+                            new Font(Font.COURIER, 8, Font.ITALIC, new Color(220, 38, 38))));
+                }
             }
 
             doc.add(separador(ANCHO, mono));
