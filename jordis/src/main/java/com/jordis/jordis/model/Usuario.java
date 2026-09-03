@@ -25,6 +25,9 @@ public class Usuario {
     @Column(name = "apellido", nullable = false, length = 100)
     private String apellido;
 
+    @Column(name = "nombre_usuario", nullable = false, length = 50, unique = true)
+    private String nombreUsuario;
+
     @Column(name = "contrasena", nullable = false, length = 255)
     private String contrasena;
 

@@ -31,18 +31,19 @@ public class UsuarioService {
     }
 
     @Transactional
-    public Usuario crear(String nombre, String apellido,
+    public Usuario crear(String nombre, String apellido, String nombreUsuario,
                          String contrasena, Usuario.Rol rol) {
 
-        if (usuarioRepository.existeNombre(nombre)) {
+        if (usuarioRepository.existeNombreUsuario(nombreUsuario)) {
             throw new UsuarioYaExisteException(
-                    "Ya existe un usuario con el nombre '" + nombre + "'."
+                    "Ya existe un usuario con el nombre de usuario '" + nombreUsuario + "'."
             );
         }
 
         Usuario usuario = new Usuario();
         usuario.setNombre(nombre);
         usuario.setApellido(apellido);
+        usuario.setNombreUsuario(nombreUsuario);
         usuario.setContrasena(passwordEncoder.encode(contrasena));
         usuario.setRol(rol);
         usuario.setActivo(true);
@@ -59,18 +60,19 @@ public class UsuarioService {
 
     @Transactional
     public Usuario actualizar(Integer idUsuario, String nombre,
-                              String apellido, Usuario.Rol rol) {
+                              String apellido, String nombreUsuario, Usuario.Rol rol) {
 
         Usuario usuario = obtenerPorId(idUsuario);
 
-        if (usuarioRepository.existeNombreEnOtro(nombre, idUsuario)) {
+        if (usuarioRepository.existeNombreUsuarioEnOtro(nombreUsuario, idUsuario)) {
             throw new UsuarioYaExisteException(
-                    "Ya existe otro usuario con el nombre '" + nombre + "'."
+                    "Ya existe otro usuario con el nombre de usuario '" + nombreUsuario + "'."
             );
         }
 
         usuario.setNombre(nombre);
         usuario.setApellido(apellido);
+        usuario.setNombreUsuario(nombreUsuario);
         usuario.setRol(rol);
 
         log.info("Usuario actualizado: {}", usuario.getNombreCompleto());

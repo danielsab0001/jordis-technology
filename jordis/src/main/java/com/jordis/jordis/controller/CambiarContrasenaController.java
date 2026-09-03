@@ -28,7 +28,7 @@ public class CambiarContrasenaController {
     public void setUsuario(Usuario u) {
         this.usuario = u;
         txtTitulo.setText("Cambiar contraseña");
-        lblUsuario.setText("Usuario: " + u.getNombreCompleto()
+        lblUsuario.setText(u.getNombreCompleto() + "  (usuario: " + u.getNombreUsuario() + ")"
                 + "  |  Rol: " + u.getRol().name());
         lblError.setText("");
         txtNueva.clear();

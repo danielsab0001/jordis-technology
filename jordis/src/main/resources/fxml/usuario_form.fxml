@@ -31,6 +31,16 @@
                           -fx-padding: 4 10;"/>
     </VBox>
 
+    <!-- Nombre de usuario (login) -->
+    <VBox spacing="4">
+        <Label text="Nombre de usuario" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>
+        <TextField fx:id="txtNombreUsuario" promptText="Ej: jperez (con este inicia sesión)"
+                   prefHeight="36"
+                   style="-fx-font-size: 13; -fx-border-color: #BFDBFE;
+                          -fx-border-radius: 6; -fx-background-radius: 6;
+                          -fx-padding: 4 10;"/>
+    </VBox>
+
     <!-- Contraseña (solo en creación) -->
     <VBox fx:id="vboxContrasena" spacing="4">
         <Label text="Contraseña" style="-fx-font-size: 12; -fx-text-fill: #64748B;"/>

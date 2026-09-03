@@ -53,11 +53,12 @@
                           -fx-background-radius: 8; -fx-font-size: 12;">
             <columns>
                 <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
-                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="130"/>
-                <TableColumn fx:id="colApellido" text="Apellido" prefWidth="130"/>
-                <TableColumn fx:id="colRol" text="Rol" prefWidth="120"/>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="110"/>
+                <TableColumn fx:id="colApellido" text="Apellido" prefWidth="110"/>
+                <TableColumn fx:id="colNombreUsuario" text="Usuario" prefWidth="110"/>
+                <TableColumn fx:id="colRol" text="Rol" prefWidth="110"/>
                 <TableColumn fx:id="colEstado" text="Estado" prefWidth="100"/>
-                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="280"/>
+                <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="100"/>
             </columns>
         </TableView>
     </VBox>

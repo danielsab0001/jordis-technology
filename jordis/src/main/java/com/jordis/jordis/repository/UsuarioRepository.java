@@ -20,12 +20,12 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     @Query("SELECT u FROM Usuario u WHERE u.bloqueado = true")
     List<Usuario> findBloqueados();
 
-    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE LOWER(u.nombre) = LOWER(:nombre)")
-    boolean existeNombre(String nombre);
+    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE LOWER(u.nombreUsuario) = LOWER(:nombreUsuario)")
+    boolean existeNombreUsuario(String nombreUsuario);
 
-    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE LOWER(u.nombre) = LOWER(:nombre) AND u.idUsuario <> :id")
-    boolean existeNombreEnOtro(String nombre, Integer id);
+    @Query("SELECT COUNT(u) > 0 FROM Usuario u WHERE LOWER(u.nombreUsuario) = LOWER(:nombreUsuario) AND u.idUsuario <> :id")
+    boolean existeNombreUsuarioEnOtro(String nombreUsuario, Integer id);
 
-    @Query("SELECT u FROM Usuario u WHERE LOWER(u.nombre) = LOWER(:nombre)")
-    Optional<Usuario> findByNombre(String nombre);
+    @Query("SELECT u FROM Usuario u WHERE LOWER(u.nombreUsuario) = LOWER(:nombreUsuario)")
+    Optional<Usuario> findByNombreUsuario(String nombreUsuario);
 }

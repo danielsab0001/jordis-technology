@@ -28,6 +28,7 @@ public class UsuarioController {
     @FXML private TableColumn<Usuario, String> colId;
     @FXML private TableColumn<Usuario, String> colNombre;
     @FXML private TableColumn<Usuario, String> colApellido;
+    @FXML private TableColumn<Usuario, String> colNombreUsuario;
     @FXML private TableColumn<Usuario, String> colRol;
     @FXML private TableColumn<Usuario, String> colEstado;
     @FXML private TableColumn<Usuario, Void>   colAcciones;
@@ -68,7 +69,8 @@ public class UsuarioController {
         String t = texto.toLowerCase();
         paginador.setDatos(base.stream()
                 .filter(u -> u.getNombre().toLowerCase().contains(t)
-                        || u.getApellido().toLowerCase().contains(t))
+                        || u.getApellido().toLowerCase().contains(t)
+                        || u.getNombreUsuario().toLowerCase().contains(t))
                 .toList());
     }
 
@@ -79,6 +81,8 @@ public class UsuarioController {
                 new SimpleStringProperty(d.getValue().getNombre()));
         colApellido.setCellValueFactory(d ->
                 new SimpleStringProperty(d.getValue().getApellido()));
+        colNombreUsuario.setCellValueFactory(d ->
+                new SimpleStringProperty(d.getValue().getNombreUsuario()));
         colRol.setCellValueFactory(d ->
                 new SimpleStringProperty(d.getValue().getRol().name()));
 
@@ -114,75 +118,55 @@ public class UsuarioController {
         });
 
         colAcciones.setCellFactory(col -> new TableCell<>() {
-            private final Button btnEditar      = crearBtn("Editar",      "#2563EB", "#EFF6FF");
-            private final Button btnContrasena = crearBtn("Contraseña", "#6D28D9", "#EDE9FE");
-            private final Button btnDesbloquear = crearBtn("Desbloquear", "#B45309", "#FEF3C7");
-            private final Button btnDesactivar  = crearBtn("Desactivar",  "#64748B", "#F1F5F9");
-            private final Button btnReactivar   = crearBtn("Reactivar",   "#15803D", "#DCFCE7");
-            private final HBox box = new HBox(5,
-                    btnEditar, btnContrasena, btnDesbloquear, btnDesactivar, btnReactivar);
-
-            {
-                btnEditar.setOnAction(e ->
-                        abrirFormulario(getTableView().getItems().get(getIndex())));
-                btnDesbloquear.setOnAction(e ->
-                        desbloquear(getTableView().getItems().get(getIndex())));
-                btnDesactivar.setOnAction(e ->
-                        desactivar(getTableView().getItems().get(getIndex())));
-                btnReactivar.setOnAction(e ->
-                        reactivar(getTableView().getItems().get(getIndex())));
-            }
-
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || getIndex() >= getTableView().getItems().size()) {
+                if (empty || getTableRow() == null || getTableRow().getItem() == null) {
                     setGraphic(null); return;
                 }
-
-                Usuario u      = getTableView().getItems().get(getIndex());
+                Usuario u = (Usuario) getTableRow().getItem();
                 Usuario activo = autenticacionService.getUsuarioActivo();
                 boolean esMiCuenta = activo != null &&
                         activo.getIdUsuario().equals(u.getIdUsuario());
-                boolean estaActivo   = u.getActivo();
+                boolean estaActivo    = u.getActivo();
                 boolean estaBloqueado = u.getBloqueado();
 
-                btnContrasena.setOnAction(e -> abrirCambioContrasena(u));
+                MenuButton menu = new MenuButton("⋮ Acciones");
+                menu.setStyle("-fx-background-color: #EFF6FF; -fx-text-fill: #2563EB;"
+                        + " -fx-border-color: #BFDBFE; -fx-border-radius: 4;"
+                        + " -fx-background-radius: 4; -fx-font-size: 10;"
+                        + " -fx-padding: 3 8; -fx-cursor: hand;");
 
-                // Desbloquear: solo si está bloqueado
-                btnDesbloquear.setVisible(estaBloqueado && estaActivo);
-                btnDesbloquear.setManaged(estaBloqueado && estaActivo);
+                MenuItem miEditar = new MenuItem("Editar");
+                miEditar.setOnAction(e -> abrirFormulario(u));
 
-                // Desactivar: solo si está activo y no es mi cuenta
-                btnDesactivar.setVisible(estaActivo);
-                btnDesactivar.setManaged(estaActivo);
-                btnDesactivar.setDisable(esMiCuenta);
-                btnDesactivar.setStyle(crearEstiloBtn(
-                        esMiCuenta ? "#CBD5E1" : "#64748B",
-                        esMiCuenta ? "#F8FAFC" : "#F1F5F9"
-                ));
+                MenuItem miContrasena = new MenuItem("Cambiar contraseña");
+                miContrasena.setOnAction(e -> abrirCambioContrasena(u));
 
-                // Reactivar: solo si está inactivo
-                btnReactivar.setVisible(!estaActivo);
-                btnReactivar.setManaged(!estaActivo);
+                menu.getItems().addAll(miEditar, miContrasena);
 
-                setGraphic(box);
+                // Desbloquear: solo aparece si está bloqueado
+                if (estaBloqueado && estaActivo) {
+                    MenuItem miDesbloquear = new MenuItem("Desbloquear");
+                    miDesbloquear.setOnAction(e -> desbloquear(u));
+                    menu.getItems().add(miDesbloquear);
+                }
+
+                // Desactivar (deshabilitado si es mi propia cuenta) o Reactivar
+                if (estaActivo) {
+                    MenuItem miDesactivar = new MenuItem("Desactivar");
+                    miDesactivar.setDisable(esMiCuenta);
+                    miDesactivar.setOnAction(e -> desactivar(u));
+                    menu.getItems().add(miDesactivar);
+                } else {
+                    MenuItem miReactivar = new MenuItem("Reactivar");
+                    miReactivar.setOnAction(e -> reactivar(u));
+                    menu.getItems().add(miReactivar);
+                }
+
+                setGraphic(menu);
             }
         });
-    }
-
-    private String crearEstiloBtn(String colorTexto, String colorFondo) {
-        return "-fx-background-color: " + colorFondo
-                + "; -fx-text-fill: " + colorTexto
-                + "; -fx-border-color: " + colorTexto
-                + "; -fx-border-radius: 4; -fx-background-radius: 4;"
-                + " -fx-font-size: 10; -fx-padding: 3 8; -fx-cursor: hand;";
-    }
-
-    private Button crearBtn(String texto, String colorTexto, String colorFondo) {
-        Button btn = new Button(texto);
-        btn.setStyle(crearEstiloBtn(colorTexto, colorFondo));
-        return btn;
     }
 
     private void cargarUsuarios() {
@@ -300,7 +284,7 @@ public class UsuarioController {
             });
 
             Stage stage = com.jordis.jordis.util.VentanaUtil.crearDialogoModal(
-                    result.root, usuario == null ? "Nuevo Usuario" : "Editar Usuario", 400, 380);
+                    result.root, usuario == null ? "Nuevo Usuario" : "Editar Usuario", 400, 480);
             stage.showAndWait();
 
         } catch (Exception e) {

@@ -28,13 +28,13 @@ public class AutenticacionService {
     private Usuario usuarioActivo;
 
     // Sin @Transactional aquí — cada operación maneja su propia transacción
-    public Usuario autenticar(String nombre, String contrasena) {
+    public Usuario autenticar(String nombreUsuario, String contrasena) {
 
-        // 1. Buscar por nombre sin filtrar por activo
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByNombre(nombre);
+        // 1. Buscar por nombre de usuario sin filtrar por activo
+        Optional<Usuario> usuarioOpt = usuarioRepository.findByNombreUsuario(nombreUsuario);
 
         if (usuarioOpt.isEmpty()) {
-            log.warn("Login fallido: usuario '{}' no existe", nombre);
+            log.warn("Login fallido: usuario '{}' no existe", nombreUsuario);
             throw new UsuarioNoEncontradoException("Usuario o contraseña incorrectos.");
         }
 
@@ -42,7 +42,7 @@ public class AutenticacionService {
 
         // 2. Verificar si la cuenta está desactivada
         if (!usuario.getActivo()) {
-            log.warn("Login fallido: cuenta desactivada '{}'", nombre);
+            log.warn("Login fallido: cuenta desactivada '{}'", nombreUsuario);
             throw new CuentaDesactivadaException(
                     "Esta cuenta ha sido desactivada. Comunícate con el administrador."
             );
@@ -51,7 +51,7 @@ public class AutenticacionService {
         // 3. Verificar si está bloqueado (solo cajeros)
         if (usuario.getBloqueado()
                 && usuario.getRol() != Usuario.Rol.ADMINISTRADOR) {
-            log.warn("Login fallido: cuenta bloqueada '{}'", nombre);
+            log.warn("Login fallido: cuenta bloqueada '{}'", nombreUsuario);
             throw new UsuarioBloqueadoException(
                     "Esta cuenta ha sido bloqueada por precaución debido a varios " +
                             "intentos fallidos de contraseña. Comuníquese con el administrador."
@@ -63,7 +63,7 @@ public class AutenticacionService {
 
             // Administradores no acumulan intentos
             if (usuario.getRol() == Usuario.Rol.ADMINISTRADOR) {
-                log.warn("Contraseña incorrecta para admin '{}'", nombre);
+                log.warn("Contraseña incorrecta para admin '{}'", nombreUsuario);
                 throw new CredencialesInvalidasException("Contraseña incorrecta.");
             }
 
@@ -73,7 +73,7 @@ public class AutenticacionService {
             if (nuevoIntentos >= MAX_INTENTOS) {
                 // Bloquear en transacción propia para que no haga rollback
                 bloquearUsuario(usuario.getIdUsuario());
-                log.warn("Usuario '{}' bloqueado tras {} intentos", nombre, nuevoIntentos);
+                log.warn("Usuario '{}' bloqueado tras {} intentos", nombreUsuario, nuevoIntentos);
                 alertaService.alertaUsuarioBloqueado(usuario);
                 throw new UsuarioBloqueadoException(
                         "Esta cuenta ha sido bloqueada por precaución debido a varios " +
@@ -85,7 +85,7 @@ public class AutenticacionService {
             incrementarIntentos(usuario.getIdUsuario(), nuevoIntentos);
             int restantes = MAX_INTENTOS - nuevoIntentos;
             log.warn("Contraseña incorrecta para '{}'. Intentos restantes: {}",
-                    nombre, restantes);
+                    nombreUsuario, restantes);
             throw new CredencialesInvalidasException(
                     "Contraseña incorrecta. Te quedan " + restantes + " intento(s)."
             );
@@ -105,7 +105,7 @@ public class AutenticacionService {
                 && !mismaMaquina
                 && !sesionEstaAbandonada(usuario)) {
             log.warn("Login rechazado: '{}' ya tiene una sesión activa en otra máquina ({})",
-                    nombre, usuario.getSesionMaquina());
+                    nombreUsuario, usuario.getSesionMaquina());
             throw new SesionActivaException(
                     "Este usuario ya tiene una sesión abierta en otra computadora. "
                             + "Cierra esa sesión primero, o espera unos minutos si esa "

@@ -17,6 +17,7 @@ public class UsuarioFormController {
     @FXML private Text txtTitulo;
     @FXML private TextField txtNombre;
     @FXML private TextField txtApellido;
+    @FXML private TextField txtNombreUsuario;
     @FXML private PasswordField txtContrasena;
     @FXML private VBox vboxContrasena;
     @FXML private ComboBox<Usuario.Rol> cmbRol;
@@ -40,6 +41,7 @@ public class UsuarioFormController {
             txtTitulo.setText("Editar Usuario");
             txtNombre.setText(usuario.getNombre());
             txtApellido.setText(usuario.getApellido());
+            txtNombreUsuario.setText(usuario.getNombreUsuario());
             cmbRol.setValue(usuario.getRol());
             vboxContrasena.setVisible(false);
             vboxContrasena.setManaged(false);
@@ -56,12 +58,18 @@ public class UsuarioFormController {
 
     @FXML
     public void onGuardar() {
-        String nombre    = txtNombre.getText().trim();
-        String apellido  = txtApellido.getText().trim();
-        Usuario.Rol rol  = cmbRol.getValue();
+        String nombre         = txtNombre.getText().trim();
+        String apellido       = txtApellido.getText().trim();
+        String nombreUsuario  = txtNombreUsuario.getText().trim();
+        Usuario.Rol rol       = cmbRol.getValue();
 
-        if (nombre.isEmpty() || apellido.isEmpty() || rol == null) {
+        if (nombre.isEmpty() || apellido.isEmpty() || nombreUsuario.isEmpty() || rol == null) {
             lblError.setText("Todos los campos son obligatorios.");
+            return;
+        }
+
+        if (nombreUsuario.contains(" ")) {
+            lblError.setText("El nombre de usuario no puede contener espacios.");
             return;
         }
 
@@ -72,9 +80,9 @@ public class UsuarioFormController {
                     lblError.setText("La contraseña debe tener al menos 6 caracteres.");
                     return;
                 }
-                usuarioService.crear(nombre, apellido, contrasena, rol);
+                usuarioService.crear(nombre, apellido, nombreUsuario, contrasena, rol);
             } else {
-                usuarioService.actualizar(usuarioEditar.getIdUsuario(), nombre, apellido, rol);
+                usuarioService.actualizar(usuarioEditar.getIdUsuario(), nombre, apellido, nombreUsuario, rol);
             }
 
             if (onGuardado != null) onGuardado.run();
